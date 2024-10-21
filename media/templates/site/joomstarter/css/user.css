@@ -158,3 +158,13 @@
     font-size: 0.95rem;
 }
 /***** TAG *****/
+/***** MODALITA *****/
+.creacomp{
+    background-color: var(--nero);
+    border-radius: 50px;
+}
+.creacomp a{
+    text-decoration: none;
+    color: var(--bianco);
+}
+/***** MODALITA *****/
