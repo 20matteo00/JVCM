@@ -1,0 +1,160 @@
+:root{
+    --nero: black;
+    --bianco: white;
+    --blu: blue;
+}
+/*NAVBAR*/
+.navbar-brand{
+    width: 48px;
+    height: 48px;
+}
+
+/***** CATEGORY LIST *****/
+.cat-children h3{
+    display: none;
+}
+.com-content-category__children h3{
+    display: block;
+}
+
+/* Contenitore principale per la tabella */
+.category-table-container {
+    margin: 0 auto;
+}
+
+/* Tabella principale */
+.category-table {
+    width: 100%;
+    vertical-align: middle;
+    min-width: 400px;
+}
+
+/* Intestazione della tabella */
+.category-header-logo,
+.category-header-participants {
+    text-align: center;
+    font-weight: bold;
+    padding: 10px;
+}
+.category-header-title{
+    text-align: left;
+    font-weight: bold;
+    padding: 10px;
+}
+
+/* Cella dell'immagine della categoria */
+.category-image-cell {
+    width: 80px;
+    text-align: center;
+}
+
+/* Immagine della categoria */
+.category-image {
+    display: block;
+    margin: 0 auto;
+    width: 80px;   /* Larghezza fissa */
+    height: 80px;  /* Altezza fissa */
+    object-fit: contain;  /* Ritaglia l'immagine mantenendo le proporzioni */
+}
+
+/* Cella del titolo della categoria */
+.category-title-cell {
+    width: auto;
+    text-align: left;
+}
+
+/* Titolo della categoria */
+.category-title {
+    font-weight: bold;
+    text-decoration: none;
+    color: #000;
+}
+
+/* Cella del numero di articoli */
+.category-items-cell {
+    width: 50px;
+    text-align: center;
+}
+
+/* Badge con il numero di articoli */
+.category-badge {
+    font-size: 14px;
+}
+
+
+.cat-children td a,
+.allarticles td a,
+.campionato{
+    color: var(--nero);
+    text-decoration: none;
+}
+
+.cat-children td a:hover,
+.allarticles td a:hover,
+.campionato:hover{
+    color: var(--blu);
+    text-decoration: none;
+}
+/***** CATEGORY LIST *****/
+
+.squadra{
+    width: auto; /* Si adatta al contenuto */
+    min-width: 100px; /* Limite minimo di larghezza per garantire una dimensione accettabile */ 
+    padding:5px;
+    text-align: center;
+}
+
+
+/***** ARTICOLI *****/
+.com-content-article {
+    margin-bottom: 30px; /* Spaziatura inferiore */
+}
+
+.com-content-article__header {
+    padding: 10px; /* Padding per il titolo */
+    width: 50%;
+}
+
+.com-content-article__title {
+    margin: 0; /* Rimuove margini predefiniti */
+    font-size: 2rem; /* Dimensione del font del titolo */
+}
+
+.com-content-article__body {
+    margin-top: 15px; /* Spazio sopra il contenuto dell'articolo */
+}
+.com-content-article__body p{
+    text-align: left;
+    color: var(--nero);
+}
+.com-content-article__image img{
+    width: auto; /* Limita la larghezza dell'immagine */
+    height: 250px;
+}
+
+.com-content-article__strength {
+    margin-top: 15px; /* Spazio sopra il campo forza */
+    font-weight: bold; /* Rende il testo in grassetto */
+}
+
+/***** ARTICOLI *****/
+/***** TAG *****/
+.com-tags__items .card {
+    transition: all 0.3s ease;
+    min-height: 150px;
+}
+
+.com-tags__items .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.com-tags__items .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.com-tags__items .card-text {
+    font-size: 0.95rem;
+}
+/***** TAG *****/
