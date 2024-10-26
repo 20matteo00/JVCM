@@ -126,12 +126,6 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
 
     <?php // Generate the main content area of the website 
     ?>
-    <?php if ($this->countModules('custom')) : ?>
-        <div class="container">
-            <jdoc:include type="modules" name="custom" style="none" />
-
-        </div>
-    <?php endif; ?>
     <div class="siteBody">
         <div class="container">
             <?php // Load Breadcrumbs Module if Module Exists 
@@ -139,6 +133,12 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
             <?php if ($this->countModules('breadcrumbs')) : ?>
                 <div class="breadcrumbs">
                     <jdoc:include type="modules" name="breadcrumbs" style="none" />
+                </div>
+            <?php endif; ?>
+            <?php if ($this->countModules('custom')) : ?>
+                <div class="container">
+                    <jdoc:include type="modules" name="custom" style="none" />
+
                 </div>
             <?php endif; ?>
             <div class="row">

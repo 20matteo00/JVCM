@@ -4,6 +4,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
+use Symfony\Component\VarDumper\VarDumper;
 
 // Ottieni l'ID della categoria attuale
 $currentCategoryId = $this->category->id;
@@ -13,11 +14,23 @@ function getSubcategories($categoryId)
 {
     $db = Factory::getDbo();
     $query = $db->getQuery(true)
-        ->select('id')
+        ->select('id, title')
         ->from('#__categories')
         ->where('parent_id = ' . (int) $categoryId);
 
     return $db->setQuery($query)->loadColumn();
+}
+
+// Funzione per recuperare le sottocategorie di una data categoria
+function getSubcategories2($categoryId)
+{
+    $db = Factory::getDbo();
+    $query = $db->getQuery(true)
+        ->select('id, title')
+        ->from('#__categories')
+        ->where('parent_id = ' . (int) $categoryId);
+
+    return $db->setQuery($query)->loadObjectList();
 }
 
 // Funzione per recuperare gli articoli in base alle sottocategorie
@@ -25,7 +38,7 @@ function getArticlesInSubcategories($subcategoryIds)
 {
     $db = Factory::getDbo();
     $query = $db->getQuery(true)
-        ->select('id, title, images')
+        ->select('id, title, images, catid') // Aggiungi 'catid' qui
         ->from('#__content')
         ->where('catid IN (' . implode(',', array_map('intval', $subcategoryIds)) . ')')
         ->where('state = 1'); // Solo articoli pubblicati
@@ -33,11 +46,21 @@ function getArticlesInSubcategories($subcategoryIds)
     return $db->setQuery($query)->loadObjectList();
 }
 
-// Recupera le sottocategorie della categoria 8
-$subcategoryIds = getSubcategories(8);
+// Funzione per recuperare il tag associato alla categoria dell'articolo
+function getCategoryTag($categoryId)
+{
+    $db = Factory::getDbo();
+    $query = $db->getQuery(true)
+        ->select('t.id')
+        ->from('#__tags AS t')
+        ->join('INNER', '#__contentitem_tag_map AS m ON m.tag_id = t.id')
+        ->where('m.type_alias = "com_content.category"')
+        ->where('m.content_item_id = ' . (int) $categoryId)
+        ->where('t.published = 1'); // Solo tag pubblicati
 
-// Recupera gli articoli delle sottocategorie
-$articles = getArticlesInSubcategories($subcategoryIds);
+    return $db->setQuery($query)->loadResult();
+}
+
 
 // Funzione per recuperare i sottotag di un tag specifico
 function getSubTags($tagId)
@@ -51,13 +74,19 @@ function getSubTags($tagId)
     return $db->setQuery($query)->loadObjectList();
 }
 
+// Recupera le sottocategorie della categoria 8
+$subcategoryIds = getSubcategories(8);
+// Recupera gli articoli delle sottocategorie
+$articles = getArticlesInSubcategories($subcategoryIds);
 // Recupera i sottotag del tag 2
 $subTags = getSubTags(2);
-
 // Modalità specifiche
 $modalita = [68, 69, 70];
 
+$campionati = getSubcategories2(8);
+
 if (in_array($this->category->id, $modalita)): ?>
+
     <div class="container mt-5">
         <div class="row justify-content-center"> <!-- Centra il contenuto -->
             <div class="col-md-6">
@@ -130,45 +159,72 @@ if (in_array($this->category->id, $modalita)): ?>
                                     <select class="form-control" id="numero_partecipanti_fasefinale" name="fase_finale" required=""></select>
                                 <?php endif; ?>
                             </div>
-
-                            <!-- Campo "TAG" -->
-                            <div class="form-group mt-4">
-                                <label for="tags">Tag:</label>
-                                <select class="form-control" id="tags" name="tags[]" multiple>
-                                    <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
-                                    <?php foreach ($subTags as $tag): ?>
-                                        <option value="<?= $tag->id; ?>"><?= htmlspecialchars($tag->title); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <small class="form-text text-muted">Seleziona i tag desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
-                            </div>
-
                             <button type="submit" class="btn btn-primary my-3" id="submit-button" disabled>Invia</button>
                         </form>
-
                     </div> <!-- Fine card body -->
                 </div> <!-- Fine card -->
             </div> <!-- Fine colonna -->
         </div> <!-- Fine row -->
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Campo "TAG" -->
+                <div class="form-group mt-4">
+                    <label for="tags">Stati:</label>
+                    <select class="form-control" id="tags" name="tags[]" multiple>
+                        <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                        <?php foreach ($subTags as $tag): ?>
+                            <option value="<?= $tag->id; ?>"><?= htmlspecialchars($tag->title); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="form-text text-muted">Seleziona gli stati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- Campo "CATEGORIA" -->
+                <div class="form-group mt-4">
+                    <label for="cat">Campionati:</label>
+                    <select class="form-control" id="cat" name="cat[]" multiple>
+                        <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                        <?php foreach ($campionati as $camp): ?>
+                            <option value="<?= $camp->id; ?>">
+                                <?= htmlspecialchars($camp->title); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="form-text text-muted">Seleziona i campionati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
+                </div>
+            </div>
+        </div>
         <!-- Lista articoli -->
-        <h4 class="mt-4">Seleziona Squadre:</h4>
+        <h4 class="mt-4">Seleziona Squadre: <span id="selected-count">0</span> selezionate</h4>
+        <button id="clear-selection" class="btn btn-secondary btn-sm mb-3">Deseleziona tutte</button>
         <div class="row" id="articles-list">
             <?php foreach ($articles as $article): ?>
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3"> <!-- Colonne per layout responsive -->
+                <?php
+                // Recupera il tag della categoria dell'articolo
+                $categoryTag = getCategoryTag($article->catid);
+                ?>
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>" data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
                     <div class="form-check">
-                        <input class="form-check-input" style="margin-top: 20px;" type="checkbox" value="<?= $article->id; ?>" id="article-<?= $article->id; ?>">
+                        <!-- Input checkbox per selezionare l'articolo -->
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            value="<?= $article->id; ?>"
+                            id="article-<?= $article->id; ?>"
+                            style="margin-top: 20px;">
                         <label class="form-check-label d-flex align-items-center" for="article-<?= $article->id; ?>">
                             <?php
-                            // Decodifica la stringa JSON in un oggetto
+                            // Decodifica JSON per estrarre l'immagine introduttiva
                             $images = json_decode($article->images);
-
-                            // Controlla se la decodifica ha avuto successo e se image_intro è impostato
-                            if (isset($images->image_intro)) {
-                                // Stampa il tag img per visualizzare l'immagine
-                                echo '<img src="' . htmlspecialchars($images->image_intro) . '" alt="' . htmlspecialchars($article->title) . '" class="me-2 miniimg" />'; // Aggiungi margine a destra
-                            }
-                            ?>
-                            <span class="overflow-hidden"><?= htmlspecialchars($article->title); ?></span> <!-- Nome della squadra -->
+                            if (isset($images->image_intro)) : ?>
+                                <img
+                                    src="<?= htmlspecialchars($images->image_intro); ?>"
+                                    alt="<?= htmlspecialchars($article->title); ?>"
+                                    class="me-2 miniimg" /> <!-- Aggiunge margine a destra dell'immagine -->
+                            <?php endif; ?>
+                            <!-- Nome dell'articolo -->
+                            <span class="overflow-hidden"><?= htmlspecialchars($article->title); ?></span>
                         </label>
                     </div>
                 </div>
