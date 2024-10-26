@@ -272,9 +272,9 @@ if (in_array($this->category->id, $modalita)): ?>
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
     // Assicurati di convalidare e filtrare i dati di input
     $data = [
-        'user_id' => (int)$_POST['user_id'], // ID dell'utente
+        'user_id' => (int) $userId, // ID dell'utente
         'nome_competizione' => $_POST['nome_campionato'], // Nome della competizione
-        'modalita' => (int)$_POST['modalita'], // Modalità
+        'modalita' => (int) $this->category->id, // Modalità
         'gironi' => isset($_POST['gironi']) ? (int)$_POST['gironi'] : 0, // Gironi
         'andata_ritorno' => (int)$_POST['andata_ritorno'], // Andata/Ritorno
         'partecipanti' => (int)$_POST['numero_partecipanti'], // Partecipanti
