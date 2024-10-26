@@ -10,77 +10,41 @@ function getArticleUrlById($articleId)
     $db = Factory::getDbo();
     $article = $db->setQuery("SELECT id, alias, catid FROM #__content WHERE id = " . (int)$articleId)->loadObject();
 
-    if ($article) {
-        $slug = $article->id . ':' . $article->alias;
-        return Route::_('index.php?option=com_content&view=article&id=' . (int)$articleId . '&catid=' . (int)$article->catid);
-    }
-
-    return '';
+    return $article ? Route::_('index.php?option=com_content&view=article&id=' . (int)$articleId . '&catid=' . (int)$article->catid) : '';
 }
 
 function getCategoryNameById($categoryId)
 {
     $db = Factory::getDbo();
-    $query = $db->getQuery(true);
-
-    // Costruisci la query per selezionare il nome della categoria in base al suo ID
-    $query->select($db->quoteName('title'))
-        ->from($db->quoteName('#__categories'))
-        ->where($db->quoteName('id') . ' = ' . (int) $categoryId);
-
-    // Imposta ed esegui la query
-    $db->setQuery($query);
-    $categoryName = $db->loadResult();
-
-    return $categoryName;
+    return $db->setQuery("SELECT title FROM #__categories WHERE id = " . (int)$categoryId)->loadResult() ?: '';
 }
-
 
 function getArticleTitleById($articleId)
 {
     $db = Factory::getDbo();
-    $query = $db->getQuery(true);
-
-    // Costruisci la query per selezionare il titolo dell'articolo in base al suo ID
-    $query->select($db->quoteName('title'))
-        ->from($db->quoteName('#__content'))
-        ->where($db->quoteName('id') . ' = ' . (int) $articleId);
-
-    // Imposta ed esegui la query
-    $db->setQuery($query);
-    $articleTitle = $db->loadResult();
-
-    return $articleTitle;
+    return $db->setQuery("SELECT title FROM #__content WHERE id = " . (int)$articleId)->loadResult() ?: '';
 }
 
+// Ottieni l'ID della voce di menu attiva
 $menu = Factory::getApplication()->getMenu();
 $activeMenuItem = $menu->getActive();
 $menuItemId = $activeMenuItem ? $activeMenuItem->id : null;
 
 // Importa il database di Joomla
 $db = Factory::getDbo();
-$query = $db->getQuery(true);
 
 // Costruisci la query per selezionare i dati dalla tabella delle competizioni
-$query->select('*')
-    ->from($db->quoteName('#__competizioni')); // Sostituisci con il nome della tua tabella
-
-// Esegui la query
+$query = $db->getQuery(true)->select('*')->from($db->quoteName('#__competizioni'));
 $db->setQuery($query);
 $results = $db->loadObjectList();
 
 $pagconsentite = [106, 107];
 
 if (in_array($menuItemId, $pagconsentite)) {
-
     // Visualizza i risultati in un formato HTML
     if (!empty($results)) { ?>
         <h1 class="text-center fw-bold">Competizioni
-            <?php if ($menuItemId == 106): ?>
-                in Corso
-            <?php elseif ($menuItemId == 107): ?>
-                Finite
-            <?php endif; ?>
+            <?php echo ($menuItemId == 106) ? " in Corso" : " Finite"; ?>
         </h1>
         <div class="table-responsive category-table-container competizioni">
             <table class="table table-striped category-table" style="min-width:1200px;">
@@ -97,124 +61,83 @@ if (in_array($menuItemId, $pagconsentite)) {
                     </tr>
                 </thead>
                 <tbody class="allarticles">
-                    <?php foreach ($results as $competizione): ?>
-                        <?php
+                    <?php foreach ($results as $competizione):
                         // Decodifica la stringa JSON o PHP serializzata
                         $squadre = json_decode($competizione->squadre);
-                        $count = count($squadre);
                         $idcomp = $competizione->id;
-                        ?>
-                        <?php if ($menuItemId == 106 && $competizione->finita == 0): ?>
+
+                        if (($menuItemId == 106 && $competizione->finita == 0) || ($menuItemId == 107 && $competizione->finita == 1)): ?>
                             <tr>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->nome_competizione); ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars(getCategoryNameById($competizione->modalita)); ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->gironi); ?></td>
-                                <td class="category-title-cell">
-                                    <?php
-                                    if ($competizione->andata_ritorno == 0) {
-                                        echo "No";
-                                    } elseif ($competizione->andata_ritorno == 1) {
-                                        echo "Si";
-                                    }
-                                    ?>
-                                </td>
+                                <td class="category-title-cell"><?php echo ($competizione->andata_ritorno == 0) ? "No" : "Si"; ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->partecipanti); ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->fase_finale); ?></td>
                                 <td class="category-title-cell">
                                     <div style="max-height: 200px; overflow-y: scroll;">
-                                        <?php
-                                        // Esempio di utilizzo
-                                        foreach ($squadre as $index => $id) {
-                                            // Eseguiamo la query per ottenere i campi personalizzati
-                                            $query = $db->getQuery(true)
-                                                ->select($db->quoteName(['field_id', 'value']))
-                                                ->from($db->quoteName('#__fields_values'))
-                                                ->where($db->quoteName('item_id') . ' = ' . (int)$id); // Assicurati di castare l'ID a intero
-
-                                            $db->setQuery($query);
-                                            $customFields = $db->loadObjectList('field_id'); // Carica i risultati in un array indicizzato per field_id
-                                            // Assegniamo i valori ai colori, alla forza e all'immagine
-                                            $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000'; // Colore di sfondo del titolo
-                                            $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff'; // Colore del testo
-
-                                            $articleTitle = htmlspecialchars(getArticleTitleById($id)); // Ottieni il titolo dell'articolo
-                                            $articleUrl = getArticleUrlById($id); // Ottieni l'URL dell'articolo
-
-                                            // Crea un link all'articolo
-                                            echo '<div class="p-1 mx-2 my-1" style="background-color:' . $color1 . '; display: inline-block; border-radius:50px;">';
-                                            echo '<a class="h5" style="color:' . $color2 . '" href="' . htmlspecialchars($articleUrl) . '">' . $articleTitle . '</a>';
-                                            echo '</div>';
-                                        }
-                                        ?>
+                                        <?php foreach ($squadre as $id):
+                                            $customFields = $db->setQuery("SELECT field_id, value FROM #__fields_values WHERE item_id = " . (int)$id)->loadObjectList('field_id');
+                                            $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000';
+                                            $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff';
+                                            $articleTitle = htmlspecialchars(getArticleTitleById($id));
+                                            $articleUrl = getArticleUrlById($id); ?>
+                                            <div class="p-1 mx-2 my-1" style="background-color:<?php echo $color1; ?>; display: inline-block; border-radius:50px;">
+                                                <a class="h5 fw-bold" style="color:<?php echo $color2; ?>" href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </td>
-
                                 <td class="category-title-cell">
-                                    <form action="#" method="post">
+                                    <form action="" method="post">
                                         <input type="hidden" value="<?php echo $idcomp; ?>" name="id">
-                                        <a href="url_dettaglio_articolo" class="btn btn-success btn-sm me-1" name="visualizza">Visualizza</a>
-                                        <a href="url_elimina_articolo" class="btn btn-danger btn-sm" name="elimina">Elimina</a>
+                                        <button type="submit" class="btn btn-success btn-sm me-1" name="visualizza">Visualizza</button>
+                                        <button type="submit" class="btn btn-danger btn-sm" name="elimina">Elimina</button>
                                     </form>
                                 </td>
                             </tr>
-                        <?php elseif ($menuItemId == 107 && $competizione->finita == 1): ?>
-                            <tr>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->nome_competizione); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars(getCategoryNameById($competizione->modalita)); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->gironi); ?></td>
-                                <td class="category-title-cell">
-                                    <?php
-                                    if ($competizione->andata_ritorno == 0) {
-                                        echo "No";
-                                    } elseif ($competizione->andata_ritorno == 1) {
-                                        echo "Si";
-                                    }
-                                    ?>
-                                </td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->partecipanti); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->fase_finale); ?></td>
-                                <td class="category-title-cell">
-                                    <div style="max-height: 200px; overflow-y: scroll;">
-                                        <?php
-                                        // Esempio di utilizzo
-                                        foreach ($squadre as $index => $id) {
-                                            // Eseguiamo la query per ottenere i campi personalizzati
-                                            $query = $db->getQuery(true)
-                                                ->select($db->quoteName(['field_id', 'value']))
-                                                ->from($db->quoteName('#__fields_values'))
-                                                ->where($db->quoteName('item_id') . ' = ' . (int)$id); // Assicurati di castare l'ID a intero
-
-                                            $db->setQuery($query);
-                                            $customFields = $db->loadObjectList('field_id'); // Carica i risultati in un array indicizzato per field_id
-                                            // Assegniamo i valori ai colori, alla forza e all'immagine
-                                            $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000'; // Colore di sfondo del titolo
-                                            $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff'; // Colore del testo
-
-                                            $articleTitle = htmlspecialchars(getArticleTitleById($id)); // Ottieni il titolo dell'articolo
-                                            $articleUrl = getArticleUrlById($id); // Ottieni l'URL dell'articolo
-
-                                            // Crea un link all'articolo
-                                            echo '<div class="p-1 mx-2 my-1" style="background-color:' . $color1 . '; display: inline-block; border-radius:50px;">';
-                                            echo '<a class="h5" style="color:' . $color2 . '" href="' . htmlspecialchars($articleUrl) . '">' . $articleTitle . '</a>';
-                                            echo '</div>';
-                                        }
-                                        ?>
-                                    </div>
-                                </td>
-
-                                <td class="category-title-cell">
-                                    <form action="#" method="post">
-                                        <input type="hidden" value="<?php echo $idcomp; ?>" name="id">
-                                        <a href="url_dettaglio_articolo" class="btn btn-success btn-sm me-1" name="visualizza">Visualizza</a>
-                                        <a href="url_elimina_articolo" class="btn btn-danger btn-sm" name="elimina">Elimina</a>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
+                    <?php endif;
+                    endforeach; ?>
                 </tbody>
             </table>
         </div>
-<?php
+<?php } else {
+        echo "<p class='h1'>Nessuna competizione presente.</p>";
     }
 }
+
+// Gestione della richiesta POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
+    $id = (int) $_POST['id'];
+
+    if (isset($_POST['visualizza'])) {
+        // Ottieni l'URL della voce di menu con ID 110
+        $menuItem = $menu->getItem(110);
+        if ($menuItem) {
+            $url = Route::_('index.php?Itemid=' . (int) $menuItem->id . '&id=' . $id);
+            // Reindirizza alla pagina
+            header("Location: " . $url);
+            exit; // Assicurati di uscire dopo il reindirizzamento
+        }
+    } elseif (isset($_POST['elimina'])) {
+        // Importa il database di Joomla
+        $db = Factory::getDbo();
+        // Crea la query per eliminare la competizione
+        $query = $db->getQuery(true)
+            ->delete($db->quoteName('#__competizioni'))
+            ->where($db->quoteName('id') . ' = ' . $db->quote($id));
+
+        $db->setQuery($query);
+
+        try {
+            $db->execute();
+            // Ricarica la pagina
+            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']));
+            exit;
+        } catch (Exception $e) {
+            // Gestione degli errori
+            echo "Errore durante l'eliminazione: " . htmlspecialchars($e->getMessage());
+        }
+    }
+}
+?>
