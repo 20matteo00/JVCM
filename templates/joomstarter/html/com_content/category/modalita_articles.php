@@ -2,14 +2,46 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\Router\Route;
-use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Symfony\Component\VarDumper\VarDumper;
 
 // Ottieni l'ID della categoria attuale
 $currentCategoryId = $this->category->id;
+$user = Factory::getUser();
+$userId = $user->id; // ID dell'utente corrente
+if ($userId==0) $userId = 988;
 
-// Funzione per recuperare le sottocategorie di una data categoria
+// Funzione per inserire una competizione nella tabella
+function insertCompetizione($data)
+{
+    $db = Factory::getDbo();
+    $tableName = $db->getPrefix() . 'competizioni';
+
+    // Prepara l'oggetto di inserimento
+    $query = $db->getQuery(true);
+    $columns = ['user_id', 'nome_competizione', 'modalita', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
+    $values = [
+        (int)$data['user_id'], // Assicurati di impostare l'ID utente correttamente
+        $db->quote($data['nome_competizione']),
+        (int)$data['modalita'],
+        (int)$data['gironi'],
+        (int)$data['andata_ritorno'],
+        (int)$data['partecipanti'],
+        (int)$data['fase_finale'],
+        (int)$data['finita'],
+        $db->quote(json_encode($data['squadre'])) // Codifica l'array in JSON
+    ];
+
+    // Crea la query di inserimento
+    $query
+        ->insert($db->quoteName($tableName))
+        ->columns($db->quoteName($columns))
+        ->values(implode(',', $values));
+
+    // Esegui la query di inserimento
+    $db->setQuery($query);
+    $db->execute();
+}
+
+// Funzione per recuperare le sottocategorie di una data categoria per ricavare gli articoli
 function getSubcategories($categoryId)
 {
     $db = Factory::getDbo();
@@ -21,7 +53,7 @@ function getSubcategories($categoryId)
     return $db->setQuery($query)->loadColumn();
 }
 
-// Funzione per recuperare le sottocategorie di una data categoria
+// Funzione per recuperare le sottocategorie di una data categoria per ricavarmi i nomi delle subcategory
 function getSubcategories2($categoryId)
 {
     $db = Factory::getDbo();
@@ -86,33 +118,33 @@ $modalita = [68, 69, 70];
 $campionati = getSubcategories2(8);
 
 if (in_array($this->category->id, $modalita)): ?>
+    <form action="#" method="post" id="form-participanti">
 
-    <div class="container mt-5">
-        <div class="row justify-content-center"> <!-- Centra il contenuto -->
-            <div class="col-md-6">
-                <?php
-                // Determina i colori e il titolo della card
-                $cardClass = '';
-                $headerClass = '';
+        <div class="container mt-5">
+            <div class="row justify-content-center"> <!-- Centra il contenuto -->
+                <div class="col-md-6">
+                    <?php
+                    // Determina i colori e il titolo della card
+                    $cardClass = '';
+                    $headerClass = '';
 
-                if ($this->category->id == 68) {
-                    $cardClass = 'border-primary';
-                    $headerClass = 'bg-primary text-white';
-                } elseif ($this->category->id == 69) {
-                    $cardClass = 'border-success';
-                    $headerClass = 'bg-success text-white';
-                } elseif ($this->category->id == 70) {
-                    $cardClass = 'border-warning';
-                    $headerClass = 'bg-warning text-dark';
-                }
-                ?>
+                    if ($this->category->id == 68) {
+                        $cardClass = 'border-primary';
+                        $headerClass = 'bg-primary text-white';
+                    } elseif ($this->category->id == 69) {
+                        $cardClass = 'border-success';
+                        $headerClass = 'bg-success text-white';
+                    } elseif ($this->category->id == 70) {
+                        $cardClass = 'border-warning';
+                        $headerClass = 'bg-warning text-dark';
+                    }
+                    ?>
 
-                <div class="card text-center <?= $cardClass; ?> mb-4">
-                    <div class="card-header <?= $headerClass; ?>">
-                        <h2><?= htmlspecialchars($this->category->title); ?></h2>
-                    </div>
-                    <div class="card-body">
-                        <form action="" method="post" id="form-participanti">
+                    <div class="card text-center <?= $cardClass; ?> mb-4">
+                        <div class="card-header <?= $headerClass; ?>">
+                            <h2><?= htmlspecialchars($this->category->title); ?></h2>
+                        </div>
+                        <div class="card-body">
                             <!-- Campo "Nome" -->
                             <div class="form-group">
                                 <label for="nome_campionato">Nome:</label>
@@ -159,76 +191,99 @@ if (in_array($this->category->id, $modalita)): ?>
                                     <select class="form-control" id="numero_partecipanti_fasefinale" name="fase_finale" required=""></select>
                                 <?php endif; ?>
                             </div>
-                            <button type="submit" class="btn btn-primary my-3" id="submit-button" disabled>Invia</button>
-                        </form>
-                    </div> <!-- Fine card body -->
-                </div> <!-- Fine card -->
-            </div> <!-- Fine colonna -->
-        </div> <!-- Fine row -->
-        <div class="row">
-            <div class="col-md-6">
-                <!-- Campo "TAG" -->
-                <div class="form-group mt-4">
-                    <label for="tags">Stati:</label>
-                    <select class="form-control" id="tags" name="tags[]" multiple>
-                        <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
-                        <?php foreach ($subTags as $tag): ?>
-                            <option value="<?= $tag->id; ?>"><?= htmlspecialchars($tag->title); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <small class="form-text text-muted">Seleziona gli stati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <!-- Campo "CATEGORIA" -->
-                <div class="form-group mt-4">
-                    <label for="cat">Campionati:</label>
-                    <select class="form-control" id="cat" name="cat[]" multiple>
-                        <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
-                        <?php foreach ($campionati as $camp): ?>
-                            <option value="<?= $camp->id; ?>">
-                                <?= htmlspecialchars($camp->title); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <small class="form-text text-muted">Seleziona i campionati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
-                </div>
-            </div>
-        </div>
-        <!-- Lista articoli -->
-        <h4 class="mt-4">Seleziona Squadre: <span id="selected-count">0</span> selezionate</h4>
-        <button id="clear-selection" class="btn btn-secondary btn-sm mb-3">Deseleziona tutte</button>
-        <div class="row" id="articles-list">
-            <?php foreach ($articles as $article): ?>
-                <?php
-                // Recupera il tag della categoria dell'articolo
-                $categoryTag = getCategoryTag($article->catid);
-                ?>
-                <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>" data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
-                    <div class="form-check">
-                        <!-- Input checkbox per selezionare l'articolo -->
-                        <input
-                            class="form-check-input"
-                            type="checkbox"
-                            value="<?= $article->id; ?>"
-                            id="article-<?= $article->id; ?>"
-                            style="margin-top: 20px;">
-                        <label class="form-check-label d-flex align-items-center" for="article-<?= $article->id; ?>">
-                            <?php
-                            // Decodifica JSON per estrarre l'immagine introduttiva
-                            $images = json_decode($article->images);
-                            if (isset($images->image_intro)) : ?>
-                                <img
-                                    src="<?= htmlspecialchars($images->image_intro); ?>"
-                                    alt="<?= htmlspecialchars($article->title); ?>"
-                                    class="me-2 miniimg" /> <!-- Aggiunge margine a destra dell'immagine -->
-                            <?php endif; ?>
-                            <!-- Nome dell'articolo -->
-                            <span class="overflow-hidden"><?= htmlspecialchars($article->title); ?></span>
-                        </label>
+                            <button type="submit" class="btn btn-primary my-3" id="submit-button" name="submit-button" disabled>Invia</button>
+                        </div> <!-- Fine card body -->
+                    </div> <!-- Fine card -->
+                </div> <!-- Fine colonna -->
+            </div> <!-- Fine row -->
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Campo "TAG" -->
+                    <div class="form-group mt-4">
+                        <label for="tags">Stati:</label>
+                        <select class="form-control" id="tags" name="tags[]" multiple>
+                            <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                            <?php foreach ($subTags as $tag): ?>
+                                <option value="<?= $tag->id; ?>"><?= htmlspecialchars($tag->title); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-text text-muted">Seleziona gli stati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        </div>
-    </div> <!-- Fine container -->
+                <div class="col-md-6">
+                    <!-- Campo "CATEGORIA" -->
+                    <div class="form-group mt-4">
+                        <label for="cat">Campionati:</label>
+                        <select class="form-control" id="cat" name="cat[]" multiple>
+                            <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                            <?php foreach ($campionati as $camp): ?>
+                                <option value="<?= $camp->id; ?>">
+                                    <?= htmlspecialchars($camp->title); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-text text-muted">Seleziona i campionati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
+                    </div>
+                </div>
+            </div>
+            <!-- Lista articoli -->
+            <h4 class="mt-4">Seleziona Squadre: <span id="selected-count">0</span> selezionate</h4>
+            <button id="clear-selection" class="btn btn-secondary btn-sm mb-3">Deseleziona tutte</button>
+            <div class="row" id="articles-list">
+                <?php foreach ($articles as $article): ?>
+                    <?php
+                    // Recupera il tag della categoria dell'articolo
+                    $categoryTag = getCategoryTag($article->catid);
+                    ?>
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>" data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
+                        <div class="form-check">
+                            <!-- Input checkbox per selezionare l'articolo -->
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                value="<?= $article->id; ?>"
+                                id="article-<?= $article->id; ?>"
+                                name="articles[]"
+                                style="margin-top: 20px;">
+                            <label class="form-check-label d-flex align-items-center" for="article-<?= $article->id; ?>">
+                                <?php
+                                // Decodifica JSON per estrarre l'immagine introduttiva
+                                $images = json_decode($article->images);
+                                if (isset($images->image_intro)) : ?>
+                                    <img
+                                        src="<?= htmlspecialchars($images->image_intro); ?>"
+                                        alt="<?= htmlspecialchars($article->title); ?>"
+                                        class="me-2 miniimg" /> <!-- Aggiunge margine a destra dell'immagine -->
+                                <?php endif; ?>
+                                <!-- Nome dell'articolo -->
+                                <span class="overflow-hidden"><?= htmlspecialchars($article->title); ?></span>
+                            </label>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div> <!-- Fine container -->
+    </form>
 <?php endif; ?>
+
+
+<?php
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
+    // Assicurati di convalidare e filtrare i dati di input
+    $data = [
+        'user_id' => (int)$_POST['user_id'], // ID dell'utente
+        'nome_competizione' => $_POST['nome_campionato'], // Nome della competizione
+        'modalita' => (int)$_POST['modalita'], // Modalità
+        'gironi' => isset($_POST['gironi']) ? (int)$_POST['gironi'] : 0, // Gironi
+        'andata_ritorno' => (int)$_POST['andata_ritorno'], // Andata/Ritorno
+        'partecipanti' => (int)$_POST['numero_partecipanti'], // Partecipanti
+        'fase_finale' => isset($_POST['gironi']) ? (int)$_POST['fase_finale'] : 0, // Fase Finale
+        'finita' => 0, // Finita, di default a 0
+        'squadre' => isset($_POST['articles']) ? $_POST['articles'] : [] // Squadre
+    ];
+
+    // Inserisci la competizione
+    insertCompetizione($data);
+}
+?>
