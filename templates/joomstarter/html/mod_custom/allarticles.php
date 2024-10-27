@@ -1,29 +1,17 @@
 <?php
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Helper\TagsHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
+use Joomstarter\Helpers\Competizione;
 
+// Utilizzo della funzione
 $categoryId = 8; // ID della categoria principale
-
-$db = Factory::getDbo();
-$query = $db->getQuery(true);
-
-// Query per ottenere gli articoli delle sottocategorie della categoria con ID 8
-$query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, f3.value as number_value')
-    ->from('#__content as a')
-    ->join('INNER', '#__categories as c ON a.catid = c.id')
-    ->join('LEFT', '#__fields_values AS f1 ON f1.item_id = a.id AND f1.field_id = 1') // Colore 1
-    ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
-    ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
-    ->where('c.parent_id = ' . (int) $categoryId)
-    ->order('c.id ASC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
-
-$db->setQuery($query);
-$articles = $db->loadObjectList();
+$articles = Competizione::getArticlesFromSubcategories($categoryId);
 
 // Controlla se ci sono articoli
 if ($articles) :

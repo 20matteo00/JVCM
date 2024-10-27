@@ -9,6 +9,7 @@
  */
 
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
@@ -20,6 +21,7 @@ use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
+use Joomstarter\Helpers\Competizione;
 
 // Creiamo un oggetto per l'articolo attuale
 $app = Factory::getApplication();
@@ -27,14 +29,7 @@ $db = Factory::getDbo();
 $user = $app->getIdentity();
 $id = (int) $this->item->id;
 
-// Eseguiamo la query per ottenere i campi personalizzati
-$query = $db->getQuery(true)
-    ->select($db->quoteName(['field_id', 'value']))
-    ->from($db->quoteName('#__fields_values'))
-    ->where($db->quoteName('item_id') . ' = ' . $db->quote($id));
-
-$db->setQuery($query);
-$customFields = $db->loadObjectList('field_id');
+$customFields = Competizione::getCustomFields($id);
 
 // Assegniamo i valori ai colori, alla forza e all'immagine
 $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000'; // Colore di sfondo del titolo

@@ -9,6 +9,44 @@ use Joomla\CMS\Router\Route;
 
 abstract class Competizione
 {
+
+    public static function getCustomFields($itemId)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+
+        // Eseguiamo la query per ottenere i campi personalizzati
+        $query->select($db->quoteName(['field_id', 'value']))
+            ->from($db->quoteName('#__fields_values'))
+            ->where($db->quoteName('item_id') . ' = ' . (int) $itemId); // Convertiamo in intero per sicurezza
+
+        $db->setQuery($query);
+
+        // Restituisci i campi personalizzati come array indicizzati per field_id
+        return $db->loadObjectList('field_id');
+    }
+    public static function getArticlesFromSubcategories($categoryId)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+
+        // Query per ottenere gli articoli delle sottocategorie della categoria specificata
+        $query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, f3.value as number_value')
+            ->from('#__content AS a')
+            ->join('INNER', '#__categories AS c ON a.catid = c.id')
+            ->join('LEFT', '#__fields_values AS f1 ON f1.item_id = a.id AND f1.field_id = 1') // Colore 1
+            ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
+            ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
+            ->where('c.parent_id = ' . (int) $categoryId)
+            ->order('c.id ASC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
+
+        $db->setQuery($query);
+
+        // Restituisci gli articoli come array di oggetti
+        return $db->loadObjectList();
+    }
     // Funzione per ottenere il titolo dell'articolo
     public static function getArticleTitleById($articleId)
     {
@@ -76,6 +114,24 @@ abstract class Competizione
             ->where('t.published = 1'); // Solo tag pubblicati
 
         return $db->setQuery($query)->loadResult();
+    }
+    // Funzione per recuperare una competizione dal database in base all'ID
+    public static function getCompetizioneById($idcomp)
+    {
+        // Connessione al database
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true);
+
+        // Costruisci la query per selezionare i dati della competizione basata sull'ID
+        $query->select('*')
+            ->from($db->quoteName('#__competizioni')) // Sostituisci con il nome corretto della tua tabella
+            ->where($db->quoteName('id') . ' = ' . $db->quote($idcomp));
+
+        // Esegui la query
+        $db->setQuery($query);
+
+        // Recupera la competizione
+        return $db->loadObject();
     }
     // Funzione per inserire una competizione nella tabella
     public static function insertCompetizione($data)

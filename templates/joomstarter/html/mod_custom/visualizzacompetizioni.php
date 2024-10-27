@@ -74,7 +74,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                 <td class="category-title-cell">
                                     <div style="max-height: 200px; overflow-y: scroll;">
                                         <?php foreach ($squadre as $id):
-                                            $customFields = $db->setQuery("SELECT field_id, value FROM #__fields_values WHERE item_id = " . (int)$id)->loadObjectList('field_id');
+                                            $customFields = Competizione::getCustomFields($id);
                                             $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000';
                                             $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff';
                                             $articleTitle = htmlspecialchars(Competizione::getArticleTitleById($id));

@@ -11,20 +11,8 @@ if (isset($_GET['id'])) {
     // Ottieni l'ID della competizione in modo sicuro, convertendolo in un intero
     $idcomp = (int)$_GET['id'];
     
-    // Connessione al database
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true);
-    
-    // Costruisci la query per selezionare i dati della competizione basata sull'ID
-    $query->select('*')
-        ->from($db->quoteName('#__competizioni')) // Sostituisci con il nome corretto della tua tabella
-        ->where($db->quoteName('id') . ' = ' . $db->quote($idcomp));
-    
-    // Esegui la query
-    $db->setQuery($query);
-    
-    // Recupera la competizione
-    $competizione = $db->loadObject();
+    // Recupera la competizione utilizzando la funzione
+    $competizione = Competizione::getCompetizioneById($idcomp);
     
     // Controlla se la competizione è stata trovata
     if ($competizione) {
