@@ -1,7 +1,9 @@
 <?php
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
+use Joomstarter\Helpers\Competizione;
 
 // Ottieni l'ID della categoria attuale
 $currentCategoryId = $this->category->id;
@@ -9,113 +11,18 @@ $user = Factory::getUser();
 $userId = $user->id; // ID dell'utente corrente
 if ($userId==0) $userId = 988;
 
-// Funzione per inserire una competizione nella tabella
-function insertCompetizione($data)
-{
-    $db = Factory::getDbo();
-    $tableName = $db->getPrefix() . 'competizioni';
 
-    // Prepara l'oggetto di inserimento
-    $query = $db->getQuery(true);
-    $columns = ['user_id', 'nome_competizione', 'modalita', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
-    $values = [
-        (int)$data['user_id'], // Assicurati di impostare l'ID utente correttamente
-        $db->quote($data['nome_competizione']),
-        (int)$data['modalita'],
-        (int)$data['gironi'],
-        (int)$data['andata_ritorno'],
-        (int)$data['partecipanti'],
-        (int)$data['fase_finale'],
-        (int)$data['finita'],
-        $db->quote(json_encode($data['squadre'])) // Codifica l'array in JSON
-    ];
-
-    // Crea la query di inserimento
-    $query
-        ->insert($db->quoteName($tableName))
-        ->columns($db->quoteName($columns))
-        ->values(implode(',', $values));
-
-    // Esegui la query di inserimento
-    $db->setQuery($query);
-    $db->execute();
-}
-
-// Funzione per recuperare le sottocategorie di una data categoria per ricavare gli articoli
-function getSubcategories($categoryId)
-{
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true)
-        ->select('id, title')
-        ->from('#__categories')
-        ->where('parent_id = ' . (int) $categoryId);
-
-    return $db->setQuery($query)->loadColumn();
-}
-
-// Funzione per recuperare le sottocategorie di una data categoria per ricavarmi i nomi delle subcategory
-function getSubcategories2($categoryId)
-{
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true)
-        ->select('id, title')
-        ->from('#__categories')
-        ->where('parent_id = ' . (int) $categoryId);
-
-    return $db->setQuery($query)->loadObjectList();
-}
-
-// Funzione per recuperare gli articoli in base alle sottocategorie
-function getArticlesInSubcategories($subcategoryIds)
-{
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true)
-        ->select('id, title, images, catid') // Aggiungi 'catid' qui
-        ->from('#__content')
-        ->where('catid IN (' . implode(',', array_map('intval', $subcategoryIds)) . ')')
-        ->where('state = 1'); // Solo articoli pubblicati
-
-    return $db->setQuery($query)->loadObjectList();
-}
-
-// Funzione per recuperare il tag associato alla categoria dell'articolo
-function getCategoryTag($categoryId)
-{
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true)
-        ->select('t.id')
-        ->from('#__tags AS t')
-        ->join('INNER', '#__contentitem_tag_map AS m ON m.tag_id = t.id')
-        ->where('m.type_alias = "com_content.category"')
-        ->where('m.content_item_id = ' . (int) $categoryId)
-        ->where('t.published = 1'); // Solo tag pubblicati
-
-    return $db->setQuery($query)->loadResult();
-}
-
-
-// Funzione per recuperare i sottotag di un tag specifico
-function getSubTags($tagId)
-{
-    $db = Factory::getDbo();
-    $query = $db->getQuery(true)
-        ->select('id, title')
-        ->from('#__tags')
-        ->where('parent_id = ' . (int) $tagId);
-
-    return $db->setQuery($query)->loadObjectList();
-}
 
 // Recupera le sottocategorie della categoria 8
-$subcategoryIds = getSubcategories(8);
+$subcategoryIds = Competizione::getSubcategories(8);
 // Recupera gli articoli delle sottocategorie
-$articles = getArticlesInSubcategories($subcategoryIds);
+$articles = Competizione::getArticlesInSubcategories($subcategoryIds);
 // Recupera i sottotag del tag 2
-$subTags = getSubTags(2);
+$subTags = Competizione::getSubTags(2);
 // Modalità specifiche
 $modalita = [68, 69, 70];
 
-$campionati = getSubcategories2(8);
+$campionati = Competizione::getSubcategories(8, true);
 
 if (in_array($this->category->id, $modalita)): ?>
     <form action="#" method="post" id="form-participanti">
@@ -233,7 +140,7 @@ if (in_array($this->category->id, $modalita)): ?>
                 <?php foreach ($articles as $article): ?>
                     <?php
                     // Recupera il tag della categoria dell'articolo
-                    $categoryTag = getCategoryTag($article->catid);
+                    $categoryTag = Competizione::getCategoryTag($article->catid);
                     ?>
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>" data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
                         <div class="form-check">
@@ -284,6 +191,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
     ];
 
     // Inserisci la competizione
-    insertCompetizione($data);
+    Competizione::insertCompetizione($data);
 }
 ?>

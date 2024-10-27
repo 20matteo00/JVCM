@@ -1,29 +1,10 @@
 <?php
 defined('_JEXEC') or die; // Assicurati che il file venga caricato solo da Joomla
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
-
-// Funzione per ottenere l'URL dell'articolo
-function getArticleUrlById($articleId)
-{
-    $db = Factory::getDbo();
-    $article = $db->setQuery("SELECT id, alias, catid FROM #__content WHERE id = " . (int)$articleId)->loadObject();
-
-    return $article ? Route::_('index.php?option=com_content&view=article&id=' . (int)$articleId . '&catid=' . (int)$article->catid) : '';
-}
-
-function getCategoryNameById($categoryId)
-{
-    $db = Factory::getDbo();
-    return $db->setQuery("SELECT title FROM #__categories WHERE id = " . (int)$categoryId)->loadResult() ?: '';
-}
-
-function getArticleTitleById($articleId)
-{
-    $db = Factory::getDbo();
-    return $db->setQuery("SELECT title FROM #__content WHERE id = " . (int)$articleId)->loadResult() ?: '';
-}
+use Joomstarter\Helpers\Competizione;
 
 // Ottieni l'ID della voce di menu attiva
 $menu = Factory::getApplication()->getMenu();
@@ -65,23 +46,39 @@ if (in_array($menuItemId, $pagconsentite)) {
                         // Decodifica la stringa JSON o PHP serializzata
                         $squadre = json_decode($competizione->squadre);
                         $idcomp = $competizione->id;
-
+                        $nomemodalita = Competizione::getCategoryNameById($competizione->modalita);
                         if (($menuItemId == 106 && $competizione->finita == 0) || ($menuItemId == 107 && $competizione->finita == 1)): ?>
                             <tr>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->nome_competizione); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars(getCategoryNameById($competizione->modalita)); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->gironi); ?></td>
+                                <td class="category-title-cell"><?php echo htmlspecialchars($nomemodalita); ?></td>
+                                <td class="category-title-cell">
+                                    <?php
+                                    if ($competizione->modalita != 70) {
+                                        echo "No";
+                                    } else {
+                                        echo htmlspecialchars($competizione->gironi);
+                                    }
+                                    ?>
+                                </td>
                                 <td class="category-title-cell"><?php echo ($competizione->andata_ritorno == 0) ? "No" : "Si"; ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->partecipanti); ?></td>
-                                <td class="category-title-cell"><?php echo htmlspecialchars($competizione->fase_finale); ?></td>
+                                <td class="category-title-cell">
+                                    <?php
+                                    if ($competizione->modalita != 70) {
+                                        echo "No";
+                                    } else {
+                                        echo htmlspecialchars($competizione->fase_finale);
+                                    }
+                                    ?>
+                                </td>
                                 <td class="category-title-cell">
                                     <div style="max-height: 200px; overflow-y: scroll;">
                                         <?php foreach ($squadre as $id):
                                             $customFields = $db->setQuery("SELECT field_id, value FROM #__fields_values WHERE item_id = " . (int)$id)->loadObjectList('field_id');
                                             $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000';
                                             $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff';
-                                            $articleTitle = htmlspecialchars(getArticleTitleById($id));
-                                            $articleUrl = getArticleUrlById($id); ?>
+                                            $articleTitle = htmlspecialchars(Competizione::getArticleTitleById($id));
+                                            $articleUrl = Competizione::getArticleUrlById($id); ?>
                                             <div class="p-1 mx-2 my-1" style="background-color:<?php echo $color1; ?>; display: inline-block; border-radius:50px;">
                                                 <a class="h5 fw-bold" style="color:<?php echo $color2; ?>" href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
                                             </div>
