@@ -181,4 +181,21 @@
     padding: 10px;
     border-radius: 8px;
 }
+.calendario .card{
+    min-width: 450px;
+    overflow: auto;
+}
+.myinput input[type="number"] {
+    -moz-appearance: textfield; /* Rimuove le freccette in Firefox */
+    width: 30px;
+    height: 30px;
+    padding: 5px;
+}
+.myinput .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px; /* Puoi regolare la dimensione del font se necessario */
+}
+
 /***** COMPETIZIONI *****/

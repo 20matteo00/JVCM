@@ -85,7 +85,7 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
     <jdoc:include type="scripts" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 
 <?php // you can change data-bs-theme to dark for dark mode  // 

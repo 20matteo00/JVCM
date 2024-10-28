@@ -11,13 +11,25 @@ $menu = Factory::getApplication()->getMenu();
 $activeMenuItem = $menu->getActive();
 $menuItemId = $activeMenuItem ? $activeMenuItem->id : null;
 
+// Ottieni l'ID dell'utente corrente
+$user = Factory::getUser();
+$userId = $user->id;
+
 // Importa il database di Joomla
 $db = Factory::getDbo();
 
-// Costruisci la query per selezionare i dati dalla tabella delle competizioni
-$query = $db->getQuery(true)->select('*')->from($db->quoteName('#__competizioni'));
+// Costruisci la query per selezionare i dati dalla tabella delle competizioni solo per l'utente corrente
+$query = $db->getQuery(true)
+    ->select('*')
+    ->from($db->quoteName('#__competizioni'))
+    ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId)); // Filtra per user_id
+
+// Imposta ed esegui la query
 $db->setQuery($query);
 $results = $db->loadObjectList();
+
+// Ora $results conterrà solo le competizioni dell'utente loggato
+
 
 $pagconsentite = [106, 107];
 

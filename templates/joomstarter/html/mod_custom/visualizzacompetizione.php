@@ -5,6 +5,9 @@ require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ModuleHelper; // Aggiungi questa riga per utilizzare JModuleHelper
 use Joomstarter\Helpers\Competizione;
+// Ottieni l'ID dell'utente corrente
+$user = Factory::getUser();
+$userId = $user->id;
 
 // Verifica se l'ID è presente nei parametri GET
 if (isset($_GET['id'])) {
@@ -12,11 +15,16 @@ if (isset($_GET['id'])) {
     $idcomp = (int)$_GET['id'];
     
     // Recupera la competizione utilizzando la funzione
-    $competizione = Competizione::getCompetizioneById($idcomp);
-    
+    $competizione = Competizione::getCompetizioneById($idcomp, $userId);
+    $squadreJson = $competizione->squadre;
+    // Decodifica la stringa JSON in un array
+    $squadre = json_decode($squadreJson, true);
+
     // Controlla se la competizione è stata trovata
     if ($competizione) {
         $nomemodalita = Competizione::getCategoryNameById($competizione->modalita);
+        $tablePartite = Competizione::CreaTabelleCompetizione($idcomp);
+        Competizione::GeneraCampionato($squadre, $tablePartite);
         
         // Visualizza i dettagli della competizione
         echo '<h1 class="text-center">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
