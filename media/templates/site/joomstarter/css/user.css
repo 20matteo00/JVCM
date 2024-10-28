@@ -176,5 +176,9 @@
 
 
 /***** COMPETIZIONI *****/
-
+.squadra-container {
+    width: 150px;
+    padding: 10px;
+    border-radius: 8px;
+}
 /***** COMPETIZIONI *****/
