@@ -31,7 +31,7 @@ if (isset($_GET['id'])) {
     <div class="container calendario">
         <div class="row">
             <?php foreach ($giornate as $index => $partite): ?>
-                <div class="col-12 col-lg-6">
+                <div class="col-12 col-lg-6" id="<?php echo $index; ?>">
                     <div class="card mb-4">
                         <div class="card-header p-2">
                             <h5 class="text-center m-0 fw-bold">GIORNATA <?php echo $index; ?></h5>
@@ -62,6 +62,7 @@ if (isset($_GET['id'])) {
                                     </div>
                                     <form action="" class="d-flex align-items-center ms-3" method="post">
                                         <input type="hidden" name="module_id" value="116">
+                                        <input type="hidden" name="giornata" value="<?php echo $index; ?>">
                                         <input type="hidden" name="squadra1" value="<?php echo $partita['squadra1']; ?>">
                                         <input type="hidden" name="squadra2" value="<?php echo $partita['squadra2']; ?>">
                                         <input type="number" id="gol1-<?php echo $index . '-' . $i; ?>" name="gol1" class="form-control me-2 text-center" value="<?php echo $gol1; ?>" onclick="selezionaInput(this)">
@@ -105,6 +106,7 @@ if (isset($_GET['id'])) {
 if (isset($_POST['save'])) {
     $squadra1 = $_POST['squadra1'];
     $squadra2 = $_POST['squadra2'];
+    $giornata = $_POST['giornata'];
     if ($_POST['gol1'] != NULL) {
         $gol1 = $_POST['gol1'];
     } else $gol1 = 0;
@@ -126,11 +128,12 @@ if (isset($_POST['save'])) {
     $db->setQuery($query);
     $db->execute();
 
-    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 } elseif (isset($_POST['delete'])) {
     $squadra1 = $_POST['squadra1'];
     $squadra2 = $_POST['squadra2'];
+    $giornata = $_POST['giornata'];
     $module_ID = $_POST['module_id'];
     $db = Factory::getDbo();
     $query = $db->getQuery(true)
@@ -147,7 +150,7 @@ if (isset($_POST['save'])) {
     $db->execute();
 
 
-    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 } elseif (isset($_POST['saveall'])) {
     $module_ID = $_POST['module_id'];
@@ -188,8 +191,9 @@ if (isset($_POST['save'])) {
             $db->setQuery($query);
             $db->execute();
         }
+        $gio = $giornata+1;
     }
-    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$gio");
     exit;
 } elseif (isset($_POST['deleteall'])) {
     $giornata = $_POST['giornata'];
@@ -211,7 +215,7 @@ if (isset($_POST['save'])) {
     $db->setQuery($query);
     $db->execute();
 
-    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 }
 

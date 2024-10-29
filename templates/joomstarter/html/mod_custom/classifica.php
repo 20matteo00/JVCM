@@ -1,109 +1,143 @@
 <?php
-defined('_JEXEC') or die; // Assicurati che il file venga caricato solo da Joomla
+defined('_JEXEC') or die;
 require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\Helper\ModuleHelper; // Aggiungi questa riga per utilizzare JModuleHelper
 use Joomstarter\Helpers\Competizione;
+
+$user = Factory::getUser();
+$userId = $user->id;
 
 if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
     $tableStatistiche = Competizione::getTableStatistiche($idcomp);
+    $tablePartite = Competizione::getTablePartite($idcomp);
+    $competizione = Competizione::getCompetizioneById($idcomp, $userId);
+    $ar = $competizione->andata_ritorno;
 
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
+    $numsquadre = count($classifica);
+
+    // Determina la vista
+    $view = isset($_POST['Casa']) ? 'casa' :
+        (isset($_POST['Trasferta']) ? 'trasferta' :
+            (isset($_POST['Andata']) ? 'andata' :
+                (isset($_POST['Ritorno']) ? 'ritorno' :
+                    (isset($_POST['Andamento']) ? 'andamento' : 'totale'))));
+
+    if ($view === 'andata' && $ar === 1) {
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view);
+    } elseif ($view === 'ritorno' && $ar === 1) {
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view);
+    } elseif ($view === 'andamento') {
+        $classifica = NULL;
+        $andamento = Competizione::getAndamento($tablePartite);
+    }
 
     if (!empty($classifica)): ?>
-        <div class="table-responsive" style="min-width:600px;">
-
-            <table class="table table-striped table-bordered text-center category-table m-0" style="min-width:600px;">
+        <div class="table-responsive my-5">
+            <table class="table table-striped table-bordered text-center category-table">
                 <thead class="thead-dark">
                     <tr>
                         <td class="fw-bold" colspan="2">Rank</td>
-                        <td class="fw-bold" colspan="8">Totale</td>
-                        <td class="fw-bold" colspan="8">Casa</td>
-                        <td class="fw-bold" colspan="8">Trasferta</td>
+                        <td class="fw-bold" colspan="8"><?php echo ucfirst($view); ?></td>
                     </tr>
                     <tr>
-                        <th class="category-header-force">#</th>
-                        <th class="category-header-force">Squadra</th>
-                        <th class="category-header-force">Pt</th>
-                        <th class="category-header-force">G</th>
-                        <th class="category-header-force">V</th>
-                        <th class="category-header-force">N</th>
-                        <th class="category-header-force">P</th>
-                        <th class="category-header-force">GF</th>
-                        <th class="category-header-force">GS</th>
-                        <th class="category-header-force">DR</th>
-                        <th class="category-header-force">Pt</th>
-                        <th class="category-header-force">G</th>
-                        <th class="category-header-force">V</th>
-                        <th class="category-header-force">N</th>
-                        <th class="category-header-force">P</th>
-                        <th class="category-header-force">GF</th>
-                        <th class="category-header-force">GS</th>
-                        <th class="category-header-force">DR</th>
-                        <th class="category-header-force">Pt</th>
-                        <th class="category-header-force">G</th>
-                        <th class="category-header-force">V</th>
-                        <th class="category-header-force">N</th>
-                        <th class="category-header-force">P</th>
-                        <th class="category-header-force">GF</th>
-                        <th class="category-header-force">GS</th>
-                        <th class="category-header-force">DR</th>
+                        <th class="category-header-logo">#</th>
+                        <th class="category-header-logo">Squadra</th>
+                        <th class="category-header-logo">Pt</th>
+                        <th class="category-header-logo">G</th>
+                        <th class="category-header-logo">V</th>
+                        <th class="category-header-logo">N</th>
+                        <th class="category-header-logo">P</th>
+                        <th class="category-header-logo">GF</th>
+                        <th class="category-header-logo">GS</th>
+                        <th class="category-header-logo">DR</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $posizione = 1; // Inizia la posizione da 1
+                    $posizione = 1;
                     foreach ($classifica as $squadra):
-                        $punti = (($squadra->VC + $squadra->VT) * 3) + ($squadra->NC + $squadra->NT); // Calcolo punti TOT
-                        $puntiC = ($squadra->VC * 3) + $squadra->NC; // Calcolo punti Casa
-                        $puntiT = ($squadra->VT * 3) + $squadra->NT; // Calcolo punti Trasferta
-                        $giocate = $squadra->VC + $squadra->VT + $squadra->NC + $squadra->NT + $squadra->PC + $squadra->PT;
-                        $giocateC = $squadra->VC + $squadra->NC  + $squadra->PC;
-                        $giocateT = $squadra->VT + $squadra->NT  + $squadra->PT;
-                        $vinte = $squadra->VC + $squadra->VT;
-                        $pari = $squadra->NC + $squadra->NT;
-                        $perse = $squadra->PC + $squadra->PT;
-                        $golfatti = $squadra->GFC + $squadra->GFT;
-                        $golsubiti = $squadra->GSC + $squadra->GST;
-                        $diff = ($squadra->GFC + $squadra->GFT) - ($squadra->GSC + $squadra->GST);
-                        $diffC = $squadra->GFC - $squadra->GSC;
-                        $diffT = $squadra->GFT - $squadra->GST;
-                    ?>
+                        // Calcola le statistiche
+                        $stats = Competizione::calculateStatistics($squadra, $view, $ar);
+                        ?>
                         <tr>
                             <td class="category-items-cell"><?php echo $posizione++; ?></td>
-                            <td class="category-items-cell"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra)); ?></td>
-                            <td class="category-items-cell"><?php echo $punti; ?></td>
-                            <td class="category-items-cell"><?php echo $giocate; ?></td>
-                            <td class="category-items-cell"><?php echo $vinte; ?></td>
-                            <td class="category-items-cell"><?php echo $pari; ?></td>
-                            <td class="category-items-cell"><?php echo $perse; ?></td>
-                            <td class="category-items-cell"><?php echo $golfatti; ?></td>
-                            <td class="category-items-cell"><?php echo $golsubiti; ?></td>
-                            <td class="category-items-cell"><?php echo $diff; ?></td>
-                            <td class="category-items-cell"><?php echo $puntiC; ?></td>
-                            <td class="category-items-cell"><?php echo $giocateC; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->VC; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->NC; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->PC; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->GFC; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->GSC; ?></td>
-                            <td class="category-items-cell"><?php echo $diffC; ?></td>
-                            <td class="category-items-cell"><?php echo $puntiT; ?></td>
-                            <td class="category-items-cell"><?php echo $giocateT; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->VT; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->NT; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->PT; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->GFT; ?></td>
-                            <td class="category-items-cell"><?php echo $squadra->GST; ?></td>
-                            <td class="category-items-cell"><?php echo $diffT; ?></td>
+                            <td
+                                class="category-items-cell"><?php
+                                if (isset($squadra->squadra)) {
+                                    echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
+                                } else {
+                                    echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
+                                }
+                                ?>
+                            </td>
+                            <td class="category-items-cell"><?php echo $stats['punti']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['giocate']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['vinte']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['pari']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['perse']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['golFatti']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['golSubiti']; ?></td>
+                            <td class="category-items-cell"><?php echo $stats['differenza']; ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-<?php endif;
+    <?php elseif (!empty($andamento)): ?>
+        <div class="table-responsive my-5">
+            <table class="table table-striped table-bordered text-center category-table">
+                <thead class="thead-dark">
+                    <tr>
+                        <td
+                            class="fw-bold" colspan="<?php echo Competizione::getGiornate($tablePartite)+1; ?>"><?php echo ucfirst($view); ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="category-header-logo">Squadra</th>
+                        <?php
+                        // Trova il numero massimo di giornate
+                        $maxGiornate = max(array_map(function ($squadra) {
+                            return count($squadra['risultati']);
+                        }, $andamento));
+
+                        for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
+                            <th
+                                class="category-header-logo"><?php echo $giornata; ?>
+                            </th>
+                        <?php endfor; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($andamento as $squadra): ?>
+                        <tr>
+                            <td class="category-items-cell"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?></td>
+                            <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
+                                <td
+                                    class="category-items-cell"><?php echo isset($squadra['risultati'][$giornata]) ? $squadra['risultati'][$giornata] : 0; ?>
+                                </td>
+                            <?php endfor; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
+
+    <form method="post" action="">
+        <div class="d-flex justify-content-between p-2">
+            <input type="hidden" name="module_id" value="117">
+            <button type="submit" name="Totale" class="btn btn-info">Totale</button>
+            <button type="submit" name="Andamento" class="btn btn-info">Andamento</button>
+            <button type="submit" name="Casa" class="btn btn-info">Casa</button>
+            <button type="submit" name="Trasferta" class="btn btn-info">Trasferta</button>
+            <button type="submit" name="Andata" class="btn btn-info">Andata</button>
+            <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
+        </div>
+    </form><?php
 }
 ?>
+

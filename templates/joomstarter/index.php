@@ -90,9 +90,8 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
 
 <?php // you can change data-bs-theme to dark for dark mode  // 
 ?>
-
 <body class="site <?php echo $pageclass; ?>" data-bs-theme="light">
-    <header class="mb-3">
+    <header class="sticky-header mb-3">
         <?php // Generate a Bootstrap Navbar for the top of our website and put the site title on it 
         ?>
         <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
@@ -138,7 +137,6 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
             <?php if ($this->countModules('custom')) : ?>
                 <div class="container">
                     <jdoc:include type="modules" name="custom" style="none" />
-
                 </div>
             <?php endif; ?>
             <div class="row">

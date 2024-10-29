@@ -1,19 +1,30 @@
-:root{
+:root {
     --nero: black;
     --bianco: white;
     --blu: blue;
 }
+
+/*HEADER*/
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1050;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 /*NAVBAR*/
-.navbar-brand{
+.navbar-brand {
     width: 48px;
     height: 48px;
 }
 
 /***** CATEGORY LIST *****/
-.cat-children h3{
+.cat-children h3 {
     display: none;
 }
-.com-content-category__children h3{
+
+.com-content-category__children h3 {
     display: block;
 }
 
@@ -36,7 +47,8 @@
     font-weight: bold;
     padding: 10px;
 }
-.category-header-title{
+
+.category-header-title {
     text-align: left;
     font-weight: bold;
     padding: 10px;
@@ -52,9 +64,12 @@
 .category-image {
     display: block;
     margin: 0 auto;
-    width: 80px;   /* Larghezza fissa */
-    height: 80px;  /* Altezza fissa */
-    object-fit: contain;  /* Ritaglia l'immagine mantenendo le proporzioni */
+    width: 80px;
+    /* Larghezza fissa */
+    height: 80px;
+    /* Altezza fissa */
+    object-fit: contain;
+    /* Ritaglia l'immagine mantenendo le proporzioni */
 }
 
 /* Cella del titolo della categoria */
@@ -84,57 +99,70 @@
 
 .cat-children td a,
 .allarticles td a,
-.campionato{
+.campionato {
     color: var(--nero);
     text-decoration: none;
 }
 
 .cat-children td a:hover,
 .allarticles td a:hover,
-.campionato:hover{
+.campionato:hover {
     color: var(--blu);
     text-decoration: none;
 }
+
 /***** CATEGORY LIST *****/
 
-.squadra{
-    width: auto; /* Si adatta al contenuto */
-    min-width: 100px; /* Limite minimo di larghezza per garantire una dimensione accettabile */ 
-    padding:5px;
+.squadra {
+    width: auto;
+    /* Si adatta al contenuto */
+    min-width: 100px;
+    /* Limite minimo di larghezza per garantire una dimensione accettabile */
+    padding: 5px;
     text-align: center;
 }
 
 
 /***** ARTICOLI *****/
 .com-content-article {
-    margin-bottom: 30px; /* Spaziatura inferiore */
+    margin-bottom: 30px;
+    /* Spaziatura inferiore */
 }
 
 .com-content-article__header {
-    padding: 10px; /* Padding per il titolo */
+    padding: 10px;
+    /* Padding per il titolo */
     width: 50%;
 }
 
 .com-content-article__title {
-    margin: 0; /* Rimuove margini predefiniti */
-    font-size: 2rem; /* Dimensione del font del titolo */
+    margin: 0;
+    /* Rimuove margini predefiniti */
+    font-size: 2rem;
+    /* Dimensione del font del titolo */
 }
 
 .com-content-article__body {
-    margin-top: 15px; /* Spazio sopra il contenuto dell'articolo */
+    margin-top: 15px;
+    /* Spazio sopra il contenuto dell'articolo */
 }
-.com-content-article__body p{
+
+.com-content-article__body p {
     text-align: left;
     color: var(--nero);
 }
-.com-content-article__image img{
-    width: auto; /* Limita la larghezza dell'immagine */
+
+.com-content-article__image img {
+    width: auto;
+    /* Limita la larghezza dell'immagine */
     height: 250px;
 }
 
 .com-content-article__strength {
-    margin-top: 15px; /* Spazio sopra il campo forza */
-    font-weight: bold; /* Rende il testo in grassetto */
+    margin-top: 15px;
+    /* Spazio sopra il campo forza */
+    font-weight: bold;
+    /* Rende il testo in grassetto */
 }
 
 /***** ARTICOLI *****/
@@ -157,45 +185,65 @@
 .com-tags__items .card-text {
     font-size: 0.95rem;
 }
+
 /***** TAG *****/
 /***** MODALITA *****/
-.creacomp{
+.creacomp {
     background-color: var(--nero);
     border-radius: 50px;
 }
-.creacomp a{
+
+.creacomp a {
     text-decoration: none;
     color: var(--bianco);
 }
-.miniimg{
+
+.miniimg {
     width: 50px;
     height: 50px;
     object-fit: contain;
 }
+
 /***** MODALITA *****/
 
 
 /***** COMPETIZIONI *****/
+.fixed-buttons {
+    position: fixed;
+    z-index: 1050;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    bottom: 20px;
+    left: 25%;
+    right: 25%;
+}
+
 .squadra-container {
     width: 150px;
     padding: 10px;
     border-radius: 8px;
 }
-.calendario .card{
+
+.calendario .card {
     min-width: 450px;
     overflow: auto;
 }
+
 .myinput input[type="number"] {
-    -moz-appearance: textfield; /* Rimuove le freccette in Firefox */
+    -moz-appearance: textfield;
+    /* Rimuove le freccette in Firefox */
     width: 30px;
     height: 30px;
     padding: 5px;
 }
+
 .myinput .btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px; /* Puoi regolare la dimensione del font se necessario */
+    font-size: 16px;
+    /* Puoi regolare la dimensione del font se necessario */
 }
 
 /***** COMPETIZIONI *****/

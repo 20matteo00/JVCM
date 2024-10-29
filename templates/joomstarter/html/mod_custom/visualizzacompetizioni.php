@@ -15,27 +15,16 @@ $menuItemId = $activeMenuItem ? $activeMenuItem->id : null;
 $user = Factory::getUser();
 $userId = $user->id;
 
-// Importa il database di Joomla
-$db = Factory::getDbo();
+$competizioni = Competizione::getCompetizioniPerUtente($userId);
 
-// Costruisci la query per selezionare i dati dalla tabella delle competizioni solo per l'utente corrente
-$query = $db->getQuery(true)
-    ->select('*')
-    ->from($db->quoteName('#__competizioni'))
-    ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId)); // Filtra per user_id
-
-// Imposta ed esegui la query
-$db->setQuery($query);
-$results = $db->loadObjectList();
-
-// Ora $results conterrà solo le competizioni dell'utente loggato
+// Ora $competizioni conterrà solo le competizioni dell'utente loggato
 
 
 $pagconsentite = [106, 107];
 
 if (in_array($menuItemId, $pagconsentite)) {
     // Visualizza i risultati in un formato HTML
-    if (!empty($results)) { ?>
+    if (!empty($competizioni)) { ?>
         <h1 class="text-center fw-bold">Competizioni
             <?php echo ($menuItemId == 106) ? " in Corso" : " Finite"; ?>
         </h1>
@@ -54,7 +43,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                     </tr>
                 </thead>
                 <tbody class="allarticles">
-                    <?php foreach ($results as $competizione):
+                    <?php foreach ($competizioni as $competizione):
                         // Decodifica la stringa JSON o PHP serializzata
                         $squadre = json_decode($competizione->squadre);
                         $idcomp = $competizione->id;

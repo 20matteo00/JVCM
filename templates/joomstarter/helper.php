@@ -6,6 +6,7 @@ defined(constant_name: '_JEXEC') or die; // Assicurati che il file venga caricat
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Exception;
 
 abstract class Competizione
 {
@@ -135,6 +136,23 @@ abstract class Competizione
         return $db->loadObject();
     }
 
+    public static function getCompetizioniPerUtente($userId)
+    {
+        // Importa il database di Joomla
+        $db = Factory::getDbo();
+
+        // Costruisci la query per selezionare i dati dalla tabella delle competizioni solo per l'utente corrente
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName('#__competizioni'))
+            ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId)); // Filtra per user_id
+
+        // Imposta ed esegui la query
+        $db->setQuery($query);
+
+        // Restituisci i risultati della query come un array di oggetti
+        return $db->loadObjectList();
+    }
     // Funzione per inserire una competizione nella tabella
     public static function insertCompetizione($data)
     {
@@ -225,7 +243,7 @@ abstract class Competizione
             }
         }
     }
-    public static function GeneraCampionato($squadre, $tablePartite)
+    public static function GeneraCampionato($squadre, $tablePartite, $ar)
     {
         $db = Factory::getDbo();
 
@@ -269,7 +287,6 @@ abstract class Competizione
                 if (!empty($partite)) {
                     $giornate[] = $partite;
                 }
-
                 $squadre = array_merge(
                     [$squadre[0]],
                     array_slice($squadre, 2),
@@ -294,20 +311,21 @@ abstract class Competizione
                         echo 'Error inserting first match: ' . $e->getMessage();
                         // Puoi anche loggare l'errore o fare altre operazioni
                     }
+                    if ($ar == 1) {
+                        // Inserisci la partita di ritorno
+                        $inserimentoRitorno = (object) [
+                            'squadra1' => $partita['squadra2'],
+                            'squadra2' => $partita['squadra1'],
+                            'giornata' => $numeroSquadre + $index,
+                        ];
 
-                    // Inserisci la partita di ritorno
-                    $inserimentoRitorno = (object) [
-                        'squadra1' => $partita['squadra2'],
-                        'squadra2' => $partita['squadra1'],
-                        'giornata' => $numeroSquadre + $index,
-                    ];
-
-                    // Esegui l'inserimento
-                    try {
-                        $db->insertObject($tablePartite, $inserimentoRitorno);
-                    } catch (Exception $e) {
-                        echo 'Error inserting return match: ' . $e->getMessage();
-                        // Puoi anche loggare l'errore o fare altre operazioni
+                        // Esegui l'inserimento
+                        try {
+                            $db->insertObject($tablePartite, $inserimentoRitorno);
+                        } catch (Exception $e) {
+                            echo 'Error inserting return match: ' . $e->getMessage();
+                            // Puoi anche loggare l'errore o fare altre operazioni
+                        }
                     }
                 }
             }
@@ -342,7 +360,8 @@ abstract class Competizione
             $gol1 = $partita->gol1;
             $gol2 = $partita->gol2;
 
-            if ($gol1 === NULL || $gol2 === NULL) continue;
+            if ($gol1 === NULL || $gol2 === NULL)
+                continue;
             // Inizializza le statistiche per le squadre se non esistono
             if (!isset($statistiche[$squadra1])) {
                 $statistiche[$squadra1] = [
@@ -448,6 +467,96 @@ abstract class Competizione
         }
     }
 
+    public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view)
+    {
+        if ($ar === 0) {
+            return [];
+        }
+
+        if ($ar === 1) {
+            $classifica = []; // Array per contenere la classifica delle squadre
+
+            // Ottieni il database
+            $db = Factory::getDbo();
+
+            // Crea la query per ottenere le partite
+            $query = $db->getQuery(true)
+                ->select('*') // Seleziona tutti i campi
+                ->from($db->quoteName($tablePartite)); // Sostituisci con il nome della tua tabella
+
+            // Esegui la query
+            $db->setQuery($query);
+            $partite = $db->loadObjectList(); // Ottieni i risultati come array di oggetti
+
+            // Controlla se $partite è valido
+            if (!is_array($partite) && !is_object($partite)) {
+                return []; // Gestisci l'errore
+            }
+
+            // Itera su tutte le partite
+            foreach ($partite as $partita) {
+                // Controlla se la partita è stata giocata nella giornata valida
+                if ($view === "andata") {
+                    $partitedaprendere = $partita->giornata < $numsquadre;
+                } elseif ($view === "ritorno") {
+                    $partitedaprendere = $partita->giornata >= $numsquadre;
+                }
+                if ($partitedaprendere) {
+                    // Estrai le squadre e i risultati
+                    $squadraCasa = $partita->squadra1; // ID della squadra di casa
+                    $squadraTrasferta = $partita->squadra2; // ID della squadra in trasferta
+                    $golCasa = $partita->gol1; // Gol della squadra di casa
+                    $golTrasferta = $partita->gol2; // Gol della squadra in trasferta
+
+                    // Inizializza le squadre se non già presente
+                    if (!isset($classifica[$squadraCasa])) {
+                        $classifica[$squadraCasa] = new \stdClass();
+                        $classifica[$squadraCasa]->ID = $squadraCasa;
+                        $classifica[$squadraCasa]->V = 0;
+                        $classifica[$squadraCasa]->N = 0;
+                        $classifica[$squadraCasa]->P = 0;
+                        $classifica[$squadraCasa]->GF = 0;
+                        $classifica[$squadraCasa]->GS = 0;
+                    }
+                    if (!isset($classifica[$squadraTrasferta])) {
+                        $classifica[$squadraTrasferta] = new \stdClass();
+                        $classifica[$squadraTrasferta]->ID = $squadraTrasferta;
+                        $classifica[$squadraTrasferta]->V = 0;
+                        $classifica[$squadraTrasferta]->N = 0;
+                        $classifica[$squadraTrasferta]->P = 0;
+                        $classifica[$squadraTrasferta]->GF = 0;
+                        $classifica[$squadraTrasferta]->GS = 0;
+                    }
+
+                    // Calcola i risultati
+                    if ($golCasa > $golTrasferta) {
+                        // Vittoria per la squadra di casa
+                        $classifica[$squadraCasa]->V++;
+                        $classifica[$squadraTrasferta]->P++;
+                    } elseif ($golCasa < $golTrasferta) {
+                        // Vittoria per la squadra in trasferta
+                        $classifica[$squadraTrasferta]->V++;
+                        $classifica[$squadraCasa]->P++;
+                    } else {
+                        // Pareggio
+                        $classifica[$squadraCasa]->N++;
+                        $classifica[$squadraTrasferta]->N++;
+                    }
+
+                    // Aggiorna i gol fatti e subiti
+                    $classifica[$squadraCasa]->GF += $golCasa;
+                    $classifica[$squadraCasa]->GS += $golTrasferta;
+                    $classifica[$squadraTrasferta]->GF += $golTrasferta;
+                    $classifica[$squadraTrasferta]->GS += $golCasa;
+                }
+            }
+
+            return array_values($classifica); // Restituisci un array di oggetti
+        }
+
+        return []; // Se non ci sono altre condizioni, restituisci un array vuoto
+    }
+
     public static function getGiornateByCompetizioneId($idcomp, $tablePartite)
     {
         $db = Factory::getDbo();
@@ -476,4 +585,174 @@ abstract class Competizione
         $getTableStatistiche = $prefix . 'competizione' . $ID . '_statistiche';
         return $getTableStatistiche;
     }
+
+    public static function calculateStatistics($squadra, $view, $ar)
+    {
+        $squadraID = $punti = $giocate = $vinte = $pari = $perse = $golFatti = $golSubiti = $differenza = 0;
+
+        if ($view === 'casa') {
+            $punti = ($squadra->VC * 3) + $squadra->NC;
+            $giocate = $squadra->VC + $squadra->NC + $squadra->PC;
+            $vinte = $squadra->VC;
+            $pari = $squadra->NC;
+            $perse = $squadra->PC;
+            $golFatti = $squadra->GFC;
+            $golSubiti = $squadra->GSC;
+        } elseif ($view === 'trasferta') {
+            $punti = ($squadra->VT * 3) + $squadra->NT;
+            $giocate = $squadra->VT + $squadra->NT + $squadra->PT;
+            $vinte = $squadra->VT;
+            $pari = $squadra->NT;
+            $perse = $squadra->PT;
+            $golFatti = $squadra->GFT;
+            $golSubiti = $squadra->GST;
+        } elseif ($view === 'andata') {
+            if ($ar === 0) {
+                $punti = (($squadra->VC + $squadra->VT) * 3) + ($squadra->NC + $squadra->NT);
+                $giocate = $squadra->VC + $squadra->VT + $squadra->NC + $squadra->NT + $squadra->PC + $squadra->PT;
+                $vinte = $squadra->VC + $squadra->VT;
+                $pari = $squadra->NC + $squadra->NT;
+                $perse = $squadra->PC + $squadra->PT;
+                $golFatti = $squadra->GFC + $squadra->GFT;
+                $golSubiti = $squadra->GSC + $squadra->GST;
+            } elseif ($ar === 1) {
+                $squadraID = $squadra->ID; // Accedi all'ID della squadra
+                $punti = ($squadra->V * 3) + $squadra->N; // Calcola i punti
+                $giocate = $squadra->V + $squadra->N + $squadra->P; // Partite giocate
+                $vinte = $squadra->V; // Partite vinte
+                $pari = $squadra->N; // Partite pareggiate
+                $perse = $squadra->P; // Partite perse
+                $golFatti = $squadra->GF; // Gol fatti
+                $golSubiti = $squadra->GS; // Gol subiti
+
+            }
+        } elseif ($view === 'ritorno') {
+            if ($ar === 0) {
+                $punti = 0;
+                $giocate = 0;
+                $vinte = 0;
+                $pari = 0;
+                $perse = 0;
+                $golFatti = 0;
+                $golSubiti = 0;
+            } elseif ($ar === 1) {
+                $squadraID = $squadra->ID; // Accedi all'ID della squadra
+                $punti = ($squadra->V * 3) + $squadra->N; // Calcola i punti
+                $giocate = $squadra->V + $squadra->N + $squadra->P; // Partite giocate
+                $vinte = $squadra->V; // Partite vinte
+                $pari = $squadra->N; // Partite pareggiate
+                $perse = $squadra->P; // Partite perse
+                $golFatti = $squadra->GF; // Gol fatti
+                $golSubiti = $squadra->GS; // Gol subiti
+
+            }
+        } elseif ($view === 'totale') {
+            $punti = (($squadra->VC + $squadra->VT) * 3) + ($squadra->NC + $squadra->NT);
+            $giocate = $squadra->VC + $squadra->VT + $squadra->NC + $squadra->NT + $squadra->PC + $squadra->PT;
+            $vinte = $squadra->VC + $squadra->VT;
+            $pari = $squadra->NC + $squadra->NT;
+            $perse = $squadra->PC + $squadra->PT;
+            $golFatti = $squadra->GFC + $squadra->GFT;
+            $golSubiti = $squadra->GSC + $squadra->GST;
+        }
+
+        $differenza = $golFatti - $golSubiti;
+
+        return [
+            'squadra' => $squadraID,
+            'punti' => $punti,
+            'giocate' => $giocate,
+            'vinte' => $vinte,
+            'pari' => $pari,
+            'perse' => $perse,
+            'golFatti' => $golFatti,
+            'golSubiti' => $golSubiti,
+            'differenza' => $differenza,
+        ];
+    }
+
+    public static function getAndamento($tablePartite)
+    {
+        // Inizializza un array per tenere traccia dei punti accumulati per ogni squadra
+        $andamento = [];
+
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere le partite
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName($tablePartite))
+            ->order('giornata ASC'); // Assicurati di ordinare per giornata
+
+        // Esegui la query
+        $db->setQuery($query);
+        $partite = $db->loadObjectList();
+
+        // Itera su tutte le partite
+        foreach ($partite as $partita) {
+            $giornata = $partita->giornata;
+            $squadraCasa = $partita->squadra1;
+            $squadraTrasferta = $partita->squadra2;
+            $golCasa = $partita->gol1;
+            $golTrasferta = $partita->gol2;
+
+            // Inizializza le squadre se non già presente
+            if (!isset($andamento[$squadraCasa])) {
+                $andamento[$squadraCasa] = [
+                    'squadra' => $squadraCasa,
+                    'risultati' => array_fill(1, max(array_column($partite, 'giornata')), 0) // Inizializza con 0
+                ];
+            }
+            if (!isset($andamento[$squadraTrasferta])) {
+                $andamento[$squadraTrasferta] = [
+                    'squadra' => $squadraTrasferta,
+                    'risultati' => array_fill(1, max(array_column($partite, 'giornata')), 0) // Inizializza con 0
+                ];
+            }
+
+            // Calcola i punti per la giornata
+            $puntiCasa = 0;
+            $puntiTrasferta = 0;
+
+            if ($golCasa > $golTrasferta) {
+                $puntiCasa = 3; // Vittoria per la squadra di casa
+            } elseif ($golCasa < $golTrasferta) {
+                $puntiTrasferta = 3; // Vittoria per la squadra in trasferta
+            } else {
+                $puntiCasa = 1; // Pareggio
+                $puntiTrasferta = 1; // Pareggio
+            }
+
+            // Aggiorna i punti per la squadra di casa e accumula i risultati
+            $andamento[$squadraCasa]['risultati'][$giornata] += $puntiCasa;
+            $andamento[$squadraCasa]['risultati'][$giornata] += ($andamento[$squadraCasa]['risultati'][$giornata - 1] ?? 0); // Accumula punti
+
+            // Aggiorna i punti per la squadra in trasferta e accumula i risultati
+            $andamento[$squadraTrasferta]['risultati'][$giornata] += $puntiTrasferta;
+            $andamento[$squadraTrasferta]['risultati'][$giornata] += ($andamento[$squadraTrasferta]['risultati'][$giornata - 1] ?? 0); // Accumula punti
+        }
+
+        // Ritorna l'andamento calcolato
+        return $andamento;
+    }
+
+    public static function getGiornate($tablePartite)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere il numero massimo di giornate
+        $query = $db->getQuery(true)
+            ->select('MAX(giornata) AS max_giornata')
+            ->from($db->quoteName($tablePartite));
+
+        // Esegui la query
+        $db->setQuery($query);
+        $maxGiornate = $db->loadResult();
+
+        // Ora puoi usare $maxGiornate come numero di giornate
+        return $maxGiornate;
+    }
+
 }
