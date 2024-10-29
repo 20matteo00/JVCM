@@ -84,7 +84,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     ?>
                                 </td>
                                 <td class="category-title-cell">
-                                    <div style="max-height: 200px; overflow-y: scroll;">
+                                    <div style="max-height: 200px;">
                                         <?php foreach ($squadre as $id):
                                             $customFields = Competizione::getCustomFields($id);
                                             $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000';
@@ -129,24 +129,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             exit; // Assicurati di uscire dopo il reindirizzamento
         }
     } elseif (isset($_POST['elimina'])) {
-        // Importa il database di Joomla
         $db = Factory::getDbo();
-        // Crea la query per eliminare la competizione
-        $query = $db->getQuery(true)
-            ->delete($db->quoteName('#__competizioni'))
-            ->where($db->quoteName('id') . ' = ' . $db->quote($id));
+        $prefix = $db->getPrefix();
+        $tablePartite = $prefix . 'competizione' . $id . '_partite';
+        $tableStatistiche = $prefix . 'competizione' . $id . '_statistiche';
 
-        $db->setQuery($query);
+        // Inizia una transazione per garantire che tutte le eliminazioni siano atomiche
+        $db->transactionStart();
 
         try {
+            // Elimina la competizione dalla tabella principale
+            $query = $db->getQuery(true)
+                ->delete($db->quoteName('#__competizioni'))
+                ->where($db->quoteName('id') . ' = ' . $db->quote($id));
+            $db->setQuery($query);
             $db->execute();
+
+            // Esegui la query per eliminare la tabella delle partite
+            $dropPartiteQuery = "DROP TABLE IF EXISTS " . $db->quoteName($tablePartite);
+            $db->setQuery($dropPartiteQuery);
+            $db->execute();
+
+            // Esegui la query per eliminare la tabella delle statistiche
+            $dropStatisticheQuery = "DROP TABLE IF EXISTS " . $db->quoteName($tableStatistiche);
+            $db->setQuery($dropStatisticheQuery);
+            $db->execute();
+
+            // Conferma la transazione
+            $db->transactionCommit();
+
             // Ricarica la pagina
             header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']));
             exit;
         } catch (Exception $e) {
-            // Gestione degli errori
+            // Annulla la transazione in caso di errore
+            $db->transactionRollback();
             echo "Errore durante l'eliminazione: " . htmlspecialchars($e->getMessage());
         }
     }
 }
+
 ?>

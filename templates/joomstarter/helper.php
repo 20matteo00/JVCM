@@ -167,7 +167,7 @@ abstract class Competizione
         $db->execute();
     }
 
-    public static function CreaTabelleCompetizione($idCompetizione)
+    public static function CreaTabelleCompetizione($idCompetizione, $squadre)
     {
         $db = Factory::getDbo();
         $prefix = $db->getPrefix();
@@ -176,14 +176,14 @@ abstract class Competizione
 
         // Creazione della tabella partite
         $query = "CREATE TABLE IF NOT EXISTS `$tablePartite` (
-            `squadra1` INT NOT NULL,
-            `squadra2` INT NOT NULL,
-            `gol1` INT DEFAULT NULL,
-            `gol2` INT DEFAULT NULL,
-            `giornata` INT,
-            `girone` INT DEFAULT 0,
-            PRIMARY KEY (`squadra1`, `squadra2`)
-        )";
+        `squadra1` INT NOT NULL,
+        `squadra2` INT NOT NULL,
+        `gol1` INT DEFAULT NULL,
+        `gol2` INT DEFAULT NULL,
+        `giornata` INT,
+        `girone` INT DEFAULT 0,
+        PRIMARY KEY (`squadra1`, `squadra2`)
+    )";
         $db->setQuery($query);
         try {
             $db->execute();
@@ -193,30 +193,38 @@ abstract class Competizione
 
         // Creazione della tabella statistiche
         $query = "CREATE TABLE IF NOT EXISTS `$tableStatistiche` (
-            `squadra` INT NOT NULL,
-            `VC` INT DEFAULT 0,
-            `NC` INT DEFAULT 0,
-            `PC` INT DEFAULT 0,
-            `GFC` INT DEFAULT 0,
-            `GSC` INT DEFAULT 0,
-            `VT` INT DEFAULT 0,
-            `NT` INT DEFAULT 0,
-            `PT` INT DEFAULT 0,
-            `GFT` INT DEFAULT 0,
-            `GST` INT DEFAULT 0,
-            `girone` INT DEFAULT 0,
-            PRIMARY KEY (`squadra`)
-        )";
+        `squadra` INT NOT NULL,
+        `VC` INT DEFAULT NULL,
+        `NC` INT DEFAULT NULL,
+        `PC` INT DEFAULT NULL,
+        `GFC` INT DEFAULT NULL,
+        `GSC` INT DEFAULT NULL,
+        `VT` INT DEFAULT NULL,
+        `NT` INT DEFAULT NULL,
+        `PT` INT DEFAULT NULL,
+        `GFT` INT DEFAULT NULL,
+        `GST` INT DEFAULT NULL,
+        `girone` INT DEFAULT NULL,
+        PRIMARY KEY (`squadra`)
+    )";
         $db->setQuery($query);
         try {
             $db->execute();
         } catch (Exception $e) {
             echo 'Errore nella creazione della tabella statistiche: ' . $e->getMessage();
         }
-        return $tablePartite;
 
+        // Popola la tabella statistiche con tutte le squadre della competizione
+        foreach ($squadre as $squadraId) {
+            $query = "INSERT IGNORE INTO `$tableStatistiche` (`squadra`) VALUES (" . (int) $squadraId . ")";
+            $db->setQuery($query);
+            try {
+                $db->execute();
+            } catch (Exception $e) {
+                echo 'Errore durante l\'inserimento nella tabella statistiche: ' . $e->getMessage();
+            }
+        }
     }
-
     public static function GeneraCampionato($squadre, $tablePartite)
     {
         $db = Factory::getDbo();
@@ -306,6 +314,140 @@ abstract class Competizione
         }
     }
 
+    public static function GeneraStatistiche($squadre, $tableStatistiche, $tablePartite)
+    {
+        $db = Factory::getDbo();
+
+        // Inizializza le statistiche
+        $statistiche = [];
+
+        // Prepara la query per ottenere tutte le partite
+        $query = $db->getQuery(true)
+            ->select('squadra1, squadra2, gol1, gol2')
+            ->from($db->quoteName($tablePartite));
+
+        $db->setQuery($query);
+
+        try {
+            $partite = $db->loadObjectList();
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle partite: ' . $e->getMessage();
+            return;
+        }
+
+        // Calcola le statistiche per ogni partita
+        foreach ($partite as $partita) {
+            $squadra1 = $partita->squadra1;
+            $squadra2 = $partita->squadra2;
+            $gol1 = $partita->gol1;
+            $gol2 = $partita->gol2;
+
+            if ($gol1 === NULL || $gol2 === NULL) continue;
+            // Inizializza le statistiche per le squadre se non esistono
+            if (!isset($statistiche[$squadra1])) {
+                $statistiche[$squadra1] = [
+                    'VC' => 0, // Vittorie in casa
+                    'NC' => 0, // Nulle in casa
+                    'PC' => 0, // Perde in casa
+                    'GFC' => 0, // Gol Fatti
+                    'GSC' => 0, // Gol Subiti
+                    'VT' => 0,
+                    'NT' => 0,
+                    'PT' => 0,
+                    'GFT' => 0,
+                    'GST' => 0,
+                    'girone' => null, // Puoi gestire i gironi se necessario
+                ];
+            }
+
+            if (!isset($statistiche[$squadra2])) {
+                $statistiche[$squadra2] = [
+                    'VC' => 0, // Vittorie in casa
+                    'NC' => 0, // Nulle in casa
+                    'PC' => 0, // Perde in casa
+                    'GFC' => 0, // Gol Fatti
+                    'GSC' => 0, // Gol Subiti
+                    'VT' => 0,
+                    'NT' => 0,
+                    'PT' => 0,
+                    'GFT' => 0,
+                    'GST' => 0,
+                    'girone' => null, // Puoi gestire i gironi se necessario
+                ];
+            }
+
+            // Aggiorna le statistiche in base al risultato
+            if ($gol1 > $gol2) { // Squadra 1 vince
+                $statistiche[$squadra1]['VC']++;
+                $statistiche[$squadra2]['PT']++;
+            } elseif ($gol1 < $gol2) { // Squadra 2 vince
+                $statistiche[$squadra2]['VT']++;
+                $statistiche[$squadra1]['PC']++;
+            } else { // Pareggio
+                $statistiche[$squadra1]['NC']++;
+                $statistiche[$squadra2]['NT']++;
+            }
+
+            // Aggiorna gol fatti e subiti
+            $statistiche[$squadra1]['GFC'] += $gol1;
+            $statistiche[$squadra1]['GSC'] += $gol2;
+            $statistiche[$squadra2]['GFT'] += $gol2;
+            $statistiche[$squadra2]['GST'] += $gol1;
+        }
+
+        // Aggiorna la tabella statistiche nel database
+        foreach ($squadre as $squadraId) {
+            if (isset($statistiche[$squadraId])) {
+                $query = $db->getQuery(true)
+                    ->update($db->quoteName($tableStatistiche))
+                    ->set($db->quoteName('VC') . ' = ' . $statistiche[$squadraId]['VC'])
+                    ->set($db->quoteName('NC') . ' = ' . $statistiche[$squadraId]['NC'])
+                    ->set($db->quoteName('PC') . ' = ' . $statistiche[$squadraId]['PC'])
+                    ->set($db->quoteName('GFC') . ' = ' . $statistiche[$squadraId]['GFC'])
+                    ->set($db->quoteName('GSC') . ' = ' . $statistiche[$squadraId]['GSC'])
+                    ->set($db->quoteName('VT') . ' = ' . $statistiche[$squadraId]['VT'])
+                    ->set($db->quoteName('NT') . ' = ' . $statistiche[$squadraId]['NT'])
+                    ->set($db->quoteName('PT') . ' = ' . $statistiche[$squadraId]['PT'])
+                    ->set($db->quoteName('GFT') . ' = ' . $statistiche[$squadraId]['GFT'])
+                    ->set($db->quoteName('GST') . ' = ' . $statistiche[$squadraId]['GST'])
+                    ->where($db->quoteName('squadra') . ' = ' . (int) $squadraId);
+
+                $db->setQuery($query);
+                try {
+                    $db->execute();
+                } catch (Exception $e) {
+                    echo 'Errore durante l\'aggiornamento delle statistiche: ' . $e->getMessage();
+                }
+            }
+        }
+    }
+
+    // Funzione per ottenere la classifica delle squadre
+    public static function getClassifica($tableStatistiche)
+    {
+        $db = Factory::getDbo();
+
+        // Query per ottenere tutte le statistiche e calcolare i punti, la differenza reti e i gol fatti
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->select('
+            (VC + VT) * 3 + (NC + NT) AS punti,  
+            (GFC + GFT - GSC - GST) AS diff_reti, 
+            (GFC + GFT) AS gol_fatti')
+            ->from($db->quoteName($tableStatistiche))
+            ->order('punti DESC, diff_reti DESC, gol_fatti DESC, squadra ASC'); // Ordina secondo i criteri specificati
+
+
+        $db->setQuery($query);
+
+        try {
+            return $db->loadObjectList(); // Restituisce un array di oggetti
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle statistiche: ' . $e->getMessage();
+            return [];
+        }
+    }
+
     public static function getGiornateByCompetizioneId($idcomp, $tablePartite)
     {
         $db = Factory::getDbo();
@@ -316,5 +458,22 @@ abstract class Competizione
 
         $db->setQuery($query);
         return $db->loadObjectList(); // Restituisce un array di oggetti
+    }
+
+    public static function getTablePartite($ID)
+    {
+        // Recupera le giornate dalla competizione
+        $db = Factory::getDbo();
+        $prefix = $db->getPrefix();
+        $tablePartite = $prefix . 'competizione' . $ID . '_partite';
+        return $tablePartite;
+    }
+    public static function getTableStatistiche($ID)
+    {
+        // Recupera le giornate dalla competizione
+        $db = Factory::getDbo();
+        $prefix = $db->getPrefix();
+        $getTableStatistiche = $prefix . 'competizione' . $ID . '_statistiche';
+        return $getTableStatistiche;
     }
 }

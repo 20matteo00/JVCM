@@ -4,12 +4,13 @@ require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
 use Joomstarter\Helpers\Competizione;
+use Joomla\CMS\Router\Route;
 
 // Ottieni l'ID della categoria attuale
 $currentCategoryId = $this->category->id;
 $user = Factory::getUser();
 $userId = $user->id; // ID dell'utente corrente
-if ($userId==0) $userId = 988;
+if ($userId == 0) $userId = 988;
 
 
 
@@ -192,5 +193,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
 
     // Inserisci la competizione
     Competizione::insertCompetizione($data);
+    // Ottieni l'URL della voce di menu con ID 106
+    $menuLink = Route::_('index.php?Itemid=106');
+    header("location: " . $menuLink);
+    exit;
 }
 ?>

@@ -57,8 +57,8 @@ class JConfig {
 	public $feed_limit = 10;
 	public $feed_email = 'none';
 	public $log_path = 'C:\\laragon\\www\\ct\\administrator/logs';
-	public $tmp_path = 'C:\\laragon\\www\\ct/tmp';
-	public $lifetime = 15;
+	public $tmp_path = 'C:\\laragon\\www\\JVCM/tmp';
+	public $lifetime = 1000;
 	public $session_handler = 'database';
 	public $shared_session = false;
 	public $session_metadata = true;

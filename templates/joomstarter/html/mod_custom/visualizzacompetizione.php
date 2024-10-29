@@ -23,9 +23,12 @@ if (isset($_GET['id'])) {
     // Controlla se la competizione è stata trovata
     if ($competizione) {
         $nomemodalita = Competizione::getCategoryNameById($competizione->modalita);
-        $tablePartite = Competizione::CreaTabelleCompetizione($idcomp);
-        Competizione::GeneraCampionato($squadre, $tablePartite);
-        
+        Competizione::CreaTabelleCompetizione($idcomp, $squadre);
+        $tablePartite = Competizione::getTablePartite($idcomp);
+        $tableStatistiche = Competizione::getTableStatistiche($idcomp);
+
+        Competizione::GeneraCampionato( $squadre, tablePartite: $tablePartite);
+        Competizione::GeneraStatistiche($squadre, $tableStatistiche, $tablePartite);
         // Visualizza i dettagli della competizione
         echo '<h1 class="text-center">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
         ?>
@@ -43,6 +46,10 @@ if (isset($_GET['id'])) {
         // Verifica se è stato inviato un ID modulo
         if (isset($_POST['module_id'])) {
             $modulo = $_POST['module_id'];
+            $module = ModuleHelper::getModuleById($modulo);
+            echo ModuleHelper::renderModule($module);
+        } elseif (isset($_GET['module_id'])) {
+            $modulo = $_GET['module_id'];
             $module = ModuleHelper::getModuleById($modulo);
             echo ModuleHelper::renderModule($module);
         }
