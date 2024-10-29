@@ -507,7 +507,8 @@ abstract class Competizione
                     $squadraTrasferta = $partita->squadra2; // ID della squadra in trasferta
                     $golCasa = $partita->gol1; // Gol della squadra di casa
                     $golTrasferta = $partita->gol2; // Gol della squadra in trasferta
-
+                    if ($golCasa === NULL || $golTrasferta === NULL)
+                        continue;
                     // Inizializza le squadre se non già presente
                     if (!isset($classifica[$squadraCasa])) {
                         $classifica[$squadraCasa] = new \stdClass();
@@ -689,6 +690,9 @@ abstract class Competizione
         $db->setQuery($query);
         $partite = $db->loadObjectList();
 
+        // Trova il numero massimo di giornate giocate
+        $maxGiornata = max(array_column($partite, 'giornata'));
+
         // Itera su tutte le partite
         foreach ($partite as $partita) {
             $giornata = $partita->giornata;
@@ -697,17 +701,22 @@ abstract class Competizione
             $golCasa = $partita->gol1;
             $golTrasferta = $partita->gol2;
 
-            // Inizializza le squadre se non già presente
+            // Salta le partite non giocate (gol null)
+            if ($golCasa === null || $golTrasferta === null) {
+                continue;
+            }
+
+            // Inizializza le squadre se non già presente, con tutte le giornate a null
             if (!isset($andamento[$squadraCasa])) {
                 $andamento[$squadraCasa] = [
                     'squadra' => $squadraCasa,
-                    'risultati' => array_fill(1, max(array_column($partite, 'giornata')), 0) // Inizializza con 0
+                    'risultati' => array_fill(1, $maxGiornata, null) // Imposta null per ogni giornata
                 ];
             }
             if (!isset($andamento[$squadraTrasferta])) {
                 $andamento[$squadraTrasferta] = [
                     'squadra' => $squadraTrasferta,
-                    'risultati' => array_fill(1, max(array_column($partite, 'giornata')), 0) // Inizializza con 0
+                    'risultati' => array_fill(1, $maxGiornata, null) // Imposta null per ogni giornata
                 ];
             }
 
@@ -724,13 +733,9 @@ abstract class Competizione
                 $puntiTrasferta = 1; // Pareggio
             }
 
-            // Aggiorna i punti per la squadra di casa e accumula i risultati
-            $andamento[$squadraCasa]['risultati'][$giornata] += $puntiCasa;
-            $andamento[$squadraCasa]['risultati'][$giornata] += ($andamento[$squadraCasa]['risultati'][$giornata - 1] ?? 0); // Accumula punti
-
-            // Aggiorna i punti per la squadra in trasferta e accumula i risultati
-            $andamento[$squadraTrasferta]['risultati'][$giornata] += $puntiTrasferta;
-            $andamento[$squadraTrasferta]['risultati'][$giornata] += ($andamento[$squadraTrasferta]['risultati'][$giornata - 1] ?? 0); // Accumula punti
+            // Accumula punti solo per le giornate giocate
+            $andamento[$squadraCasa]['risultati'][$giornata] = ($andamento[$squadraCasa]['risultati'][$giornata - 1] ?? 0) + $puntiCasa;
+            $andamento[$squadraTrasferta]['risultati'][$giornata] = ($andamento[$squadraTrasferta]['risultati'][$giornata - 1] ?? 0) + $puntiTrasferta;
         }
 
         // Ritorna l'andamento calcolato
@@ -753,6 +758,60 @@ abstract class Competizione
 
         // Ora puoi usare $maxGiornate come numero di giornate
         return $maxGiornate;
+    }
+
+    // Funzione per controllare se tutti i gol sono NULL
+    public static function checkGolNull($tablePartite)
+    {
+        $db = Factory::getDbo();
+
+        // Query per verificare se tutti i gol sono NULL
+        $query = $db->getQuery(true)
+            ->select('COUNT(*) AS total')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('gol1') . ' IS NOT NULL OR ' . $db->quoteName('gol2') . ' IS NOT NULL');
+
+        $db->setQuery($query);
+
+        try {
+            $result = $db->loadResult();
+        } catch (Exception $e) {
+            echo 'Errore durante il controllo dei gol: ' . $e->getMessage();
+            return false;
+        }
+
+        return $result == 0; // Ritorna true se tutti i gol sono NULL
+    }
+
+    public static function resetStatistiche($tableStatistiche)
+    {
+        $db = Factory::getDbo();
+
+        // Costruisci la query di aggiornamento
+        $query = $db->getQuery(true)
+            ->update($db->quoteName($tableStatistiche))
+            ->set([
+                'VC = NULL',
+                'VT = NULL',
+                'NC = NULL',
+                'NT = NULL',
+                'PC = NULL',
+                'PT = NULL',
+                'GFC = NULL',
+                'GFT = NULL',
+                'GSC = NULL',
+                'GST = NULL'
+            ]); // Specifica tutte le colonne tranne 'squadra'
+
+        $db->setQuery($query);
+
+        try {
+            $db->execute();
+            return true; // Operazione riuscita
+        } catch (Exception $e) {
+            echo 'Errore durante l\'aggiornamento delle statistiche: ' . $e->getMessage();
+            return false;
+        }
     }
 
 }

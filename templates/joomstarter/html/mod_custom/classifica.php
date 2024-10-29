@@ -15,6 +15,9 @@ if (isset($_GET['id'])) {
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $ar = $competizione->andata_ritorno;
 
+    $checkgol = Competizione::checkGolNull($tablePartite);
+    if($checkgol===true) Competizione::resetStatistiche($tableStatistiche);
+
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
     $numsquadre = count($classifica);
@@ -35,7 +38,7 @@ if (isset($_GET['id'])) {
         $andamento = Competizione::getAndamento($tablePartite);
     }
 
-    if (!empty($classifica)): ?>
+    if (!empty($classifica) && !$checkgol): ?>
         <div class="table-responsive my-5">
             <table class="table table-striped table-bordered text-center category-table">
                 <thead class="thead-dark">
@@ -87,14 +90,13 @@ if (isset($_GET['id'])) {
                 </tbody>
             </table>
         </div>
-    <?php elseif (!empty($andamento)): ?>
+    <?php elseif (!empty($andamento)&& !$checkgol): ?>
         <div class="table-responsive my-5">
             <table class="table table-striped table-bordered text-center category-table">
                 <thead class="thead-dark">
                     <tr>
-                        <td
-                            class="fw-bold" colspan="<?php echo Competizione::getGiornate($tablePartite)+1; ?>"><?php echo ucfirst($view); ?>
-                        </td>
+                        <td class="fw-bold"><?php echo ucfirst($view); ?></td>
+                        <td class="fw-bold" colspan="<?php echo Competizione::getGiornate($tablePartite) + 1; ?>">Giornate</td>
                     </tr>
                     <tr>
                         <th class="category-header-logo">Squadra</th>
@@ -117,7 +119,7 @@ if (isset($_GET['id'])) {
                             <td class="category-items-cell"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?></td>
                             <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
                                 <td
-                                    class="category-items-cell"><?php echo isset($squadra['risultati'][$giornata]) ? $squadra['risultati'][$giornata] : 0; ?>
+                                    class="category-items-cell"><?php echo isset($squadra['risultati'][$giornata]) ? $squadra['risultati'][$giornata] : ""; ?>
                                 </td>
                             <?php endfor; ?>
                         </tr>
