@@ -836,4 +836,226 @@ abstract class Competizione
         return $matches; // Return the list of matches
     }
 
+    /* public static function getRecordIndividual($squadra, $tablePartite, $index)
+    {
+        $matches = self::getPartitePerSquadra($squadra, $tablePartite);
+        $count = $giornataInizio = $giornataFine = 0;
+        $maxcount = $maxgiornataInizio = $maxgiornataFine = 0;
+        switch ($index) {
+            case 0:
+                foreach ($matches as $match) {
+                    // Check if the team is squadra1
+                    if ($squadra == $match->squadra1) {
+                        if ($match->gol1 > $match->gol2) {
+                            // Increment count for a win
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a win and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                    // Check if the team is squadra2
+                    elseif ($squadra == $match->squadra2) {
+                        if ($match->gol2 > $match->gol1) {
+                            // Increment count for a win
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a win and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                }
+                if ($count > $maxcount) {
+                    $maxcount = $count;
+                    $maxgiornataInizio = $giornataInizio;
+                    $maxgiornataFine = $giornataFine;
+                }
+                return $maxcount . ' (' . $maxgiornataInizio . 'º-' . $maxgiornataFine . 'º)'; // Return the maximum consecutive wins
+            case 1:
+                foreach ($matches as $match) {
+                    // Check if the team is squadra1
+                    if ($squadra == $match->squadra1) {
+                        if ($match->gol1 == $match->gol2) {
+                            // Increment count for a draw
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a draw and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                    // Check if the team is squadra2
+                    elseif ($squadra == $match->squadra2) {
+                        if ($match->gol2 == $match->gol1) {
+                            // Increment count for a draw
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a draw and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                }
+                if ($count > $maxcount) {
+                    $maxcount = $count;
+                    $maxgiornataInizio = $giornataInizio;
+                    $maxgiornataFine = $giornataFine;
+                }
+                return $maxcount . ' (' . $maxgiornataInizio . 'º-' . $maxgiornataFine . 'º)'; // Return the maximum consecutive draw
+            case 2:
+                foreach ($matches as $match) {
+                    // Check if the team is squadra1
+                    if ($squadra == $match->squadra1) {
+                        if ($match->gol1 < $match->gol2) {
+                            // Increment count for a lose
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a lose and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                    // Check if the team is squadra2
+                    elseif ($squadra == $match->squadra2) {
+                        if ($match->gol2 < $match->gol1) {
+                            // Increment count for a lose
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a lose and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                }
+                if ($count > $maxcount) {
+                    $maxcount = $count;
+                    $maxgiornataInizio = $giornataInizio;
+                    $maxgiornataFine = $giornataFine;
+                }
+                return $maxcount . ' (' . $maxgiornataInizio . 'º-' . $maxgiornataFine . 'º)'; // Return the maximum consecutive lose
+
+            case 3:
+                foreach ($matches as $match) {
+                    // Check if the team is squadra1
+                    if ($squadra == $match->squadra1) {
+                        if ($match->gol1 > $match->gol2) {
+                            // Increment count for a win
+                            $count++;
+                            if ($giornataInizio == 0)
+                                $giornataInizio = $match->giornata;
+                            $giornataFine = $match->giornata;
+                        } else {
+                            // Reset count if not a win and update max if necessary
+                            if ($count > $maxcount) {
+                                $maxcount = $count;
+                                $maxgiornataInizio = $giornataInizio;
+                                $maxgiornataFine = $giornataFine;
+                            }
+                            $giornataInizio = $giornataFine = $count = 0; // Reset count
+                        }
+                    }
+                }
+                if ($count > $maxcount) {
+                    $maxcount = $count;
+                    $maxgiornataInizio = $giornataInizio;
+                    $maxgiornataFine = $giornataFine;
+                }
+                return $maxcount . ' (' . $maxgiornataInizio . 'º-' . $maxgiornataFine . 'º)'; // Return the maximum consecutive wins
+            default:
+                return;
+        }
+    } */
+
+    public static function getRecordIndividual($squadra, $tablePartite, $index)
+    {
+        $matches = self::getPartitePerSquadra($squadra, $tablePartite);
+        $count = $giornataInizio = $giornataFine = 0;
+        $maxcount = $maxgiornataInizio = $maxgiornataFine = 0;
+
+        // Helper function to check if the condition is met
+        $checkCondition = function ($match, $squadra, $index) {
+            switch ($index) {
+                case 0:
+                    return ($squadra == $match->squadra1 && $match->gol1 > $match->gol2) || ($squadra == $match->squadra2 && $match->gol2 > $match->gol1);
+                case 1:
+                    return ($squadra == $match->squadra1 && $match->gol1 == $match->gol2) || ($squadra == $match->squadra2 && $match->gol2 == $match->gol1);
+                case 2:
+                    return ($squadra == $match->squadra1 && $match->gol1 < $match->gol2) || ($squadra == $match->squadra2 && $match->gol2 < $match->gol1);
+                case 3:
+                    return ($squadra == $match->squadra1 && $match->gol1 > $match->gol2); // Specific condition for case 3
+                default:
+                    return false;
+            }
+        };
+
+        foreach ($matches as $match) {
+            if ($checkCondition($match, $squadra, $index)) {
+                $count++;
+                if ($giornataInizio == 0)
+                    $giornataInizio = $match->giornata;
+                $giornataFine = $match->giornata;
+            } else {
+                if ($count > $maxcount) {
+                    $maxcount = $count;
+                    $maxgiornataInizio = $giornataInizio;
+                    $maxgiornataFine = $giornataFine;
+                }
+                $giornataInizio = $giornataFine = $count = 0;
+            }
+        }
+
+        if ($count > $maxcount) {
+            $maxcount = $count;
+            $maxgiornataInizio = $giornataInizio;
+            $maxgiornataFine = $giornataFine;
+        }
+
+        return $maxcount . ' (' . $maxgiornataInizio . 'º-' . $maxgiornataFine . 'º)';
+    }
+
+
 }

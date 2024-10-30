@@ -31,8 +31,6 @@ if (isset($_GET['id'])) {
     } elseif (!isset($view)) {
         $view = 'Generali'; // Default view if none is set
     }
-
-    echo $view;
     ?>
     <div class="container statistiche">
         <form method="post" action="">
@@ -84,14 +82,82 @@ if (isset($_POST['submit'])) {
     $squadra = $_POST['squadra'];
     $vieww = $_POST[$view];
     if ($vieww === 'Individuali') {
+        $record = [
+            'Maggior Numero di Vittorie Consecutive',
+            'Maggior Numero di Pareggi Consecutivi',
+            'Maggior Numero di Sconfitte Consecutive',
+            'Maggior Numero di Vittorie Consecutive in Casa',
+            'Maggior Numero di Pareggi Consecutivi in Casa',
+            'Maggior Numero di Sconfitte Consecutive in Casa',
+            'Maggior Numero di Vittorie Consecutive in Trasferta',
+            'Maggior Numero di Pareggi Consecutivi in Trasferta',
+            'Maggior Numero di Sconfitte Consecutive in Trasferta',
+            'Partita con Maggior Scarto di Goal',
+            'Partita con Maggior Numero di Goal',
+        ];
 
+        $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
+        ?>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="category-header-logo" scope="col" colspan="2">Record</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Loop through $record and display them
+                foreach ($record as $index => $recordItem) {
+                    ?>
+                    <tr>
+                        <td class="category-items-cell"><?php echo htmlspecialchars($recordItem); ?></td>
+                        <td class="category-items-cell">
+                            <?php
+                            echo Competizione::getRecordIndividual($squadra, $tablePartite, $index);
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                }
+                ?>
+            </tbody>
+        </table>
+
+        <?php
     } elseif ($vieww === 'Elenco') {// Get the matches for the selected team
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
-
-        // Now you can loop through $matches and display them
-        foreach ($matches as $match) {
-            var_dump($match);
-        }
+        ?>
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="category-header-logo" scope="col">Giornata</th>
+                    <th class="category-header-logo" scope="col">Partita</th>
+                    <th class="category-header-logo" scope="col">Risultato</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Loop through $matches and display them
+                foreach ($matches as $match) {
+                    ?>
+                    <tr>
+                        <td class="category-items-cell"><?php echo htmlspecialchars($match->giornata); ?></td>
+                        <td class="category-items-cell">
+                            <?php
+                            echo htmlspecialchars(Competizione::getArticleTitleById($match->squadra1)) . " - " .
+                                htmlspecialchars(Competizione::getArticleTitleById($match->squadra2));
+                            ?>
+                        </td>
+                        <td class="category-items-cell">
+                            <?php echo htmlspecialchars($match->gol1) . " - " . htmlspecialchars($match->gol2); ?>
+                        </td>
+                    </tr>
+                    <?php
+                }
+                ?>
+            </tbody>
+        </table>
+        <?php
     }
 }
 ?>
