@@ -38,6 +38,18 @@ if (isset($_GET['id'])) {
     }
     ?>
     <div class="container classifica">
+        
+        <form method="post" action="">
+            <div class="d-flex justify-content-around p-2">
+                <input type="hidden" name="module_id" value="117">
+                <button type="submit" name="Totale" class="btn btn-info">Totale</button>
+                <button type="submit" name="Andamento" class="btn btn-info">Andamento</button>
+                <button type="submit" name="Casa" class="btn btn-info">Casa</button>
+                <button type="submit" name="Trasferta" class="btn btn-info">Trasferta</button>
+                <button type="submit" name="Andata" class="btn btn-info">Andata</button>
+                <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
+            </div>
+        </form>
 
         <?php
         if (!empty($classifica) && !$checkgol): ?>
@@ -136,17 +148,7 @@ if (isset($_GET['id'])) {
             </div>
         <?php endif; ?>
 
-        <form method="post" action="">
-            <div class="d-flex justify-content-between p-2">
-                <input type="hidden" name="module_id" value="117">
-                <button type="submit" name="Totale" class="btn btn-info">Totale</button>
-                <button type="submit" name="Andamento" class="btn btn-info">Andamento</button>
-                <button type="submit" name="Casa" class="btn btn-info">Casa</button>
-                <button type="submit" name="Trasferta" class="btn btn-info">Trasferta</button>
-                <button type="submit" name="Andata" class="btn btn-info">Andata</button>
-                <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
-            </div>
-        </form>
+
     </div>
     <?php
 }
