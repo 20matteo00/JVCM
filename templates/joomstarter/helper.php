@@ -339,6 +339,23 @@ abstract class Competizione
         // Inizializza le statistiche
         $statistiche = [];
 
+        // Inizializza le statistiche per ogni squadra a null
+        foreach ($squadre as $squadraId) {
+            $statistiche[$squadraId] = [
+                'VC' => null, // Vittorie in casa
+                'NC' => null, // Nulle in casa
+                'PC' => null, // Perde in casa
+                'GFC' => null, // Gol Fatti
+                'GSC' => null, // Gol Subiti
+                'VT' => null,
+                'NT' => null,
+                'PT' => null,
+                'GFT' => null,
+                'GST' => null,
+                'girone' => null, // Puoi gestire i gironi se necessario
+            ];
+        }
+
         // Prepara la query per ottenere tutte le partite
         $query = $db->getQuery(true)
             ->select('squadra1, squadra2, gol1, gol2')
@@ -360,39 +377,9 @@ abstract class Competizione
             $gol1 = $partita->gol1;
             $gol2 = $partita->gol2;
 
-            if ($gol1 === NULL || $gol2 === NULL)
+            // Salta le partite non giocate (gol null)
+            if ($gol1 === null || $gol2 === null) {
                 continue;
-            // Inizializza le statistiche per le squadre se non esistono
-            if (!isset($statistiche[$squadra1])) {
-                $statistiche[$squadra1] = [
-                    'VC' => 0, // Vittorie in casa
-                    'NC' => 0, // Nulle in casa
-                    'PC' => 0, // Perde in casa
-                    'GFC' => 0, // Gol Fatti
-                    'GSC' => 0, // Gol Subiti
-                    'VT' => 0,
-                    'NT' => 0,
-                    'PT' => 0,
-                    'GFT' => 0,
-                    'GST' => 0,
-                    'girone' => null, // Puoi gestire i gironi se necessario
-                ];
-            }
-
-            if (!isset($statistiche[$squadra2])) {
-                $statistiche[$squadra2] = [
-                    'VC' => 0, // Vittorie in casa
-                    'NC' => 0, // Nulle in casa
-                    'PC' => 0, // Perde in casa
-                    'GFC' => 0, // Gol Fatti
-                    'GSC' => 0, // Gol Subiti
-                    'VT' => 0,
-                    'NT' => 0,
-                    'PT' => 0,
-                    'GFT' => 0,
-                    'GST' => 0,
-                    'girone' => null, // Puoi gestire i gironi se necessario
-                ];
             }
 
             // Aggiorna le statistiche in base al risultato
@@ -416,30 +403,29 @@ abstract class Competizione
 
         // Aggiorna la tabella statistiche nel database
         foreach ($squadre as $squadraId) {
-            if (isset($statistiche[$squadraId])) {
-                $query = $db->getQuery(true)
-                    ->update($db->quoteName($tableStatistiche))
-                    ->set($db->quoteName('VC') . ' = ' . $statistiche[$squadraId]['VC'])
-                    ->set($db->quoteName('NC') . ' = ' . $statistiche[$squadraId]['NC'])
-                    ->set($db->quoteName('PC') . ' = ' . $statistiche[$squadraId]['PC'])
-                    ->set($db->quoteName('GFC') . ' = ' . $statistiche[$squadraId]['GFC'])
-                    ->set($db->quoteName('GSC') . ' = ' . $statistiche[$squadraId]['GSC'])
-                    ->set($db->quoteName('VT') . ' = ' . $statistiche[$squadraId]['VT'])
-                    ->set($db->quoteName('NT') . ' = ' . $statistiche[$squadraId]['NT'])
-                    ->set($db->quoteName('PT') . ' = ' . $statistiche[$squadraId]['PT'])
-                    ->set($db->quoteName('GFT') . ' = ' . $statistiche[$squadraId]['GFT'])
-                    ->set($db->quoteName('GST') . ' = ' . $statistiche[$squadraId]['GST'])
-                    ->where($db->quoteName('squadra') . ' = ' . (int) $squadraId);
+            $query = $db->getQuery(true)
+                ->update($db->quoteName($tableStatistiche))
+                ->set($db->quoteName('VC') . ' = ' . ($statistiche[$squadraId]['VC'] ?? 'NULL'))
+                ->set($db->quoteName('NC') . ' = ' . ($statistiche[$squadraId]['NC'] ?? 'NULL'))
+                ->set($db->quoteName('PC') . ' = ' . ($statistiche[$squadraId]['PC'] ?? 'NULL'))
+                ->set($db->quoteName('GFC') . ' = ' . ($statistiche[$squadraId]['GFC'] ?? 'NULL'))
+                ->set($db->quoteName('GSC') . ' = ' . ($statistiche[$squadraId]['GSC'] ?? 'NULL'))
+                ->set($db->quoteName('VT') . ' = ' . ($statistiche[$squadraId]['VT'] ?? 'NULL'))
+                ->set($db->quoteName('NT') . ' = ' . ($statistiche[$squadraId]['NT'] ?? 'NULL'))
+                ->set($db->quoteName('PT') . ' = ' . ($statistiche[$squadraId]['PT'] ?? 'NULL'))
+                ->set($db->quoteName('GFT') . ' = ' . ($statistiche[$squadraId]['GFT'] ?? 'NULL'))
+                ->set($db->quoteName('GST') . ' = ' . ($statistiche[$squadraId]['GST'] ?? 'NULL'))
+                ->where($db->quoteName('squadra') . ' = ' . (int) $squadraId);
 
-                $db->setQuery($query);
-                try {
-                    $db->execute();
-                } catch (Exception $e) {
-                    echo 'Errore durante l\'aggiornamento delle statistiche: ' . $e->getMessage();
-                }
+            $db->setQuery($query);
+            try {
+                $db->execute();
+            } catch (Exception $e) {
+                echo 'Errore durante l\'aggiornamento delle statistiche: ' . $e->getMessage();
             }
         }
     }
+
 
     // Funzione per ottenere la classifica delle squadre
     public static function getClassifica($tableStatistiche)
@@ -781,37 +767,6 @@ abstract class Competizione
         }
 
         return $result == 0; // Ritorna true se tutti i gol sono NULL
-    }
-
-    public static function resetStatistiche($tableStatistiche)
-    {
-        $db = Factory::getDbo();
-
-        // Costruisci la query di aggiornamento
-        $query = $db->getQuery(true)
-            ->update($db->quoteName($tableStatistiche))
-            ->set([
-                'VC = NULL',
-                'VT = NULL',
-                'NC = NULL',
-                'NT = NULL',
-                'PC = NULL',
-                'PT = NULL',
-                'GFC = NULL',
-                'GFT = NULL',
-                'GSC = NULL',
-                'GST = NULL'
-            ]); // Specifica tutte le colonne tranne 'squadra'
-
-        $db->setQuery($query);
-
-        try {
-            $db->execute();
-            return true; // Operazione riuscita
-        } catch (Exception $e) {
-            echo 'Errore durante l\'aggiornamento delle statistiche: ' . $e->getMessage();
-            return false;
-        }
     }
 
 }

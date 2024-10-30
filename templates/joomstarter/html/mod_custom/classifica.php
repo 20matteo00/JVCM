@@ -16,7 +16,6 @@ if (isset($_GET['id'])) {
     $ar = $competizione->andata_ritorno;
 
     $checkgol = Competizione::checkGolNull($tablePartite);
-    if($checkgol===true) Competizione::resetStatistiche($tableStatistiche);
 
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
@@ -68,29 +67,29 @@ if (isset($_GET['id'])) {
                         ?>
                         <tr>
                             <td class="category-items-cell"><?php echo $posizione++; ?></td>
-                            <td
-                                class="category-items-cell"><?php
-                                if (isset($squadra->squadra)) {
-                                    echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
-                                } else {
-                                    echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
-                                }
-                                ?>
+                            <td class="category-items-cell"><?php
+                            if (isset($squadra->squadra)) {
+                                echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
+                            } else {
+                                echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
+                            }
+                            ?>
                             </td>
-                            <td class="category-items-cell"><?php echo $stats['punti']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['giocate']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['vinte']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['pari']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['perse']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['golFatti']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['golSubiti']; ?></td>
-                            <td class="category-items-cell"><?php echo $stats['differenza']; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['punti']) ? $stats['punti'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['giocate']) ? $stats['giocate'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['vinte']) ? $stats['vinte'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['pari']) ? $stats['pari'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['perse']) ? $stats['perse'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['golFatti']) ? $stats['golFatti'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['golSubiti']) ? $stats['golSubiti'] : 0; ?></td>
+                            <td class="category-items-cell"><?php echo isset($stats['differenza']) ? $stats['differenza'] : 0; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-    <?php elseif (!empty($andamento)&& !$checkgol): ?>
+    <?php elseif (!empty($andamento) && !$checkgol): ?>
         <div class="table-responsive my-5">
             <table class="table table-striped table-bordered text-center category-table">
                 <thead class="thead-dark">
@@ -107,8 +106,7 @@ if (isset($_GET['id'])) {
                         }, $andamento));
 
                         for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
-                            <th
-                                class="category-header-logo"><?php echo $giornata; ?>
+                            <th class="category-header-logo"><?php echo $giornata; ?>
                             </th>
                         <?php endfor; ?>
                     </tr>
@@ -116,10 +114,11 @@ if (isset($_GET['id'])) {
                 <tbody>
                     <?php foreach ($andamento as $squadra): ?>
                         <tr>
-                            <td class="category-items-cell"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?></td>
+                            <td class="category-items-cell">
+                                <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?></td>
                             <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
-                                <td
-                                    class="category-items-cell"><?php echo isset($squadra['risultati'][$giornata]) ? $squadra['risultati'][$giornata] : ""; ?>
+                                <td class="category-items-cell">
+                                    <?php echo isset($squadra['risultati'][$giornata]) ? $squadra['risultati'][$giornata] : ""; ?>
                                 </td>
                             <?php endfor; ?>
                         </tr>
@@ -139,7 +138,7 @@ if (isset($_GET['id'])) {
             <button type="submit" name="Andata" class="btn btn-info">Andata</button>
             <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
         </div>
-    </form><?php
+    </form>
+    <?php
 }
 ?>
-
