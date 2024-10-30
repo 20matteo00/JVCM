@@ -1,13 +1,62 @@
 <?php
-defined('_JEXEC') or die; // Assicurati che il file venga caricato solo da Joomla
+defined('_JEXEC') or die;
 require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\Helper\ModuleHelper; // Aggiungi questa riga per utilizzare JModuleHelper
 use Joomstarter\Helpers\Competizione;
+use Joomla\CMS\Language\Text;
 
+$user = Factory::getUser();
+$userId = $user->id;
 
+if (isset($_GET['id'])) {
+    $idcomp = (int) $_GET['id'];
+    $tableStatistiche = Competizione::getTableStatistiche($idcomp);
+    $tablePartite = Competizione::getTablePartite($idcomp);
+    $competizione = Competizione::getCompetizioneById($idcomp, $userId);
 
-echo "ciao";
+    // Recupera le squadre
+    $squadreJson = $competizione->squadre;
+    // Decodifica la stringa JSON in un array
+    $squadre = json_decode($squadreJson, true);
 
+    // Recupera le partite
+    $partite = Competizione::getPartite($tablePartite); // Funzione da implementare
+
+    // Creiamo un array per memorizzare i risultati
+    $risultati = [];
+    foreach ($partite as $partita) {
+        $risultati[$partita->squadra1][$partita->squadra2] = "{$partita->gol1} - {$partita->gol2}";
+    }
+    ?>
+    <div class="container tabellone">
+        <div class="table-responsive my-5">
+            <table class="table table-striped table-bordered text-center">
+                <tr>
+                    <th><?php echo Text::_('JOOM_NUM_ITEMS'); ?></th>
+                    <!-- Spazio per l'angolo in alto a sinistra -->
+                    <?php foreach ($squadre as $squadra): ?>
+                        <th><?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
+                        </th>
+                    <?php endforeach; ?>
+                </tr>
+                <?php foreach ($squadre as $squadra): ?>
+                    <tr>
+                        <th><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?></th>
+                        <!-- Nome della squadra nella prima colonna -->
+                        <?php foreach ($squadre as $squadraAvversaria): ?>
+                            <?php if ($squadra === $squadraAvversaria): ?>
+                                <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
+                            <?php else: ?>
+                                <td><?php echo htmlspecialchars($risultati[$squadra][$squadraAvversaria] ?? ''); ?></td>
+                                <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </div>
+    </div>
+    <?php
+}
 ?>

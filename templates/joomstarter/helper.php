@@ -426,7 +426,6 @@ abstract class Competizione
         }
     }
 
-
     // Funzione per ottenere la classifica delle squadre
     public static function getClassifica($tableStatistiche)
     {
@@ -679,7 +678,7 @@ abstract class Competizione
         // Trova il numero massimo di giornate giocate
         $maxGiornata = max(array_column($partite, 'giornata'));
 
-        // Itera su tutte le partite
+        // Inizializza il punteggio cumulativo
         foreach ($partite as $partita) {
             $giornata = $partita->giornata;
             $squadraCasa = $partita->squadra1;
@@ -692,17 +691,17 @@ abstract class Competizione
                 continue;
             }
 
-            // Inizializza le squadre se non già presente, con tutte le giornate a null
+            // Inizializza le squadre se non già presente
             if (!isset($andamento[$squadraCasa])) {
                 $andamento[$squadraCasa] = [
                     'squadra' => $squadraCasa,
-                    'risultati' => array_fill(1, $maxGiornata, null) // Imposta null per ogni giornata
+                    'risultati' => array_fill(1, $maxGiornata, 0) // Imposta 0 per ogni giornata
                 ];
             }
             if (!isset($andamento[$squadraTrasferta])) {
                 $andamento[$squadraTrasferta] = [
                     'squadra' => $squadraTrasferta,
-                    'risultati' => array_fill(1, $maxGiornata, null) // Imposta null per ogni giornata
+                    'risultati' => array_fill(1, $maxGiornata, 0) // Imposta 0 per ogni giornata
                 ];
             }
 
@@ -719,9 +718,19 @@ abstract class Competizione
                 $puntiTrasferta = 1; // Pareggio
             }
 
-            // Accumula punti solo per le giornate giocate
-            $andamento[$squadraCasa]['risultati'][$giornata] = ($andamento[$squadraCasa]['risultati'][$giornata - 1] ?? 0) + $puntiCasa;
-            $andamento[$squadraTrasferta]['risultati'][$giornata] = ($andamento[$squadraTrasferta]['risultati'][$giornata - 1] ?? 0) + $puntiTrasferta;
+            // Accumula i punti per la giornata
+            $andamento[$squadraCasa]['risultati'][$giornata] = $puntiCasa;
+            $andamento[$squadraTrasferta]['risultati'][$giornata] = $puntiTrasferta;
+        }
+
+        // Ora propaghiamo i punti accumulati per le giornate non giocate e sommiamo
+        foreach ($andamento as &$squadra) {
+            $puntiAccum = 0; // Inizializza i punti accumulati
+            for ($g = 1; $g <= $maxGiornata; $g++) {
+                // Somma i punti accumulati fino a questa giornata
+                $puntiAccum += $squadra['risultati'][$g];
+                $squadra['risultati'][$g] = $puntiAccum; // Aggiorna il totale per questa giornata
+            }
         }
 
         // Ritorna l'andamento calcolato
@@ -746,6 +755,27 @@ abstract class Competizione
         return $maxGiornate;
     }
 
+    public static function getPartite($tablePartite)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere i risultati delle partite
+        $query = $db->getQuery(true)
+            ->select('squadra1, squadra2, gol1, gol2')
+            ->from($db->quoteName($tablePartite));
+
+        // Esegui la query
+        $db->setQuery($query);
+
+        try {
+            return $db->loadObjectList(); // Restituisce un array di oggetti con i risultati delle partite
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle partite: ' . $e->getMessage();
+            return [];
+        }
+    }
+
     // Funzione per controllare se tutti i gol sono NULL
     public static function checkGolNull($tablePartite)
     {
@@ -768,5 +798,24 @@ abstract class Competizione
 
         return $result == 0; // Ritorna true se tutti i gol sono NULL
     }
+
+    public static function abbreviaNomeSquadra($nome)
+    {
+        // Rimuovi eventuali spazi bianchi iniziali e finali
+        $nome = trim($nome);
+        // Dividi il nome in parole
+        $parole = explode(' ', $nome);
+
+        if (count($parole) === 1) {
+            // Se c'è una sola parola, prendi le prime 3 lettere
+            return substr($nome, 0, 3);
+        } elseif (count($parole) >= 2) {
+            // Se ci sono due o più parole, prendi 2 lettere dalla prima e 1 dalla seconda
+            return substr($parole[0], 0, 2) . strtoupper(substr($parole[1], 0, 1));
+        }
+
+        return ''; // Restituisci una stringa vuota se non ci sono parole
+    }
+
 
 }
