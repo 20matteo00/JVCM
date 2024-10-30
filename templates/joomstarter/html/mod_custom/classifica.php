@@ -38,7 +38,7 @@ if (isset($_GET['id'])) {
     }
     ?>
     <div class="container classifica">
-        
+
         <form method="post" action="">
             <div class="d-flex justify-content-around p-2">
                 <input type="hidden" name="module_id" value="117">
@@ -79,16 +79,30 @@ if (isset($_GET['id'])) {
                         foreach ($classifica as $squadra):
                             // Calcola le statistiche
                             $stats = Competizione::calculateStatistics($squadra, $view, $ar);
+                            if (isset($squadra->squadra)) {
+                                $cf = Competizione::getCustomFields($squadra->squadra);
+                            } else {
+                                $cf = Competizione::getCustomFields($stats['squadra']);
+                            }
+
+                            // Retrieve color values with defaults
+                            $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                
+
                             ?>
                             <tr>
                                 <td class="category-items-cell"><?php echo $posizione++; ?></td>
-                                <td class="category-items-cell"><?php
-                                if (isset($squadra->squadra)) {
-                                    echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
-                                } else {
-                                    echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
-                                }
-                                ?>
+                                <td class="category-items-cell">
+                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>"><span
+                                            style="color:<?php echo $color2; ?>"><?php
+                                               if (isset($squadra->squadra)) {
+                                                   echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
+                                               } else {
+                                                   echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
+                                               }
+                                               ?>
+                                        </span></div>
                                 </td>
                                 <td class="category-items-cell"><?php echo isset($stats['punti']) ? $stats['punti'] : 0; ?></td>
                                 <td class="category-items-cell"><?php echo isset($stats['giocate']) ? $stats['giocate'] : 0; ?></td>
@@ -132,9 +146,19 @@ if (isset($_GET['id'])) {
                     </thead>
                     <tbody>
                         <?php foreach ($andamento as $squadra): ?>
+                            <?php
+                            $cf = Competizione::getCustomFields($squadra['squadra']);
+                            // Retrieve color values with defaults
+                            $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                            ?>
                             <tr>
                                 <td class="category-items-cell">
-                                    <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?>
+                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                        <span style="color:<?php echo $color2; ?>">
+                                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?>
+                                        </span>
+                                    </div>
                                 </td>
                                 <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
                                     <td class="category-items-cell">

@@ -36,13 +36,36 @@ if (isset($_GET['id'])) {
                     <th><?php echo Text::_('JOOM_NUM_ITEMS'); ?></th>
                     <!-- Spazio per l'angolo in alto a sinistra -->
                     <?php foreach ($squadre as $squadra): ?>
-                        <th><?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
+                        <?php
+                        $cf = Competizione::getCustomFields($squadra);
+                        // Retrieve color values with defaults
+                        $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                        $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                        ?>
+                        <th>
+                            <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                <span style="color:<?php echo $color2; ?>">
+                                    <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
+                                </span>
+                            </div>
                         </th>
                     <?php endforeach; ?>
                 </tr>
                 <?php foreach ($squadre as $squadra): ?>
+                    <?php
+                    $cf = Competizione::getCustomFields($squadra);
+                    // Retrieve color values with defaults
+                    $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                    $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                    ?>
                     <tr>
-                        <th><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?></th>
+                        <th>
+                            <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                <span
+                                    style="color:<?php echo $color2; ?>"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
+                                </span>
+                            </div>
+                        </th>
                         <!-- Nome della squadra nella prima colonna -->
                         <?php foreach ($squadre as $squadraAvversaria): ?>
                             <?php if ($squadra === $squadraAvversaria): ?>
