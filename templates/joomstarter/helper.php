@@ -816,6 +816,24 @@ abstract class Competizione
 
         return ''; // Restituisci una stringa vuota se non ci sono parole
     }
+    public static function getPartitePerSquadra($squadraId, $tablePartite)
+    {
+        // Get a database connection
+        $db = Factory::getDbo();
 
+        // Create a query to fetch matches for the specified team
+        $query = $db->getQuery(true)
+            ->select('*') // Select all fields, adjust as necessary
+            ->from($db->quoteName($tablePartite)) // Replace with your actual table name
+            ->where($db->quoteName('squadra1') . ' = ' . (int) $squadraId . ' OR ' .
+                $db->quoteName('squadra2') . ' = ' . (int) $squadraId) // Check both team columns
+            ->order($db->quoteName('giornata') . ' ASC'); // Replace 'giornata' with your actual column name for matchday
+
+        // Set the query and load the results
+        $db->setQuery($query);
+        $matches = $db->loadObjectList();
+
+        return $matches; // Return the list of matches
+    }
 
 }

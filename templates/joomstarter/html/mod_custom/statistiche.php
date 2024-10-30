@@ -21,11 +21,18 @@ if (isset($_GET['id'])) {
     $classifica = Competizione::getClassifica($tableStatistiche);
     $numsquadre = count($classifica);
 
-    // Determina la vista
-    $view = isset($_POST['Individuali']) ? 'individuali' :
-        (isset($_POST['Elenco']) ? 'elenco' : 'Generali');
+    // Determina la vista in base al POST
+    if (isset($_POST['Generali'])) {
+        $view = 'Generali';
+    } elseif (isset($_POST['Individuali'])) {
+        $view = 'Individuali';
+    } elseif (isset($_POST['Elenco'])) {
+        $view = 'Elenco';
+    } elseif (!isset($view)) {
+        $view = 'Generali'; // Default view if none is set
+    }
 
-
+    echo $view;
     ?>
     <div class="container statistiche">
         <form method="post" action="">
@@ -37,7 +44,7 @@ if (isset($_GET['id'])) {
             </div>
         </form>
 
-        <?php if ($view === 'individuali' || $view === 'elenco'): ?>
+        <?php if ($view === 'Individuali' || $view === 'Elenco'): ?>
             <div class="text-center my-5">
                 <div class="row">
                     <?php foreach ($squadre as $squadra): ?>
@@ -48,10 +55,12 @@ if (isset($_GET['id'])) {
                         $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                         ?>
                         <div class="col-2 my-3">
-                            <form action="#" method="post">
-                                <input type="hidden" value="<?php echo $squadra; ?>">
+                            <form action="" method="post">
+                                <input type="hidden" name="squadra" value="<?php echo $squadra; ?>">
                                 <input type="hidden" name="module_id" value="119">
-                                <button type="submit" class="btn w-100" name="squadra<?php echo $squadra;?>">
+                                <input type="hidden" name="<?php echo htmlspecialchars($view); ?>"
+                                    value="<?php echo htmlspecialchars($view); ?>">
+                                <button type="submit" class="btn w-100" name="submit">
                                     <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                         <span class="fs-5" style="color:<?php echo $color2; ?>">
                                             <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
@@ -67,5 +76,22 @@ if (isset($_GET['id'])) {
 
     </div>
     <?php
+}
+
+// Handle form submission to retain view
+if (isset($_POST['submit'])) {
+    $module_ID = $_POST['module_id'];
+    $squadra = $_POST['squadra'];
+    $vieww = $_POST[$view];
+    if ($vieww === 'Individuali') {
+
+    } elseif ($vieww === 'Elenco') {// Get the matches for the selected team
+        $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
+
+        // Now you can loop through $matches and display them
+        foreach ($matches as $match) {
+            var_dump($match);
+        }
+    }
 }
 ?>
