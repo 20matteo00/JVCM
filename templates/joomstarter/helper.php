@@ -436,12 +436,11 @@ abstract class Competizione
         $query = $db->getQuery(true)
             ->select('*')
             ->select('
-            (VC + VT) * 3 + (NC + NT) AS punti,  
-            (GFC + GFT - GSC - GST) AS diff_reti, 
-            (GFC + GFT) AS gol_fatti')
+            (COALESCE(VC, 0) + COALESCE(VT, 0)) * 3 + (COALESCE(NC, 0) + COALESCE(NT, 0)) AS punti,  
+            (COALESCE(GFC, 0) + COALESCE(GFT, 0) - COALESCE(GSC, 0) - COALESCE(GST, 0)) AS diff_reti, 
+            (COALESCE(GFC, 0) + COALESCE(GFT, 0)) AS gol_fatti')
             ->from($db->quoteName($tableStatistiche))
             ->order('punti DESC, diff_reti DESC, gol_fatti DESC, squadra ASC'); // Ordina secondo i criteri specificati
-
 
         $db->setQuery($query);
 
@@ -452,6 +451,7 @@ abstract class Competizione
             return [];
         }
     }
+
 
     public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view)
     {
