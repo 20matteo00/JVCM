@@ -61,8 +61,8 @@ if (isset($_GET['id'])) {
                     <tr>
                         <th>
                             <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
-                                <span
-                                    style="color:<?php echo $color2; ?>"><?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
+                                <span style="color:<?php echo $color2; ?>">
+                                    <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
                                 </span>
                             </div>
                         </th>

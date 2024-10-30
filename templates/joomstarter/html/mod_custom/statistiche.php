@@ -41,11 +41,22 @@ if (isset($_GET['id'])) {
             <div class="text-center my-5">
                 <div class="row">
                     <?php foreach ($squadre as $squadra): ?>
-                        <div class="col-2">
+                        <?php
+                        $cf = Competizione::getCustomFields($squadra);
+                        // Retrieve color values with defaults
+                        $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                        $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                        ?>
+                        <div class="col-2 my-3">
                             <form action="#" method="post">
                                 <input type="hidden" value="<?php echo $squadra; ?>">
-                                <button type="submit" class="btn btn-primary btn-sm w-100">
-                                    <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
+                                <input type="hidden" name="module_id" value="119">
+                                <button type="submit" class="btn w-100" name="squadra<?php echo $squadra;?>">
+                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                        <span class="fs-5" style="color:<?php echo $color2; ?>">
+                                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
+                                        </span>
+                                    </div>
                                 </button>
                             </form>
                         </div>
