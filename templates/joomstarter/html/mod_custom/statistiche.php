@@ -92,16 +92,19 @@ if (isset($_POST['submit'])) {
             'Maggior Numero di Vittorie Consecutive in Trasferta',
             'Maggior Numero di Pareggi Consecutivi in Trasferta',
             'Maggior Numero di Sconfitte Consecutive in Trasferta',
-            'Partita con Maggior Scarto di Goal',
+            'Partita Vinta con Maggior Scarto di Goal',
+            'Partita Persa con Maggior Scarto di Goal',
             'Partita con Maggior Numero di Goal',
         ];
 
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
         ?>
+        <h1 class="text-center fw-bold"><?php echo Competizione::getArticleTitleById($squadra); ?></h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
-                    <th class="category-header-logo" scope="col" colspan="2">Record</th>
+                    <th class="category-header-logo" scope="col">Record</th>
+                    <th class="category-header-logo" scope="col">#: Giornata</th>
                 </tr>
             </thead>
             <tbody>
@@ -127,6 +130,7 @@ if (isset($_POST['submit'])) {
     } elseif ($vieww === 'Elenco') {// Get the matches for the selected team
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
         ?>
+        <h1 class="text-center fw-bold"><?php echo Competizione::getArticleTitleById($squadra); ?></h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
