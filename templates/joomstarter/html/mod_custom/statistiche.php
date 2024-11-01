@@ -16,7 +16,20 @@ if (isset($_GET['id'])) {
     $ar = $competizione->andata_ritorno;
     $squadre = json_decode($competizione->squadre, true); // Decodifica JSON in array
     $checkgol = Competizione::checkGolNull($tablePartite);
-
+    $record = [
+        'Maggior Numero di Vittorie Consecutive',
+        'Maggior Numero di Pareggi Consecutivi',
+        'Maggior Numero di Sconfitte Consecutive',
+        'Maggior Numero di Vittorie Consecutive in Casa',
+        'Maggior Numero di Pareggi Consecutivi in Casa',
+        'Maggior Numero di Sconfitte Consecutive in Casa',
+        'Maggior Numero di Vittorie Consecutive in Trasferta',
+        'Maggior Numero di Pareggi Consecutivi in Trasferta',
+        'Maggior Numero di Sconfitte Consecutive in Trasferta',
+        'Partita Vinta con Maggior Scarto di Goal',
+        'Partita Persa con Maggior Scarto di Goal',
+        'Partita con Maggior Numero di Goal',
+    ];
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
     $numsquadre = count($classifica);
@@ -81,22 +94,8 @@ if (isset($_POST['submit'])) {
     $module_ID = $_POST['module_id'];
     $squadra = $_POST['squadra'];
     $vieww = $_POST[$view];
-    if ($vieww === 'Individuali') {
-        $record = [
-            'Maggior Numero di Vittorie Consecutive',
-            'Maggior Numero di Pareggi Consecutivi',
-            'Maggior Numero di Sconfitte Consecutive',
-            'Maggior Numero di Vittorie Consecutive in Casa',
-            'Maggior Numero di Pareggi Consecutivi in Casa',
-            'Maggior Numero di Sconfitte Consecutive in Casa',
-            'Maggior Numero di Vittorie Consecutive in Trasferta',
-            'Maggior Numero di Pareggi Consecutivi in Trasferta',
-            'Maggior Numero di Sconfitte Consecutive in Trasferta',
-            'Partita Vinta con Maggior Scarto di Goal',
-            'Partita Persa con Maggior Scarto di Goal',
-            'Partita con Maggior Numero di Goal',
-        ];
 
+    if ($vieww === 'Individuali') {
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
         ?>
         <h1 class="text-center fw-bold"><?php echo Competizione::getArticleTitleById($squadra); ?></h1>
@@ -163,5 +162,39 @@ if (isset($_POST['submit'])) {
         </table>
         <?php
     }
+} elseif (isset($_POST['Generali'])) {
+    $matches = Competizione::getPartite($tablePartite);
+    ?>
+    <div class="text-center my-5">
+
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th class="category-header-logo" scope="col">Record</th>
+                    <th class="category-header-logo" scope="col">#: Giornata</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                // Loop through $record and display them
+                foreach ($record as $index => $recordItem) {
+                    if ($index === 9) continue;
+                    elseif ($index === 10) $recordItem = "Partita con Maggior Scarto di Goal";
+                    ?>
+                    <tr>
+                        <td class="category-items-cell"><?php echo htmlspecialchars($recordItem); ?></td>
+                        <td class="category-items-cell">
+                            <?php
+                            echo Competizione::getRecord($squadre, $tablePartite, $index);
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
 }
 ?>

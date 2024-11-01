@@ -835,6 +835,58 @@ abstract class Competizione
 
         return $matches; // Return the list of matches
     }
+
+    public static function getRecord($squadre, $tablePartite, $index)
+    {
+        $maxCount = 0;
+        $records = []; // Array per memorizzare i record massimi
+
+        foreach ($squadre as $squadra) {
+            $stringa = self::getRecordIndividual($squadra, $tablePartite, $index);
+            $result = explode(":", $stringa);
+
+            $count = (int) $result[0];
+            $resto = trim($result[1] ?? ""); // Gestione del caso in cui il risultato sia vuoto
+            $squadraName = self::getArticleTitleById($squadra);
+            if ($index >= 0 && $index < 9) {
+                if ($count > $maxCount) {
+                    // Aggiorna il massimo e resetta l'array dei record
+                    $maxCount = $count;
+                    $records = [
+                        "{$squadraName}: {$count} {$resto}"
+                    ];
+                } elseif ($count === $maxCount) {
+                    // Aggiungi l'elemento al record corrente in caso di parità
+                    $records[] = "{$squadraName}: {$count} {$resto}";
+                }
+            } elseif ($index >= 9 && $index < 12) {
+                if ($count > $maxCount) {
+                    // Aggiorna il massimo e resetta l'array dei record
+                    $maxCount = $count;
+                    $resto = str_replace("<br>", "", $resto);
+                    $records = explode(", ", $resto); // Separa i valori di $resto in base alle virgole e li inserisce nell'array, sostituendo le virgole con <br>
+                } elseif ($count === $maxCount) {
+                    $resto = str_replace("<br>", "", $resto);
+                    // Aggiungi l'elemento o gli elementi al record corrente in caso di parità
+                    $additionalRecords = explode(", ", $resto); // Separa i valori in base alle virgole, sostituendo le virgole con <br>
+                    foreach ($additionalRecords as $record) {
+                        $records[] = $record; // Aggiungi ogni elemento esploso al record corrente
+                    }
+                }
+            }
+        }
+        // Restituisci i risultati come stringa unita da linee
+        if ($index >= 0 && $index < 9) {
+            return implode("<br>", $records);
+        } elseif ($index >= 9 && $index < 12) {
+            $records = array_unique($records); // Rimuovi duplicati
+            // Unisci il conteggio con il primo record e poi vai a capo per i restanti
+            $result = "{$count}: " . array_shift($records) . "<br>" . implode("<br>", $records);
+            return $result; // Restituisci il risultato finale
+        }
+        
+    }
+
     public static function getRecordIndividual($squadra, $tablePartite, $index)
     {
         $matches = self::getPartitePerSquadra($squadra, $tablePartite);
@@ -984,28 +1036,47 @@ abstract class Competizione
                 }, $maxSequences));
             }
 
-            return $maxcount . ' (' . $sequencesStr . ')';
+            return $maxcount . ': (' . $sequencesStr . ')';
         } elseif ($index == 9 || $index == 10) {
-            $result = "";
+            $resultsByScarto = [];
             foreach ($partiteScartoMax as $partita) {
-                $s1 = self::getArticleTitleById($partita['squadra1']);
-                $s2 = self::getArticleTitleById($partita['squadra2']);
                 $scarto = abs($partita['gol1'] - $partita['gol2']);
-                $result .= "$scarto: {$s1} - {$s2} {$partita['gol1']}-{$partita['gol2']} ({$partita['giornata']}º)<br>";
-            }
-            return $result;
-        }elseif ($index == 11) {
-            $result = "";
-            foreach ($partiteScartoMax as $partita) {
                 $s1 = self::getArticleTitleById($partita['squadra1']);
                 $s2 = self::getArticleTitleById($partita['squadra2']);
-                $somma = $partita['gol1'] + $partita['gol2'];
-                $result .= "$somma: {$s1} - {$s2} {$partita['gol1']}-{$partita['gol2']} ({$partita['giornata']}º) <br>";
+                $giornata = $partita['giornata'];
+
+                // Raggruppa partite per scarto
+                $resultsByScarto[$scarto][] = "{$s1} - {$s2} {$partita['gol1']}-{$partita['gol2']} ({$giornata}º)";
             }
-            return $result;
+
+            // Crea la stringa finale
+            $result = "";
+            foreach ($resultsByScarto as $scarto => $partite) {
+                $result .= "$scarto: " . implode(", ", $partite) . "<br>";
+            }
+
+            return $result === "" ? "-" : $result;
+        } elseif ($index == 11) {
+            $resultsBySomma = [];
+            foreach ($partiteScartoMax as $partita) {
+                $somma = $partita['gol1'] + $partita['gol2'];
+                $s1 = self::getArticleTitleById($partita['squadra1']);
+                $s2 = self::getArticleTitleById($partita['squadra2']);
+                $giornata = $partita['giornata'];
+
+                // Raggruppa partite per somma
+                $resultsBySomma[$somma][] = "{$s1} - {$s2} {$partita['gol1']}-{$partita['gol2']} ({$giornata}º)";
+            }
+
+            // Crea la stringa finale
+            $result = "";
+            foreach ($resultsBySomma as $somma => $partite) {
+                $result .= "$somma: " . implode(", ", $partite) . "<br>";
+            }
+
+            return $result === "" ? "-" : $result;
         }
+
     }
-
-
 
 }
