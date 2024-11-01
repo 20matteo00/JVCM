@@ -555,6 +555,26 @@ abstract class Competizione
         return $db->loadObjectList(); // Restituisce un array di oggetti
     }
 
+    public static function getNumeroPartite($tablePartite)
+    {
+        // Connessione al database
+        $db = Factory::getDbo(); // Ottieni l'oggetto database di Joomla
+
+        // Costruzione della query
+        $query = $db->getQuery(true); // Crea un nuovo oggetto query
+        $query->select('COUNT(*)') // Seleziona il conteggio totale
+            ->from($db->quoteName($tablePartite)) // Nome della tabella
+            ->where($db->quoteName('gol1') . ' IS NOT NULL') // Controlla che gol1 non sia null
+            ->where($db->quoteName('gol2') . ' IS NOT NULL'); // Controlla che gol2 non sia null
+
+        // Esecuzione della query
+        $db->setQuery($query);
+        $numeroPartite = $db->loadResult(); // Carica il risultato della query
+
+        return $numeroPartite; // Restituisce il numero di partite
+    }
+
+
     public static function getTablePartite($ID)
     {
         // Recupera le giornate dalla competizione
@@ -572,6 +592,22 @@ abstract class Competizione
         return $getTableStatistiche;
     }
 
+    public static function setCompetizioneFinita($id) {
+        $db = Factory::getDbo();
+        $query = "UPDATE #__competizioni SET finita = 1 WHERE id = " . (int) $id;
+        $db->setQuery($query);
+        $db->execute();
+        return;
+    }
+
+    public static function setCompetizionenonFinita($id) {
+        $db = Factory::getDbo();
+        $query = "UPDATE #__competizioni SET finita = 0 WHERE id = " . (int) $id;
+        $db->setQuery($query);
+        $db->execute();
+        return;
+    }
+    
     public static function calculateStatistics($squadra, $view, $ar)
     {
         $squadraID = $punti = $giocate = $vinte = $pari = $perse = $golFatti = $golSubiti = $differenza = 0;
@@ -853,11 +889,11 @@ abstract class Competizione
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
                     $records = [
-                        "{$squadraName}: {$count} {$resto}"
+                        "{$squadraName} {$resto}"
                     ];
                 } elseif ($count === $maxCount) {
                     // Aggiungi l'elemento al record corrente in caso di parità
-                    $records[] = "{$squadraName}: {$count} {$resto}";
+                    $records[] = "{$squadraName} {$resto}";
                 }
             } elseif ($index >= 9 && $index < 12) {
                 if ($count > $maxCount) {
@@ -877,14 +913,14 @@ abstract class Competizione
         }
         // Restituisci i risultati come stringa unita da linee
         if ($index >= 0 && $index < 9) {
-            return implode("<br>", $records);
+            return $maxCount.": ".implode("<br>", $records);
         } elseif ($index >= 9 && $index < 12) {
             $records = array_unique($records); // Rimuovi duplicati
             // Unisci il conteggio con il primo record e poi vai a capo per i restanti
             $result = "{$count}: " . array_shift($records) . "<br>" . implode("<br>", $records);
             return $result; // Restituisci il risultato finale
         }
-        
+
     }
 
     public static function getRecordIndividual($squadra, $tablePartite, $index)

@@ -14,6 +14,11 @@ $userId = $user->id;
 if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
+    $finita = $competizione->finita;
+    if ($finita === 1)
+        $disabled = "disabled";
+    else
+        $disabled = "";
     $tablePartite = Competizione::getTablePartite($idcomp);
     $giornateRaw = Competizione::getGiornateByCompetizioneId($idcomp, $tablePartite);
     // Riorganizza le partite in giornate
@@ -65,12 +70,18 @@ if (isset($_GET['id'])) {
                                         <input type="hidden" name="giornata" value="<?php echo $index; ?>">
                                         <input type="hidden" name="squadra1" value="<?php echo $partita['squadra1']; ?>">
                                         <input type="hidden" name="squadra2" value="<?php echo $partita['squadra2']; ?>">
-                                        <input type="number" id="gol1-<?php echo $index . '-' . $i; ?>" name="gol1" class="form-control me-2 text-center" value="<?php echo $gol1; ?>" onclick="selezionaInput(this)">
-                                        <input type="number" id="gol2-<?php echo $index . '-' . $i; ?>" name="gol2" class="form-control text-center" value="<?php echo $gol2; ?>" onclick="selezionaInput(this)">
-                                        <button type="submit" name="save" class="btn btn-success ms-2" style="width: 30px; height: 30px; border-radius: 50%;">
+                                        <input type="number" id="gol1-<?php echo $index . '-' . $i; ?>" name="gol1"
+                                            class="form-control me-2 text-center" value="<?php echo $gol1; ?>"
+                                            onclick="selezionaInput(this)" <?php echo $disabled; ?>>
+                                        <input type="number" id="gol2-<?php echo $index . '-' . $i; ?>" name="gol2"
+                                            class="form-control text-center" value="<?php echo $gol2; ?>"
+                                            onclick="selezionaInput(this)" <?php echo $disabled; ?>>
+                                        <button type="submit" name="save" class="btn btn-success ms-2"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
                                             <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
                                         </button>
-                                        <button type="submit" name="delete" class="btn btn-danger ms-1" style="width: 30px; height: 30px; border-radius: 50%;">
+                                        <button type="submit" name="delete" class="btn btn-danger ms-1"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
                                             <span class="bi bi-x text-white" style="font-size:25px;"></span>
                                         </button>
                                     </form>
@@ -78,19 +89,23 @@ if (isset($_GET['id'])) {
                             <?php endforeach; ?>
                         </div>
                         <div class="card-footer">
-                            <form action="" class="p-2 d-flex justify-content-between" method="post" onsubmit="updateAllGolValues(<?php echo $index; ?>)">
+                            <form action="" class="p-2 d-flex justify-content-between" method="post"
+                                onsubmit="updateAllGolValues(<?php echo $index; ?>)">
                                 <input type="hidden" name="module_id" value="116">
                                 <input type="hidden" name="giornata" value="<?php echo $index; ?>">
 
                                 <?php foreach ($partite as $i => $partita): ?>
                                     <input type="hidden" name="squadra1[]" value="<?php echo $partita['squadra1']; ?>">
                                     <input type="hidden" name="squadra2[]" value="<?php echo $partita['squadra2']; ?>">
-                                    <input type="hidden" name="gol1[]" id="hidden-gol1-<?php echo $index . '-' . $i; ?>" value="<?php echo $gol1; ?>">
-                                    <input type="hidden" name="gol2[]" id="hidden-gol2-<?php echo $index . '-' . $i; ?>" value="<?php echo $gol2; ?>">
+                                    <input type="hidden" name="gol1[]" id="hidden-gol1-<?php echo $index . '-' . $i; ?>"
+                                        value="<?php echo $gol1; ?>">
+                                    <input type="hidden" name="gol2[]" id="hidden-gol2-<?php echo $index . '-' . $i; ?>"
+                                        value="<?php echo $gol2; ?>">
                                 <?php endforeach; ?>
 
-                                <button type="submit" name="saveall" class="btn btn-success" style="width: 80px;">Salva</button>
-                                <button type="submit" name="deleteall" class="btn btn-danger" style="width: 80px;">Elimina</button>
+                                <button type="submit" name="saveall" class="btn btn-success" style="width: 80px;" <?php echo $disabled; ?>>Salva</button>
+                                <button type="submit" name="deleteall" class="btn btn-danger"
+                                    style="width: 80px;" <?php echo $disabled; ?>>Elimina</button>
                             </form>
                         </div>
                     </div>
@@ -98,7 +113,7 @@ if (isset($_GET['id'])) {
             <?php endforeach; ?>
         </div>
     </div>
-<?php
+    <?php
 }
 ?>
 
@@ -109,10 +124,12 @@ if (isset($_POST['save'])) {
     $giornata = $_POST['giornata'];
     if ($_POST['gol1'] != NULL) {
         $gol1 = $_POST['gol1'];
-    } else $gol1 = 0;
+    } else
+        $gol1 = 0;
     if ($_POST['gol2'] != NULL) {
         $gol2 = $_POST['gol2'];
-    } else $gol2 = 0;
+    } else
+        $gol2 = 0;
     $module_ID = $_POST['module_id'];
     $db = Factory::getDbo();
     $query = $db->getQuery(true)
@@ -191,7 +208,7 @@ if (isset($_POST['save'])) {
             $db->setQuery($query);
             $db->execute();
         }
-        $gio = $giornata+1;
+        $gio = $giornata + 1;
     }
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$gio");
     exit;
@@ -218,5 +235,4 @@ if (isset($_POST['save'])) {
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 }
-
 ?>
