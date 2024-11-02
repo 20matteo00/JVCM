@@ -334,10 +334,13 @@ abstract class Competizione
         }
     }
 
-    public static function GeneraEliminazione($squadre, $tablePartite, $ar)
+    public static function GeneraEliminazione($squadre, $tablePartite)
     {
-        
     }
+
+
+
+
 
     public static function GeneraChampions($squadre, $tablePartite, $ar)
     {
