@@ -19,6 +19,7 @@ $userId = $user->id;
 
         // Recupera la competizione utilizzando la funzione
         $competizione = Competizione::getCompetizioneById($idcomp, $userId);
+        $mod = $competizione->modalita;
         $ar = $competizione->andata_ritorno;
         $finita = $competizione->finita;
         $squadreJson = $competizione->squadre;
@@ -31,8 +32,13 @@ $userId = $user->id;
             Competizione::CreaTabelleCompetizione($idcomp, $squadre);
             $tablePartite = Competizione::getTablePartite($idcomp);
             $tableStatistiche = Competizione::getTableStatistiche($idcomp);
-
-            Competizione::GeneraCampionato($squadre, $tablePartite, $ar);
+            if ($mod == 68) {
+                Competizione::GeneraCampionato($squadre, $tablePartite, $ar);
+            } elseif ($mod == 69) {
+                Competizione::GeneraEliminazione($squadre, $tablePartite, $ar);
+            } elseif ($mod == 70) {
+                Competizione::GeneraChampions($squadre, $tablePartite, $ar);
+            }
             Competizione::GeneraStatistiche($squadre, $tableStatistiche, $tablePartite);
             // Visualizza i dettagli della competizione
             echo '<h1 class="text-center fw-bold h1 mb-5">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
@@ -78,7 +84,7 @@ $userId = $user->id;
                     </form>
                 </div>
                 <?php
-            }elseif ($finita === 1) {
+            } elseif ($finita === 1) {
                 ?>
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
                     <span><?php echo text::_('JOOM_RIAPRI') ?></span>
@@ -93,13 +99,13 @@ $userId = $user->id;
         }
         if (isset($_POST['closecomp'])) {
             Competizione::setCompetizioneFinita($idcomp);
-            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']). "?id=$idcomp&module_id=116");
+            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
             exit;
         } elseif (isset($_POST['opencomp'])) {
             Competizione::setCompetizionenonFinita($idcomp);
-            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']). "?id=$idcomp&module_id=116");
+            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
             exit;
-        }       
+        }
     }
     ?>
 </div>

@@ -7,6 +7,7 @@ defined(constant_name: '_JEXEC') or die; // Assicurati che il file venga caricat
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Exception;
+use Symfony\Component\VarDumper\VarDumper;
 
 abstract class Competizione
 {
@@ -198,9 +199,9 @@ abstract class Competizione
         `squadra2` INT NOT NULL,
         `gol1` INT DEFAULT NULL,
         `gol2` INT DEFAULT NULL,
-        `giornata` INT,
-        `girone` INT DEFAULT 0,
-        PRIMARY KEY (`squadra1`, `squadra2`)
+        `giornata` INT NOT NULL,
+        `girone` INT DEFAULT NULL,
+        PRIMARY KEY (`squadra1`, `squadra2`, `giornata`)
     )";
         $db->setQuery($query);
         try {
@@ -243,6 +244,7 @@ abstract class Competizione
             }
         }
     }
+
     public static function GeneraCampionato($squadre, $tablePartite, $ar)
     {
         $db = Factory::getDbo();
@@ -330,6 +332,16 @@ abstract class Competizione
                 }
             }
         }
+    }
+
+    public static function GeneraEliminazione($squadre, $tablePartite, $ar)
+    {
+        
+    }
+
+    public static function GeneraChampions($squadre, $tablePartite, $ar)
+    {
+
     }
 
     public static function GeneraStatistiche($squadre, $tableStatistiche, $tablePartite)
@@ -592,7 +604,8 @@ abstract class Competizione
         return $getTableStatistiche;
     }
 
-    public static function setCompetizioneFinita($id) {
+    public static function setCompetizioneFinita($id)
+    {
         $db = Factory::getDbo();
         $query = "UPDATE #__competizioni SET finita = 1 WHERE id = " . (int) $id;
         $db->setQuery($query);
@@ -600,14 +613,15 @@ abstract class Competizione
         return;
     }
 
-    public static function setCompetizionenonFinita($id) {
+    public static function setCompetizionenonFinita($id)
+    {
         $db = Factory::getDbo();
         $query = "UPDATE #__competizioni SET finita = 0 WHERE id = " . (int) $id;
         $db->setQuery($query);
         $db->execute();
         return;
     }
-    
+
     public static function calculateStatistics($squadra, $view, $ar)
     {
         $squadraID = $punti = $giocate = $vinte = $pari = $perse = $golFatti = $golSubiti = $differenza = 0;
@@ -798,8 +812,9 @@ abstract class Competizione
 
         // Crea la query per ottenere i risultati delle partite
         $query = $db->getQuery(true)
-            ->select('squadra1, squadra2, gol1, gol2')
-            ->from($db->quoteName($tablePartite));
+            ->select('squadra1, squadra2, gol1, gol2, giornata, girone')
+            ->from($db->quoteName($tablePartite))
+            ->order('giornata');
 
         // Esegui la query
         $db->setQuery($query);
@@ -913,7 +928,7 @@ abstract class Competizione
         }
         // Restituisci i risultati come stringa unita da linee
         if ($index >= 0 && $index < 9) {
-            return $maxCount.": ".implode("<br>", $records);
+            return $maxCount . ": " . implode("<br>", $records);
         } elseif ($index >= 9 && $index < 12) {
             $records = array_unique($records); // Rimuovi duplicati
             // Unisci il conteggio con il primo record e poi vai a capo per i restanti

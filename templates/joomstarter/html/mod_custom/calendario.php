@@ -15,6 +15,7 @@ if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $finita = $competizione->finita;
+    $mod = $competizione->modalita;
     if ($finita === 1)
         $disabled = "disabled";
     else
@@ -76,14 +77,16 @@ if (isset($_GET['id'])) {
                                         <input type="number" id="gol2-<?php echo $index . '-' . $i; ?>" name="gol2"
                                             class="form-control text-center" value="<?php echo $gol2; ?>"
                                             onclick="selezionaInput(this)" <?php echo $disabled; ?>>
-                                        <button type="submit" name="save" class="btn btn-success ms-2"
-                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
-                                            <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
-                                        </button>
-                                        <button type="submit" name="delete" class="btn btn-danger ms-1"
-                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
-                                            <span class="bi bi-x text-white" style="font-size:25px;"></span>
-                                        </button>
+                                        <?php if ($mod !== 69): ?>
+                                            <button type="submit" name="save" class="btn btn-success ms-2"
+                                                style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                                <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
+                                            </button>
+                                            <button type="submit" name="delete" class="btn btn-danger ms-1"
+                                                style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                                <span class="bi bi-x text-white" style="font-size:25px;"></span>
+                                            </button>
+                                        <?php endif; ?>
                                     </form>
                                 </div>
                             <?php endforeach; ?>
@@ -92,6 +95,7 @@ if (isset($_GET['id'])) {
                             <form action="" class="p-2 d-flex justify-content-between" method="post"
                                 onsubmit="updateAllGolValues(<?php echo $index; ?>)">
                                 <input type="hidden" name="module_id" value="116">
+                                <input type="hidden" name="modalita" value="<?php echo $mod; ?>">
                                 <input type="hidden" name="giornata" value="<?php echo $index; ?>">
 
                                 <?php foreach ($partite as $i => $partita): ?>
@@ -104,8 +108,7 @@ if (isset($_GET['id'])) {
                                 <?php endforeach; ?>
 
                                 <button type="submit" name="saveall" class="btn btn-success" style="width: 80px;" <?php echo $disabled; ?>>Salva</button>
-                                <button type="submit" name="deleteall" class="btn btn-danger"
-                                    style="width: 80px;" <?php echo $disabled; ?>>Elimina</button>
+                                <button type="submit" name="deleteall" class="btn btn-danger" style="width: 80px;" <?php echo $disabled; ?>>Elimina</button>
                             </form>
                         </div>
                     </div>
@@ -215,7 +218,9 @@ if (isset($_POST['save'])) {
 } elseif (isset($_POST['deleteall'])) {
     $giornata = $_POST['giornata'];
     $module_ID = $_POST['module_id'];
-
+    $mod = $_POST['modalita'];
+    if($mod==69) $segno = " >= ";
+    else $segno = " = ";
     // Ottieni il database
     $db = Factory::getDbo();
 
@@ -226,12 +231,11 @@ if (isset($_POST['save'])) {
             'gol1 = NULL',
             'gol2 = NULL'
         ])
-        ->where($db->quoteName('giornata') . ' = ' . $db->quote($giornata));
+        ->where($db->quoteName('giornata') . $segno . $db->quote($giornata));
 
     // Esegui la query
     $db->setQuery($query);
     $db->execute();
-
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 }
