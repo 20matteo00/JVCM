@@ -467,7 +467,7 @@ abstract class Competizione
         /* foreach ($risultati as $key => $risultato) {
             echo "Risultati: " . self::getArticleTitleById($risultato['squadra1']) . " vs " . self::getArticleTitleById($risultato['squadra2']) . " - Gol: {$risultato['gol1']} : {$risultato['gol2']}\n";
         } */
-       
+
         // Determina le squadre vincenti
         foreach ($risultati as $key => $risultato) {
             if ($risultato['gol1'] > $risultato['gol2']) {
@@ -485,7 +485,6 @@ abstract class Competizione
             echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
             return;
         }
-        var_dump($squadreVincenti);
         // Creazione delle partite per il nuovo turno
         $turno = $turnoPrecedente + 1;
         self::creaTurno($squadreVincenti, $turno, $tablePartite, $ar);
