@@ -334,13 +334,217 @@ abstract class Competizione
         }
     }
 
-    public static function GeneraEliminazione($squadre, $tablePartite)
+    public static function GeneraEliminazione($squadre, $tablePartite, $ar)
     {
+        $db = Factory::getDbo();
+
+        // Controlla se ci sono già partite nella tabella
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName($tablePartite));
+        $db->setQuery($query);
+        $partiteEsistenti = $db->loadObjectList();
+
+        // Se non ci sono partite nella tabella, crea il primo turno con squadre mischiate
+        if (empty($partiteEsistenti)) {
+            shuffle($squadre); // Mischia le squadre
+            self::creaTurno($squadre, 1, $tablePartite, $ar);
+            return;
+        }
+
+        // Controlla se ci sono partite incomplete nel turno corrente
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('gol1') . ' IS NULL OR ' . $db->quoteName('gol2') . ' IS NULL');
+        $db->setQuery($query);
+        $partiteIncomplete = $db->loadObjectList();
+
+        // Se ci sono partite incomplete, interrompi l'esecuzione
+        if (!empty($partiteIncomplete)) {
+            //echo "Ci sono ancora partite da completare nel turno corrente. Attendi prima di generare il turno successivo.";
+            return;
+        }
+
+        // Recupera le squadre vincenti dal turno precedente
+        $squadreVincenti = [];
+        $turnoPrecedente = self::getTurnoCorrente($tablePartite) - 1;
+
+        $query = $db->getQuery(true)
+            ->select('squadra1, squadra2, gol1, gol2, giornata')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' = ' . (int) $turnoPrecedente . ' OR ' . $db->quoteName('giornata') . ' = ' . (int) ($turnoPrecedente - 1));
+        $db->setQuery($query);
+        $partiteTurnoPrecedente = $db->loadObjectList();
+
+        // Raccogli i risultati sommando i gol per ogni coppia di squadre (andata e ritorno)
+        $risultati = [];
+        foreach ($partiteTurnoPrecedente as $partita) {
+            // Ignora partite con gol NULL
+            if ($partita->gol1 === null || $partita->gol2 === null) {
+                continue;
+            }
+
+            // Creazione della chiave unica per le squadre
+            $key = min($partita->squadra1, $partita->squadra2) . '-' . max($partita->squadra2, $partita->squadra1);
+
+
+            // Somma i gol di andata e ritorno
+            if ($ar === 0) {
+                // Se non esiste già un record per questa coppia, crealo
+                if (!isset($risultati[$key])) {
+                    $risultati[$key] = [
+                        'squadra1' => $partita->squadra1,
+                        'squadra2' => $partita->squadra2,
+                        'gol1' => 0,
+                        'gol2' => 0,
+                        'partite' => [] // Aggiungi un array per tenere traccia delle partite
+                    ];
+                }
+            } else {
+                // In caso di eliminazione, gestisci andata e ritorno
+                if ($partita->giornata % 2 == 1) { // Considera come andata
+                    // Se non esiste già un record per questa coppia, crealo
+                    if (!isset($risultati[$key])) {
+                        $risultati[$key] = [
+                            'squadra1' => $partita->squadra1,
+                            'squadra2' => $partita->squadra2,
+                            'gol1' => 0,
+                            'gol2' => 0,
+                            'partite' => [] // Aggiungi un array per tenere traccia delle partite
+                        ];
+                    }
+                } elseif ($partita->giornata % 2 == 0) { // Considera come ritorno
+                    // Somma i gol invertiti per la partita di ritorno
+                    // Se non esiste già un record per questa coppia, crealo
+                    if (!isset($risultati[$key])) {
+                        $risultati[$key] = [
+                            'squadra1' => $partita->squadra2,
+                            'squadra2' => $partita->squadra1,
+                            'gol1' => 0,
+                            'gol2' => 0,
+                            'partite' => [] // Aggiungi un array per tenere traccia delle partite
+                        ];
+                    }
+                }
+            }
+            // Aggiungi la partita all'array delle partite
+            $risultati[$key]['partite'][] = $partita;
+
+            // Somma i gol di andata e ritorno
+            if ($ar === 0) {
+                // In caso di girone, somma normalmente
+                $risultati[$key]['gol1'] += $partita->gol1;
+                $risultati[$key]['gol2'] += $partita->gol2;
+            } else {
+                // In caso di eliminazione, gestisci andata e ritorno
+                if ($partita->giornata % 2 == 1) { // Considera come andata
+                    $risultati[$key]['gol1'] += $partita->gol1; // gol squadra1
+                    $risultati[$key]['gol2'] += $partita->gol2; // gol squadra2
+                } elseif ($partita->giornata % 2 == 0) { // Considera come ritorno
+                    // Somma i gol invertiti per la partita di ritorno
+                    $risultati[$key]['gol1'] += $partita->gol2; // gol della squadra1 nel ritorno
+                    $risultati[$key]['gol2'] += $partita->gol1; // gol della squadra2 nel ritorno
+                }
+            }
+        }
+
+        // Stampa i risultati per debug
+        /* foreach ($risultati as $key => $risultato) {
+            echo "Risultati: " . self::getArticleTitleById($risultato['squadra1']) . " vs " . self::getArticleTitleById($risultato['squadra2']) . " - Gol: {$risultato['gol1']} : {$risultato['gol2']}\n";
+        } */
+
+        // Determina le squadre vincenti
+        foreach ($risultati as $key => $risultato) {
+            if ($risultato['gol1'] > $risultato['gol2']) {
+                $squadreVincenti[] = $risultato['squadra1'];
+            } elseif ($risultato['gol2'] > $risultato['gol1']) {
+                $squadreVincenti[] = $risultato['squadra2'];
+            } else {
+                //echo "Pareggio tra {$risultato['squadra1']} e {$risultato['squadra2']} dopo andata e ritorno. Attendi prima di procedere.";
+                return;
+            }
+        }
+
+        // Se non ci sono abbastanza squadre per un nuovo turno, il torneo è terminato
+        if (count($squadreVincenti) < 2) {
+            //echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
+            return;
+        }
+
+
+        // Creazione delle partite per il nuovo turno
+        $turno = $turnoPrecedente + 1;
+        self::creaTurno($squadreVincenti, $turno, $tablePartite, $ar);
     }
 
+    // Funzione di supporto per creare un turno di partite
+    private static function creaTurno($squadre, $turno, $tablePartite, $ar)
+    {
+        $db = Factory::getDbo();
+        $partite = [];
+        $numsquadre = count($squadre);
 
+        for ($i = 0; $i < floor($numsquadre / 2); $i++) {
+            $squadraCasa = $squadre[$i];
+            $squadraTrasferta = $squadre[$numsquadre - 1 - $i];
 
+            // Aggiunge la partita andata
+            $partite[] = (object) [
+                'squadra1' => $squadraCasa,
+                'squadra2' => $squadraTrasferta,
+                'giornata' => $turno,
+                'gol1' => null,
+                'gol2' => null
+            ];
 
+            // Aggiunge la partita di ritorno se `$ar` è 1
+            if ($ar === 1 && $numsquadre > 2) {
+                $partite[] = (object) [
+                    'squadra1' => $squadraTrasferta,
+                    'squadra2' => $squadraCasa,
+                    'giornata' => $turno + 1,
+                    'gol1' => null,
+                    'gol2' => null
+                ];
+            }
+        }
+
+        // Inserisci le partite nel database
+        foreach ($partite as $partita) {
+            $query = $db->getQuery(true)
+                ->insert($db->quoteName($tablePartite))
+                ->columns([$db->quoteName('squadra1'), $db->quoteName('squadra2'), $db->quoteName('giornata'), $db->quoteName('gol1'), $db->quoteName('gol2')])
+                ->values(
+                    $db->quote($partita->squadra1) . ', ' .
+                    $db->quote($partita->squadra2) . ', ' .
+                    $db->quote($partita->giornata) . ', ' .
+                    'NULL, NULL'
+                );
+
+            $db->setQuery($query);
+            try {
+                $db->execute();
+            } catch (Exception $e) {
+                echo 'Errore nell\'inserimento della partita: ' . $e->getMessage();
+            }
+        }
+    }
+
+    // Funzione di supporto per ottenere il turno corrente
+    private static function getTurnoCorrente($tablePartite)
+    {
+        $db = Factory::getDbo();
+
+        // Ottiene il turno più alto presente nel database
+        $query = $db->getQuery(true)
+            ->select('MAX(' . $db->quoteName('giornata') . ')')
+            ->from($db->quoteName($tablePartite));
+        $db->setQuery($query);
+        $maxTurno = $db->loadResult();
+
+        return $maxTurno ? $maxTurno + 1 : 1;
+    }
 
     public static function GeneraChampions($squadre, $tablePartite, $ar)
     {

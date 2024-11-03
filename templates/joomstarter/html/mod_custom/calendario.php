@@ -16,6 +16,7 @@ if (isset($_GET['id'])) {
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $finita = $competizione->finita;
     $mod = $competizione->modalita;
+    $ar = $competizione->andata_ritorno;
     if ($finita === 1)
         $disabled = "disabled";
     else
@@ -95,6 +96,7 @@ if (isset($_GET['id'])) {
                             <form action="" class="p-2 d-flex justify-content-between" method="post"
                                 onsubmit="updateAllGolValues(<?php echo $index; ?>)">
                                 <input type="hidden" name="module_id" value="116">
+                                <input type="hidden" name="ar" value="<?php echo $ar; ?>">
                                 <input type="hidden" name="modalita" value="<?php echo $mod; ?>">
                                 <input type="hidden" name="giornata" value="<?php echo $index; ?>">
 
@@ -114,6 +116,60 @@ if (isset($_GET['id'])) {
                     </div>
                 </div>
             <?php endforeach; ?>
+            <?php
+            if ($mod === 69) {
+                // Ottieni l'oggetto database
+                $db = Factory::getDbo();
+
+                // Crea la query per ottenere l'ultima partita
+                $query = $db->getQuery(true)
+                    ->select('*')
+                    ->from($db->quoteName($tablePartite))
+                    ->where($db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')')
+                    ->where($db->quoteName('gol1') . ' IS NOT NULL')
+                    ->where($db->quoteName('gol2') . ' IS NOT NULL')
+                    ->where('(SELECT COUNT(*) FROM ' . $db->quoteName($tablePartite) . ' WHERE ' . $db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')) = 1');
+
+                // Esegui la query
+                $db->setQuery($query);
+                $partita = $db->loadObject();
+
+                // Controlla se la partita è stata trovata e determina il vincitore
+                if ($partita) {
+                    $winner = "";
+                    if ($partita->gol1 > $partita->gol2) {
+                        $winner = $partita->squadra1;
+                    } elseif ($partita->gol1 < $partita->gol2) {
+                        $winner = $partita->squadra2;
+                    }
+                    $cf1 = Competizione::getCustomFields($winner);
+                    $colors = !empty($cf1[1]) ? $cf1[1]->value : '#000000';
+                    $colort = !empty($cf1[2]) ? $cf1[2]->value : '#ffffff';
+                    // Se c'è un vincitore, mostra la card
+                    if ($winner !== "") {
+                        ?>
+                        <div class="col-12 col-lg-6" id="<?php echo $partita->giornata + 1; ?>">
+                            <div class="card mb-4">
+                                <div class="card-header p-2">
+                                    <h5 class="text-center m-0 fw-bold">VINCITORE</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="p-1 text-center fw-bold m-auto" style="border-radius:50px; width:200px; background-color: <?php echo $colors; ?>;">
+                                        <span style="color: <?php echo $colort; ?>;"><?php echo htmlspecialchars(Competizione::getArticleTitleById($winner)); ?></span>
+                                    </p>
+                                </div>
+                                <div class="card-footer">
+                                    <!-- Puoi aggiungere ulteriori dettagli qui, se necessario -->
+                                </div>
+                            </div>
+                        </div>
+                        <?php
+                    }
+                }
+            }
+            ?>
+
+
         </div>
     </div>
     <?php
@@ -180,6 +236,8 @@ if (isset($_POST['save'])) {
     $squadre2 = $_POST['squadra2']; // Array di squadre2
     $gol1 = $_POST['gol1']; // Array di gol1
     $gol2 = $_POST['gol2']; // Array di gol2
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
 
     // Assicurati che tutti gli array abbiano la stessa lunghezza
     $count = count($squadre1);
@@ -210,6 +268,20 @@ if (isset($_POST['save'])) {
             // Esegui la query
             $db->setQuery($query);
             $db->execute();
+            if ($mod == 69) {
+                $gio = $giornata;
+                if ($gio % 2 == 1 && $ar == 1)
+                    $gio += 1;
+
+                // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+                $deleteQuery = $db->getQuery(true)
+                    ->delete($db->quoteName($tablePartite))
+                    ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+                // Esegui la query per eliminare le partite successive
+                $db->setQuery($deleteQuery);
+                $db->execute();
+            }
         }
         $gio = $giornata + 1;
     }
@@ -219,23 +291,52 @@ if (isset($_POST['save'])) {
     $giornata = $_POST['giornata'];
     $module_ID = $_POST['module_id'];
     $mod = $_POST['modalita'];
-    if($mod==69) $segno = " >= ";
-    else $segno = " = ";
-    // Ottieni il database
-    $db = Factory::getDbo();
+    $ar = $_POST['ar'];
+    if ($mod == 69) {
+        $gio = $giornata;
+        if ($gio % 2 == 1 && $ar == 1)
+            $gio += 1;
+        // Ottieni il database
+        $db = Factory::getDbo();
 
-    // Prepara la query per impostare a 0 i gol della giornata specificata
-    $query = $db->getQuery(true)
-        ->update($db->quoteName($tablePartite))
-        ->set([
-            'gol1 = NULL',
-            'gol2 = NULL'
-        ])
-        ->where($db->quoteName('giornata') . $segno . $db->quote($giornata));
+        // Prepara la query per impostare a NULL i gol della giornata specificata
+        $query = $db->getQuery(true)
+            ->update($db->quoteName($tablePartite))
+            ->set([
+                $db->quoteName('gol1') . ' = NULL',
+                $db->quoteName('gol2') . ' = NULL'
+            ])
+            ->where($db->quoteName('giornata') . ' = ' . (int) $giornata);
 
-    // Esegui la query
-    $db->setQuery($query);
-    $db->execute();
+        // Esegui la query per aggiornare i gol
+        $db->setQuery($query);
+        $db->execute();
+
+        // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+        $deleteQuery = $db->getQuery(true)
+            ->delete($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+        // Esegui la query per eliminare le partite successive
+        $db->setQuery($deleteQuery);
+        $db->execute();
+    } else {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Prepara la query per impostare a 0 i gol della giornata specificata
+        $query = $db->getQuery(true)
+            ->update($db->quoteName($tablePartite))
+            ->set([
+                'gol1 = NULL',
+                'gol2 = NULL'
+            ])
+            ->where($db->quoteName('giornata') . " = " . $db->quote($giornata));
+
+        // Esegui la query
+        $db->setQuery($query);
+        $db->execute();
+    }
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 }
