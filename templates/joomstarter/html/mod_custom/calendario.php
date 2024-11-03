@@ -118,21 +118,7 @@ if (isset($_GET['id'])) {
             <?php endforeach; ?>
             <?php
             if ($mod === 69) {
-                // Ottieni l'oggetto database
-                $db = Factory::getDbo();
-
-                // Crea la query per ottenere l'ultima partita
-                $query = $db->getQuery(true)
-                    ->select('*')
-                    ->from($db->quoteName($tablePartite))
-                    ->where($db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')')
-                    ->where($db->quoteName('gol1') . ' IS NOT NULL')
-                    ->where($db->quoteName('gol2') . ' IS NOT NULL')
-                    ->where('(SELECT COUNT(*) FROM ' . $db->quoteName($tablePartite) . ' WHERE ' . $db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')) = 1');
-
-                // Esegui la query
-                $db->setQuery($query);
-                $partita = $db->loadObject();
+                $partita = Competizione::getUltimaPartita($tablePartite);
 
                 // Controlla se la partita è stata trovata e determina il vincitore
                 if ($partita) {

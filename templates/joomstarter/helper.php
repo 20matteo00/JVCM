@@ -362,13 +362,27 @@ abstract class Competizione
 
         // Se ci sono partite incomplete, interrompi l'esecuzione
         if (!empty($partiteIncomplete)) {
-            //echo "Ci sono ancora partite da completare nel turno corrente. Attendi prima di generare il turno successivo.";
+            return;
+        }
+
+        // Controlla se ci sono già partite per il turno corrente
+        $turnoCorrente = self::getTurnoCorrente($tablePartite);
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' = ' . (int) $turnoCorrente);
+        $db->setQuery($query);
+        $partiteTurnoCorrente = $db->loadObjectList();
+
+        // Se ci sono già partite per il turno corrente, non generare un nuovo turno
+        if (!empty($partiteTurnoCorrente)) {
             return;
         }
 
         // Recupera le squadre vincenti dal turno precedente
         $squadreVincenti = [];
-        $turnoPrecedente = self::getTurnoCorrente($tablePartite) - 1;
+        if($ar === 0) $turnoPrecedente = self::getTurnoCorrente($tablePartite);
+        elseif($ar === 1) $turnoPrecedente = self::getTurnoCorrente($tablePartite) - 1;
 
         $query = $db->getQuery(true)
             ->select('squadra1, squadra2, gol1, gol2, giornata')
@@ -453,7 +467,7 @@ abstract class Competizione
         /* foreach ($risultati as $key => $risultato) {
             echo "Risultati: " . self::getArticleTitleById($risultato['squadra1']) . " vs " . self::getArticleTitleById($risultato['squadra2']) . " - Gol: {$risultato['gol1']} : {$risultato['gol2']}\n";
         } */
-
+       
         // Determina le squadre vincenti
         foreach ($risultati as $key => $risultato) {
             if ($risultato['gol1'] > $risultato['gol2']) {
@@ -465,63 +479,72 @@ abstract class Competizione
                 return;
             }
         }
-
+        $squadreVincenti = array_unique($squadreVincenti);
         // Se non ci sono abbastanza squadre per un nuovo turno, il torneo è terminato
         if (count($squadreVincenti) < 2) {
-            //echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
+            echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
             return;
         }
-
-
+        var_dump($squadreVincenti);
         // Creazione delle partite per il nuovo turno
         $turno = $turnoPrecedente + 1;
         self::creaTurno($squadreVincenti, $turno, $tablePartite, $ar);
     }
 
-    // Funzione di supporto per creare un turno di partite
-    private static function creaTurno($squadre, $turno, $tablePartite, $ar)
+    public static function creaTurno($squadre, $turno, $tablePartite, $ar)
     {
+        $squadre = array_values($squadre); // Riassegna indici consecutivi a partire da 0
         $db = Factory::getDbo();
         $partite = [];
         $numsquadre = count($squadre);
 
         for ($i = 0; $i < floor($numsquadre / 2); $i++) {
-            $squadraCasa = $squadre[$i];
-            $squadraTrasferta = $squadre[$numsquadre - 1 - $i];
-
-            // Aggiunge la partita andata
-            $partite[] = (object) [
-                'squadra1' => $squadraCasa,
-                'squadra2' => $squadraTrasferta,
-                'giornata' => $turno,
-                'gol1' => null,
-                'gol2' => null
-            ];
-
-            // Aggiunge la partita di ritorno se `$ar` è 1
-            if ($ar === 1 && $numsquadre > 2) {
+            // Controlla che gli indici esistano nell'array prima di accedervi
+            $squadraCasa = isset($squadre[$i]) ? $squadre[$i] : null;
+            $squadraTrasferta = isset($squadre[$numsquadre - 1 - $i]) ? $squadre[$numsquadre - 1 - $i] : null;
+    
+            // Verifica che entrambe le squadre siano definite e non vuote
+            if (!empty($squadraCasa) && !empty($squadraTrasferta)) {
+                // Aggiunge la partita di andata
                 $partite[] = (object) [
-                    'squadra1' => $squadraTrasferta,
-                    'squadra2' => $squadraCasa,
-                    'giornata' => $turno + 1,
+                    'squadra1' => $squadraCasa,
+                    'squadra2' => $squadraTrasferta,
+                    'giornata' => $turno,
                     'gol1' => null,
                     'gol2' => null
                 ];
+    
+                // Aggiunge la partita di ritorno se `$ar` è 1
+                if ($ar === 1 && $numsquadre > 2) {
+                    $partite[] = (object) [
+                        'squadra1' => $squadraTrasferta,
+                        'squadra2' => $squadraCasa,
+                        'giornata' => $turno + 1,
+                        'gol1' => null,
+                        'gol2' => null
+                    ];
+                }
             }
         }
-
+    
         // Inserisci le partite nel database
         foreach ($partite as $partita) {
             $query = $db->getQuery(true)
                 ->insert($db->quoteName($tablePartite))
-                ->columns([$db->quoteName('squadra1'), $db->quoteName('squadra2'), $db->quoteName('giornata'), $db->quoteName('gol1'), $db->quoteName('gol2')])
+                ->columns([
+                    $db->quoteName('squadra1'),
+                    $db->quoteName('squadra2'),
+                    $db->quoteName('giornata'),
+                    $db->quoteName('gol1'),
+                    $db->quoteName('gol2')
+                ])
                 ->values(
                     $db->quote($partita->squadra1) . ', ' .
                     $db->quote($partita->squadra2) . ', ' .
                     $db->quote($partita->giornata) . ', ' .
                     'NULL, NULL'
                 );
-
+    
             $db->setQuery($query);
             try {
                 $db->execute();
@@ -530,9 +553,9 @@ abstract class Competizione
             }
         }
     }
-
+    
     // Funzione di supporto per ottenere il turno corrente
-    private static function getTurnoCorrente($tablePartite)
+    public static function getTurnoCorrente($tablePartite)
     {
         $db = Factory::getDbo();
 
@@ -1335,6 +1358,27 @@ abstract class Competizione
             return $result === "" ? "-" : $result;
         }
 
+    }
+
+    public static function getUltimaPartita($tablePartite)
+    {
+        // Ottieni l'oggetto database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere l'ultima partita
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')')
+            ->where($db->quoteName('gol1') . ' IS NOT NULL')
+            ->where($db->quoteName('gol2') . ' IS NOT NULL')
+            ->where('(SELECT COUNT(*) FROM ' . $db->quoteName($tablePartite) . ' WHERE ' . $db->quoteName('giornata') . ' = (SELECT MAX(' . $db->quoteName('giornata') . ') FROM ' . $db->quoteName($tablePartite) . ')) = 1');
+
+        // Esegui la query
+        $db->setQuery($query);
+        $partita = $db->loadObject();
+
+        return $partita; // Restituisce l'oggetto partita o null se non ci sono risultati
     }
 
 }
