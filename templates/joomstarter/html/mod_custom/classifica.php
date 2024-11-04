@@ -15,11 +15,15 @@ if (isset($_GET['id'])) {
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $ar = $competizione->andata_ritorno;
     $mod = $competizione->modalita;
-
+    if (isset($competizione->gironi)) {
+        $gironi = $competizione->gironi;
+    } else {
+        $gironi = 1;
+    }
     $checkgol = Competizione::checkGolNull($tablePartite);
-
+    $gir = false;
     // Ottieni la classifica
-    $classifica = Competizione::getClassifica($tableStatistiche);
+    $classifica = Competizione::getClassifica(tableStatistiche: $tableStatistiche);
     $numsquadre = count($classifica);
 
     // Determina la vista
@@ -27,15 +31,19 @@ if (isset($_GET['id'])) {
         (isset($_POST['Trasferta']) ? 'trasferta' :
             (isset($_POST['Andata']) ? 'andata' :
                 (isset($_POST['Ritorno']) ? 'ritorno' :
-                    (isset($_POST['Andamento']) ? 'andamento' : 'totale'))));
+                    (isset($_POST['Andamento']) ? 'andamento' :
+                        (isset($_POST['Gironi']) ? 'gironi' : 'totale')))));
 
     if ($view === 'andata' && $ar === 1) {
-        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod);
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod, $gironi);
     } elseif ($view === 'ritorno' && $ar === 1) {
-        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod);
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod, $gironi);
     } elseif ($view === 'andamento') {
         $classifica = NULL;
-        $andamento = Competizione::getAndamento($tablePartite);
+        $andamento = Competizione::getAndamento(tablePartite: $tablePartite);
+    } elseif ($view === 'gironi') {
+        $classifica = NULL;
+        $gir = true;
     }
     ?>
     <div class="container classifica">
@@ -49,20 +57,25 @@ if (isset($_GET['id'])) {
                 <button type="submit" name="Trasferta" class="btn btn-info">Trasferta</button>
                 <button type="submit" name="Andata" class="btn btn-info">Andata</button>
                 <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
-            </div>
-        </form>
+                <?php if ($mod === 70)
+                    echo '<button type="submit" name="Gironi" class="btn btn-info">Gironi</button>' ?>
+                </div>
+            </form>
 
-        <?php
-        if (!empty($classifica) && !$checkgol): ?>
+            <?php
+                if (!empty($classifica) && !$checkgol): ?>
             <div class="table-responsive my-5">
                 <table class="table table-striped table-bordered text-center category-table">
                     <thead class="thead-dark">
+                        <?php ($mod === 70) ? $colspan = 3 : $colspan = 2; ?>
                         <tr>
-                            <td class="fw-bold" colspan="2">Rank</td>
+                            <td class="fw-bold" colspan="<?php echo $colspan; ?>">Rank</td>
                             <td class="fw-bold" colspan="8"><?php echo ucfirst($view); ?></td>
                         </tr>
                         <tr>
                             <th class="category-header-logo">#</th>
+                            <?php if ($mod === 70)
+                                echo '<th class="category-header-logo">Girone</th>'; ?>
                             <th class="category-header-logo">Squadra</th>
                             <th class="category-header-logo">Pt</th>
                             <th class="category-header-logo">G</th>
@@ -79,7 +92,7 @@ if (isset($_GET['id'])) {
                         $posizione = 1;
                         foreach ($classifica as $squadra):
                             // Calcola le statistiche
-                            $stats = Competizione::calculateStatistics($squadra, $view, $ar);
+                            $stats = Competizione::calculateStatistics($squadra, $view, $ar, $tablePartite);
                             if (isset($squadra->squadra)) {
                                 $cf = Competizione::getCustomFields($squadra->squadra);
                             } else {
@@ -94,6 +107,15 @@ if (isset($_GET['id'])) {
                             ?>
                             <tr>
                                 <td class="category-items-cell"><?php echo $posizione++; ?></td>
+                                <?php
+                                if ($mod === 70) {
+                                    if (isset($squadra->girone)) {
+                                        echo '<td class="category-items-cell">' . htmlspecialchars($squadra->girone) . '</td>';
+                                    } else {
+                                        echo '<td class="category-items-cell">' . htmlspecialchars($stats['girone']) . '</td>';
+                                    }
+                                }
+                                ?>
                                 <td class="category-items-cell">
                                     <div style="border-radius:50px; background-color:<?php echo $color1; ?>"><span
                                             style="color:<?php echo $color2; ?>"><?php
@@ -127,13 +149,17 @@ if (isset($_GET['id'])) {
                 <table class="table table-striped table-bordered text-center category-table">
                     <thead class="thead-dark">
                         <tr>
-                            <td class="fw-bold"><?php echo ucfirst($view); ?></td>
+                            <?php ($mod === 70) ? $colspan = 2 : $colspan = 1; ?>
+
+                            <td class="fw-bold" colspan="<?php echo $colspan; ?>"><?php echo ucfirst($view); ?></td>
                             <td class="fw-bold" colspan="<?php echo Competizione::getGiornate($tablePartite) + 1; ?>">Giornate
                             </td>
                         </tr>
                         <tr>
-                            <th class="category-header-logo">Squadra</th>
-                            <?php
+                            <?php if ($mod === 70)
+                                echo '<th class="fw-bold">Gironi</th>' ?>
+                                <th class="category-header-logo">Squadra</th>
+                                <?php
                             // Trova il numero massimo di giornate
                             $maxGiornate = max(array_map(function ($squadra) {
                                 return count($squadra['risultati']);
@@ -154,8 +180,10 @@ if (isset($_GET['id'])) {
                             $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                             ?>
                             <tr>
-                                <td class="category-items-cell">
-                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                <?php if ($mod === 70)
+                                    echo '<td class="category-items-cell">' . Competizione::getGironeBySquadraId($squadra['squadra'], $tablePartite) . '</td>' ?>
+                                    <td class="category-items-cell">
+                                        <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                         <span style="color:<?php echo $color2; ?>">
                                             <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra['squadra'])); ?>
                                         </span>
@@ -171,6 +199,84 @@ if (isset($_GET['id'])) {
                     </tbody>
                 </table>
             </div>
+        <?php elseif ($gir && !$checkgol): ?>
+            <?php
+            for ($i = 1; $i <= $gironi; $i++) {
+                $classifica = Competizione::getClassificaGironi($tableStatistiche, $i);
+                ?>
+                <div class="table-responsive my-5">
+                    <table class="table table-striped table-bordered text-center category-table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <td class="fw-bold" colspan="2">Girone <?php echo $i;?></td>
+                                <td class="fw-bold" colspan="8"><?php echo "Totale"; ?></td>
+                            </tr>
+                            <tr>
+                                <th class="category-header-logo">#</th>
+                                <th class="category-header-logo">Squadra</th>
+                                <th class="category-header-logo">Pt</th>
+                                <th class="category-header-logo">G</th>
+                                <th class="category-header-logo">V</th>
+                                <th class="category-header-logo">N</th>
+                                <th class="category-header-logo">P</th>
+                                <th class="category-header-logo">GF</th>
+                                <th class="category-header-logo">GS</th>
+                                <th class="category-header-logo">DR</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $posizione = 1;
+                            foreach ($classifica as $squadra):
+                                // Calcola le statistiche
+                                $stats = Competizione::calculateStatistics($squadra, $view, $ar, $tablePartite);
+                                
+                                if (isset($squadra->squadra)) {
+                                    $cf = Competizione::getCustomFields($squadra->squadra);
+                                } else {
+                                    $cf = Competizione::getCustomFields($stats['squadra']);
+                                }
+
+                                // Retrieve color values with defaults
+                                $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                                $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                
+
+                                ?>
+                                <tr>
+                                    <td class="category-items-cell"><?php echo $posizione++; ?></td>
+                                    <td class="category-items-cell">
+                                        <div style="border-radius:50px; background-color:<?php echo $color1; ?>"><span
+                                                style="color:<?php echo $color2; ?>"><?php
+                                                   if (isset($squadra->squadra)) {
+                                                       echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra));
+                                                   } else {
+                                                       echo htmlspecialchars(Competizione::getArticleTitleById($stats['squadra']));
+                                                   }
+                                                   ?>
+                                            </span></div>
+                                    </td>
+                                    <td class="category-items-cell"><?php echo isset($stats['punti']) ? $stats['punti'] : 0; ?></td>
+                                    <td class="category-items-cell"><?php echo isset($stats['giocate']) ? $stats['giocate'] : 0; ?></td>
+                                    <td class="category-items-cell"><?php echo isset($stats['vinte']) ? $stats['vinte'] : 0; ?></td>
+                                    <td class="category-items-cell"><?php echo isset($stats['pari']) ? $stats['pari'] : 0; ?></td>
+                                    <td class="category-items-cell"><?php echo isset($stats['perse']) ? $stats['perse'] : 0; ?></td>
+                                    <td class="category-items-cell"><?php echo isset($stats['golFatti']) ? $stats['golFatti'] : 0; ?>
+                                    </td>
+                                    <td class="category-items-cell"><?php echo isset($stats['golSubiti']) ? $stats['golSubiti'] : 0; ?>
+                                    </td>
+                                    <td class="category-items-cell">
+                                        <?php echo isset($stats['differenza']) ? $stats['differenza'] : 0; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <?php
+            }
+            ?>
+
         <?php endif; ?>
 
 

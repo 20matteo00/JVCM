@@ -40,7 +40,7 @@ $userId = $user->id;
             } elseif ($mod == 70) {
                 Competizione::GeneraChampions($squadre, $tablePartite, $ar, $gironi);
             }
-            Competizione::GeneraStatistiche($squadre, $tableStatistiche, $tablePartite);
+            Competizione::GeneraStatistiche($squadre, $tableStatistiche, $tablePartite, $mod);
             // Visualizza i dettagli della competizione
             echo '<h1 class="text-center fw-bold h1 mb-5">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
             ?>

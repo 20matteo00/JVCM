@@ -296,7 +296,10 @@ abstract class Competizione
                 );
             }
             //var_dump($i);
-            if ($champ) $girone = $gir+1; else $girone = null;
+            if ($champ)
+                $girone = $gir + 1;
+            else
+                $girone = null;
             $numeroSquadre = count($squadre);
             foreach ($giornate as $index => $partite) {
                 foreach ($partite as $partita) {
@@ -612,9 +615,10 @@ abstract class Competizione
 
     }
 
-    public static function GeneraStatistiche($squadre, $tableStatistiche, $tablePartite)
+    public static function GeneraStatistiche($squadre, $tableStatistiche, $tablePartite, $mod)
     {
         $db = Factory::getDbo();
+
 
         // Inizializza le statistiche
         $statistiche = [];
@@ -632,7 +636,6 @@ abstract class Competizione
                 'PT' => null,
                 'GFT' => null,
                 'GST' => null,
-                'girone' => null, // Puoi gestire i gironi se necessario
             ];
         }
 
@@ -683,6 +686,11 @@ abstract class Competizione
 
         // Aggiorna la tabella statistiche nel database
         foreach ($squadre as $squadraId) {
+            if ($mod === 70) {
+                $girone = self::getGironeBySquadraId($squadraId, $tablePartite);
+            } else {
+                $girone = null;
+            }
             $query = $db->getQuery(true)
                 ->update($db->quoteName($tableStatistiche))
                 ->set($db->quoteName('VC') . ' = ' . ($statistiche[$squadraId]['VC'] ?? 'NULL'))
@@ -695,6 +703,7 @@ abstract class Competizione
                 ->set($db->quoteName('PT') . ' = ' . ($statistiche[$squadraId]['PT'] ?? 'NULL'))
                 ->set($db->quoteName('GFT') . ' = ' . ($statistiche[$squadraId]['GFT'] ?? 'NULL'))
                 ->set($db->quoteName('GST') . ' = ' . ($statistiche[$squadraId]['GST'] ?? 'NULL'))
+                ->set($db->quoteName('girone') . ' = ' . ($girone ?? 'NULL'))
                 ->where($db->quoteName('squadra') . ' = ' . (int) $squadraId);
 
             $db->setQuery($query);
@@ -732,7 +741,7 @@ abstract class Competizione
     }
 
 
-    public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod)
+    public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod, $gironi)
     {
         if ($ar === 0) {
             return [];
@@ -762,15 +771,19 @@ abstract class Competizione
             foreach ($partite as $partita) {
                 // Controlla se la partita è stata giocata nella giornata valida
                 if ($view === "andata") {
-                    if ($mod === 69)
-                        $partitedaprendere = $partita->giornata % 2 == 1;
-                    else
+                    if ($mod === 68)
                         $partitedaprendere = $partita->giornata < $numsquadre;
+                    elseif ($mod === 69)
+                        $partitedaprendere = $partita->giornata % 2 == 1;
+                    elseif ($mod === 70)
+                        $partitedaprendere = $partita->giornata < ($numsquadre / $gironi);
                 } elseif ($view === "ritorno") {
-                    if ($mod === 69)
-                        $partitedaprendere = $partita->giornata % 2 == 0;
-                    else
+                    if ($mod === 68)
                         $partitedaprendere = $partita->giornata >= $numsquadre;
+                    elseif ($mod === 69)
+                        $partitedaprendere = $partita->giornata % 2 == 0;
+                    elseif ($mod === 70)
+                        $partitedaprendere = $partita->giornata >= ($numsquadre / $gironi);
                 }
                 if ($partitedaprendere) {
                     // Estrai le squadre e i risultati
@@ -839,7 +852,7 @@ abstract class Competizione
             ->order($db->quoteName('girone') . ' ASC')
             ->order('LEAST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') // Ordina per il min id tra squadra1 e squadra2
             ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC'); // Ordina per il max id tra squadra1 e squadra2
-    
+
         $db->setQuery($query);
         return $db->loadObjectList(); // Restituisce un array di oggetti
     }
@@ -899,7 +912,7 @@ abstract class Competizione
         return;
     }
 
-    public static function calculateStatistics($squadra, $view, $ar)
+    public static function calculateStatistics($squadra, $view, $ar, $tablePartite)
     {
         $squadraID = $punti = $giocate = $vinte = $pari = $perse = $golFatti = $golSubiti = $differenza = 0;
 
@@ -959,7 +972,7 @@ abstract class Competizione
                 $golSubiti = $squadra->GS; // Gol subiti
 
             }
-        } elseif ($view === 'totale') {
+        } elseif ($view === 'totale' || $view === 'gironi') {
             $punti = (($squadra->VC + $squadra->VT) * 3) + ($squadra->NC + $squadra->NT);
             $giocate = $squadra->VC + $squadra->VT + $squadra->NC + $squadra->NT + $squadra->PC + $squadra->PT;
             $vinte = $squadra->VC + $squadra->VT;
@@ -970,7 +983,7 @@ abstract class Competizione
         }
 
         $differenza = $golFatti - $golSubiti;
-
+        $girone = self::getGironeBySquadraId($squadraID, $tablePartite);
         return [
             'squadra' => $squadraID,
             'punti' => $punti,
@@ -981,6 +994,7 @@ abstract class Competizione
             'golFatti' => $golFatti,
             'golSubiti' => $golSubiti,
             'differenza' => $differenza,
+            'girone' => $girone,
         ];
     }
 
@@ -1444,6 +1458,44 @@ abstract class Competizione
 
         // Restituisce true se c'è solo una partita nell'ultima giornata, altrimenti false
         return $numeroPartiteMaxGiornata === 1;
+    }
+
+    public static function getGironeBySquadraId($idSquadra, $tablePartite)
+    {
+        $db = Factory::getDbo();
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('girone'))
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('squadra1') . ' = ' . (int) $idSquadra . ' OR ' . $db->quoteName('squadra2') . ' = ' . (int) $idSquadra)
+            ->setLimit(1); // Limita il risultato a un solo record, assumendo che una squadra appartenga a un solo girone
+
+        $db->setQuery($query);
+        return $db->loadResult();
+    }
+
+    public static function getClassificaGironi($tableStatistiche, $girone){
+        $db = Factory::getDbo();
+
+        // Query per ottenere tutte le statistiche e calcolare i punti, la differenza reti e i gol fatti
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->select('
+            (COALESCE(VC, 0) + COALESCE(VT, 0)) * 3 + (COALESCE(NC, 0) + COALESCE(NT, 0)) AS punti,  
+            (COALESCE(GFC, 0) + COALESCE(GFT, 0) - COALESCE(GSC, 0) - COALESCE(GST, 0)) AS diff_reti, 
+            (COALESCE(GFC, 0) + COALESCE(GFT, 0)) AS gol_fatti')
+            ->from($db->quoteName($tableStatistiche))
+            ->where($db->quoteName('girone') . " = " . $girone)
+            ->order('punti DESC, diff_reti DESC, gol_fatti DESC, squadra ASC'); // Ordina secondo i criteri specificati
+
+        $db->setQuery($query);
+
+        try {
+            return $db->loadObjectList(); // Restituisce un array di oggetti
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle statistiche: ' . $e->getMessage();
+            return [];
+        }
     }
 
 }
