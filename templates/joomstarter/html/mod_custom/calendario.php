@@ -69,6 +69,8 @@ if (isset($_GET['id'])) {
                                     </div>
                                     <form action="" class="d-flex align-items-center ms-3" method="post">
                                         <input type="hidden" name="module_id" value="116">
+                                        <input type="hidden" name="ar" value="<?php echo $ar; ?>">
+                                        <input type="hidden" name="modalita" value="<?php echo $mod; ?>">
                                         <input type="hidden" name="giornata" value="<?php echo $index; ?>">
                                         <input type="hidden" name="squadra1" value="<?php echo $partita['squadra1']; ?>">
                                         <input type="hidden" name="squadra2" value="<?php echo $partita['squadra2']; ?>">
@@ -78,16 +80,16 @@ if (isset($_GET['id'])) {
                                         <input type="number" id="gol2-<?php echo $index . '-' . $i; ?>" name="gol2"
                                             class="form-control text-center" value="<?php echo $gol2; ?>"
                                             onclick="selezionaInput(this)" <?php echo $disabled; ?>>
-                                        <?php if ($mod !== 69): ?>
-                                            <button type="submit" name="save" class="btn btn-success ms-2"
-                                                style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
-                                                <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
-                                            </button>
-                                            <button type="submit" name="delete" class="btn btn-danger ms-1"
-                                                style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
-                                                <span class="bi bi-x text-white" style="font-size:25px;"></span>
-                                            </button>
-                                        <?php endif; ?>
+                                        <?php //if ($mod !== 69): ?>
+                                        <button type="submit" name="save" class="btn btn-success ms-2"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                            <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
+                                        </button>
+                                        <button type="submit" name="delete" class="btn btn-danger ms-1"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                            <span class="bi bi-x text-white" style="font-size:25px;"></span>
+                                        </button>
+                                        <?php //endif; ?>
                                     </form>
                                 </div>
                             <?php endforeach; ?>
@@ -140,8 +142,10 @@ if (isset($_GET['id'])) {
                                     <h5 class="text-center m-0 fw-bold">VINCITORE</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p class="p-1 text-center fw-bold m-auto" style="border-radius:50px; width:200px; background-color: <?php echo $colors; ?>;">
-                                        <span style="color: <?php echo $colort; ?>;"><?php echo htmlspecialchars(Competizione::getArticleTitleById($winner)); ?></span>
+                                    <p class="p-1 text-center fw-bold m-auto"
+                                        style="border-radius:50px; width:200px; background-color: <?php echo $colors; ?>;">
+                                        <span
+                                            style="color: <?php echo $colort; ?>;"><?php echo htmlspecialchars(Competizione::getArticleTitleById($winner)); ?></span>
                                     </p>
                                 </div>
                                 <div class="card-footer">
@@ -167,6 +171,8 @@ if (isset($_POST['save'])) {
     $squadra1 = $_POST['squadra1'];
     $squadra2 = $_POST['squadra2'];
     $giornata = $_POST['giornata'];
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
     if ($_POST['gol1'] != NULL) {
         $gol1 = $_POST['gol1'];
     } else
@@ -189,7 +195,20 @@ if (isset($_POST['save'])) {
         ]);
     $db->setQuery($query);
     $db->execute();
+    if ($mod == 69) {
+        $gio = $giornata;
+        if ($gio % 2 == 1 && $ar == 1)
+            $gio += 1;
 
+        // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+        $deleteQuery = $db->getQuery(true)
+            ->delete($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+        // Esegui la query per eliminare le partite successive
+        $db->setQuery($deleteQuery);
+        $db->execute();
+    }
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 } elseif (isset($_POST['delete'])) {
@@ -197,6 +216,9 @@ if (isset($_POST['save'])) {
     $squadra2 = $_POST['squadra2'];
     $giornata = $_POST['giornata'];
     $module_ID = $_POST['module_id'];
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
+
     $db = Factory::getDbo();
     $query = $db->getQuery(true)
         ->update($db->quoteName($tablePartite))
@@ -210,7 +232,20 @@ if (isset($_POST['save'])) {
         ]);
     $db->setQuery($query);
     $db->execute();
+    if ($mod == 69) {
+        $gio = $giornata;
+        if ($gio % 2 == 1 && $ar == 1)
+            $gio += 1;
 
+        // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+        $deleteQuery = $db->getQuery(true)
+            ->delete($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+        // Esegui la query per eliminare le partite successive
+        $db->setQuery($deleteQuery);
+        $db->execute();
+    }
 
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
@@ -278,25 +313,25 @@ if (isset($_POST['save'])) {
     $module_ID = $_POST['module_id'];
     $mod = $_POST['modalita'];
     $ar = $_POST['ar'];
+    // Ottieni il database
+    $db = Factory::getDbo();
+
+    // Prepara la query per impostare a NULL i gol della giornata specificata
+    $query = $db->getQuery(true)
+        ->update($db->quoteName($tablePartite))
+        ->set([
+            $db->quoteName('gol1') . ' = NULL',
+            $db->quoteName('gol2') . ' = NULL'
+        ])
+        ->where($db->quoteName('giornata') . ' = ' . (int) $giornata);
+
+    // Esegui la query per aggiornare i gol
+    $db->setQuery($query);
+    $db->execute();
     if ($mod == 69) {
         $gio = $giornata;
         if ($gio % 2 == 1 && $ar == 1)
             $gio += 1;
-        // Ottieni il database
-        $db = Factory::getDbo();
-
-        // Prepara la query per impostare a NULL i gol della giornata specificata
-        $query = $db->getQuery(true)
-            ->update($db->quoteName($tablePartite))
-            ->set([
-                $db->quoteName('gol1') . ' = NULL',
-                $db->quoteName('gol2') . ' = NULL'
-            ])
-            ->where($db->quoteName('giornata') . ' = ' . (int) $giornata);
-
-        // Esegui la query per aggiornare i gol
-        $db->setQuery($query);
-        $db->execute();
 
         // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
         $deleteQuery = $db->getQuery(true)
@@ -305,22 +340,6 @@ if (isset($_POST['save'])) {
 
         // Esegui la query per eliminare le partite successive
         $db->setQuery($deleteQuery);
-        $db->execute();
-    } else {
-        // Ottieni il database
-        $db = Factory::getDbo();
-
-        // Prepara la query per impostare a 0 i gol della giornata specificata
-        $query = $db->getQuery(true)
-            ->update($db->quoteName($tablePartite))
-            ->set([
-                'gol1 = NULL',
-                'gol2 = NULL'
-            ])
-            ->where($db->quoteName('giornata') . " = " . $db->quote($giornata));
-
-        // Esegui la query
-        $db->setQuery($query);
         $db->execute();
     }
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
