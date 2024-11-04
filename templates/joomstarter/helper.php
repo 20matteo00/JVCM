@@ -1178,12 +1178,14 @@ abstract class Competizione
         return $matches; // Return the list of matches
     }
 
-    public static function getRecord($squadre, $tablePartite, $index)
+    public static function getRecord($squadre, $tablePartite, $index, $mod)
     {
         $maxCount = 0;
         $records = []; // Array per memorizzare i record massimi
 
         foreach ($squadre as $squadra) {
+            if($mod===70) $girone = "- ".self::getGironeBySquadraId($squadra, $tablePartite)."º";
+            else $girone = null;
             $stringa = self::getRecordIndividual($squadra, $tablePartite, $index);
             $result = explode(":", $stringa);
 
@@ -1195,19 +1197,21 @@ abstract class Competizione
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
                     $records = [
-                        "{$squadraName} {$resto}"
+                        "{$squadraName} {$resto} {$girone}"
                     ];
                 } elseif ($count === $maxCount) {
                     // Aggiungi l'elemento al record corrente in caso di parità
-                    $records[] = "{$squadraName} {$resto}";
+                    $records[] = "{$squadraName} {$resto} {$girone}";
                 }
             } elseif ($index >= 9 && $index < 12) {
                 if ($count > $maxCount) {
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
+                    $resto = $resto." ".$girone;
                     $resto = str_replace("<br>", "", $resto);
                     $records = explode(", ", $resto); // Separa i valori di $resto in base alle virgole e li inserisce nell'array, sostituendo le virgole con <br>
                 } elseif ($count === $maxCount) {
+                    $resto = $resto." ".$girone;
                     $resto = str_replace("<br>", "", $resto);
                     // Aggiungi l'elemento o gli elementi al record corrente in caso di parità
                     $additionalRecords = explode(", ", $resto); // Separa i valori in base alle virgole, sostituendo le virgole con <br>

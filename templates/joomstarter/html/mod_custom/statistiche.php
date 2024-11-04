@@ -14,6 +14,7 @@ if (isset($_GET['id'])) {
     $tablePartite = Competizione::getTablePartite($idcomp);
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $ar = $competizione->andata_ritorno;
+    $mod = $competizione->modalita;
     $squadre = json_decode($competizione->squadre, true); // Decodifica JSON in array
     $checkgol = Competizione::checkGolNull($tablePartite);
     $record = [
@@ -98,12 +99,20 @@ if (isset($_POST['submit'])) {
     if ($vieww === 'Individuali') {
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
         ?>
-        <h1 class="text-center fw-bold"><?php echo Competizione::getArticleTitleById($squadra); ?></h1>
+        <h1 class="text-center fw-bold">
+            <?php
+            if ($mod === 70) {
+                echo Competizione::getArticleTitleById($squadra) . " - Girone: " . Competizione::getGironeBySquadraId($squadra, $tablePartite);
+            } else {
+                echo Competizione::getArticleTitleById($squadra);
+            }
+            ?>
+        </h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
                     <th class="category-header-logo" scope="col">Record</th>
-                    <th class="category-header-logo" scope="col">#: Giornata</th>
+                    <th class="category-header-logo" scope="col">#: Giornate</th>
                 </tr>
             </thead>
             <tbody>
@@ -129,7 +138,15 @@ if (isset($_POST['submit'])) {
     } elseif ($vieww === 'Elenco') {// Get the matches for the selected team
         $matches = Competizione::getPartitePerSquadra($squadra, $tablePartite);
         ?>
-        <h1 class="text-center fw-bold"><?php echo Competizione::getArticleTitleById($squadra); ?></h1>
+        <h1 class="text-center fw-bold">
+            <?php
+            if ($mod === 70) {
+                echo Competizione::getArticleTitleById($squadra) . " - Girone: " . Competizione::getGironeBySquadraId($squadra, $tablePartite);
+            } else {
+                echo Competizione::getArticleTitleById($squadra);
+            }
+            ?>
+        </h1>
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
@@ -171,21 +188,23 @@ if (isset($_POST['submit'])) {
             <thead class="thead-dark">
                 <tr>
                     <th class="category-header-logo" scope="col">Record</th>
-                    <th class="category-header-logo" scope="col">#: Giornata</th>
+                    <th class="category-header-logo" scope="col">#: Squadre (Giornate) <?php if($mod===70) echo "- Girone"; ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 // Loop through $record and display them
                 foreach ($record as $index => $recordItem) {
-                    if ($index === 9) continue;
-                    elseif ($index === 10) $recordItem = "Partita con Maggior Scarto di Goal";
+                    if ($index === 9)
+                        continue;
+                    elseif ($index === 10)
+                        $recordItem = "Partita con Maggior Scarto di Goal";
                     ?>
                     <tr>
                         <td class="category-items-cell"><?php echo htmlspecialchars($recordItem); ?></td>
                         <td class="category-items-cell">
                             <?php
-                            echo Competizione::getRecord($squadre, $tablePartite, $index);
+                            echo Competizione::getRecord($squadre, $tablePartite, $index, $mod);
                             ?>
                         </td>
                     </tr>

@@ -69,16 +69,24 @@ $userId = $user->id;
             <?php
             $numpartitevalide = Competizione::getNumeroPartite($tablePartite);
             $totpart = 0;
-            if ($ar === 0 && $mod !== 69) {
+            if ($ar === 0 && $mod === 68) {
                 $totgior = $numsquadre - 1;
                 $totpart = $totgior * ($numsquadre / 2);
-            } elseif ($ar === 1 && $mod !== 69) {
+            } elseif ($ar === 1 && $mod === 68) {
                 $totgior = ($numsquadre - 1) * 2;
                 $totpart = $totgior * ($numsquadre / 2);
             } elseif ($ar === 0 && $mod === 69) {
                 $totpart = $numsquadre-1;
             } elseif ($ar === 1 && $mod === 69) {
                 $totpart = ($numsquadre-1)*2 -1;
+            } elseif ($ar === 0 && $mod === 70) {
+                $totpartpergir = $numsquadre/$gironi;
+                $totgior = $totpartpergir - 1;
+                $totpart = $totgior * ($totpartpergir/ 2) * $gironi;
+            } elseif ($ar === 1 && $mod === 70) {
+                $totpartpergir = $numsquadre/$gironi;
+                $totgior = ($totpartpergir-1) * 2;
+                $totpart = $totgior * ($totpartpergir/ 2) * $gironi;
             }
             if ($numpartitevalide === $totpart && $finita === 0) {
                 ?>
