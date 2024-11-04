@@ -381,7 +381,8 @@ abstract class Competizione
 
         // Recupera le squadre vincenti dal turno precedente
         $squadreVincenti = [];
-        if($ar === 0) $turnoPrecedente = self::getTurnoCorrente($tablePartite);
+        $finale = self::isFinale($tablePartite);
+        if($ar === 0 || $finale) $turnoPrecedente = self::getTurnoCorrente($tablePartite);
         elseif($ar === 1) $turnoPrecedente = self::getTurnoCorrente($tablePartite) - 1;
 
         $query = $db->getQuery(true)
@@ -475,16 +476,17 @@ abstract class Competizione
             } elseif ($risultato['gol2'] > $risultato['gol1']) {
                 $squadreVincenti[] = $risultato['squadra2'];
             } else {
-                //echo "Pareggio tra {$risultato['squadra1']} e {$risultato['squadra2']} dopo andata e ritorno. Attendi prima di procedere.";
+                //echo "Pareggio tra ".self::getArticleTitleById(articleId: $risultato['squadra1'])." e ".self::getArticleTitleById(articleId: $risultato['squadra2'])." dopo andata e ritorno. Attendi prima di procedere.";
                 return;
             }
         }
         $squadreVincenti = array_unique($squadreVincenti);
         // Se non ci sono abbastanza squadre per un nuovo turno, il torneo è terminato
         if (count($squadreVincenti) < 2) {
-            echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
+            //echo "Il torneo è terminato. Vincitore: " . reset($squadreVincenti);
             return;
         }
+
         // Creazione delle partite per il nuovo turno
         $turno = $turnoPrecedente + 1;
         self::creaTurno($squadreVincenti, $turno, $tablePartite, $ar);
@@ -1378,6 +1380,23 @@ abstract class Competizione
         $partita = $db->loadObject();
 
         return $partita; // Restituisce l'oggetto partita o null se non ci sono risultati
+    }
+
+    public static function isFinale($tablePartite) {
+        $db = Factory::getDbo();
+
+        // Costruisce la query per contare le partite nell'ultima giornata
+        $query = $db->getQuery(true)
+            ->select('COUNT(*)')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' = (SELECT MAX(giornata) FROM ' . $db->quoteName($tablePartite) . ')');
+        
+        // Esegui la query
+        $db->setQuery($query);
+        $numeroPartiteMaxGiornata = $db->loadResult();
+    
+        // Restituisce true se c'è solo una partita nell'ultima giornata, altrimenti false
+        return $numeroPartiteMaxGiornata === 1;
     }
 
 }

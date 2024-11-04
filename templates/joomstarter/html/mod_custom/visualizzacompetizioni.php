@@ -73,7 +73,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     ?>
                                 </td>
                                 <td class="category-title-cell">
-                                    <div style="max-height: 200px;">
+                                    <div class="overflow-auto" style="max-height: 200px;">
                                         <?php foreach ($squadre as $id):
                                             $customFields = Competizione::getCustomFields($id);
                                             $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000';
