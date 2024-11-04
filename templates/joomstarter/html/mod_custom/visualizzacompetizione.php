@@ -97,7 +97,7 @@ $userId = $user->id;
                     </form>
                 </div>
                 <?php
-            } elseif ($finita === 1) {
+            } /* elseif ($finita === 1) {
                 ?>
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
                     <span><?php echo text::_('JOOM_RIAPRI') ?></span>
@@ -106,7 +106,7 @@ $userId = $user->id;
                     </form>
                 </div>
                 <?php
-            }
+            } */
             ?>
             <?php
         }
@@ -114,11 +114,11 @@ $userId = $user->id;
             Competizione::setCompetizioneFinita($idcomp);
             header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
             exit;
-        } elseif (isset($_POST['opencomp'])) {
+        } /* elseif (isset($_POST['opencomp'])) {
             Competizione::setCompetizionenonFinita($idcomp);
             header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
             exit;
-        }
+        } */
     }
     ?>
 </div>
