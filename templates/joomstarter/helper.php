@@ -1474,7 +1474,8 @@ abstract class Competizione
         return $db->loadResult();
     }
 
-    public static function getClassificaGironi($tableStatistiche, $girone){
+    public static function getClassificaGironi($tableStatistiche, $girone)
+    {
         $db = Factory::getDbo();
 
         // Query per ottenere tutte le statistiche e calcolare i punti, la differenza reti e i gol fatti
@@ -1494,6 +1495,35 @@ abstract class Competizione
             return $db->loadObjectList(); // Restituisce un array di oggetti
         } catch (Exception $e) {
             echo 'Errore durante il recupero delle statistiche: ' . $e->getMessage();
+            return [];
+        }
+    }
+
+    public static function getSquadrePerGirone($tablePartite, $girone)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere gli ID delle squadre senza duplicati
+        $query = $db->getQuery(true)
+            ->select('DISTINCT squadra1 AS squadra')
+            ->from($db->quoteName($tablePartite))
+            ->where($db->quoteName('girone') . ' = ' . $db->quote($girone))
+            ->union(
+                $db->getQuery(true)
+                    ->select('DISTINCT squadra2 AS squadra')
+                    ->from($db->quoteName($tablePartite))
+                    ->where($db->quoteName('girone') . ' = ' . $db->quote($girone))
+            );
+
+        // Esegui la query
+        $db->setQuery($query);
+        
+        try {
+            // Restituisce un array di oggetti con tutte le squadre uniche del girone specificato
+            return $db->loadObjectList();
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle squadre: ' . $e->getMessage();
             return [];
         }
     }

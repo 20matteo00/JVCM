@@ -14,7 +14,8 @@ if (isset($_GET['id'])) {
     $tableStatistiche = Competizione::getTableStatistiche($idcomp);
     $tablePartite = Competizione::getTablePartite($idcomp);
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
-
+    $mod = $competizione->modalita;
+    $gironi = $competizione->gironi;
     // Recupera le squadre
     $squadreJson = $competizione->squadre;
     // Decodifica la stringa JSON in un array
@@ -30,11 +31,28 @@ if (isset($_GET['id'])) {
     }
     ?>
     <div class="container tabellone">
-        <div class="table-responsive my-5">
-            <table class="table table-striped table-bordered text-center">
-                <tr>
-                    <th><?php echo Text::_('JOOM_NUM_ITEMS'); ?></th>
-                    <!-- Spazio per l'angolo in alto a sinistra -->
+        <?php if ($mod !== 70): ?>
+            <div class="table-responsive my-5">
+                <table class="table table-striped table-bordered text-center">
+                    <tr>
+                        <th><?php echo Text::_('JOOM_NUM_ITEMS'); ?></th>
+                        <!-- Spazio per l'angolo in alto a sinistra -->
+                        <?php foreach ($squadre as $squadra): ?>
+                            <?php
+                            $cf = Competizione::getCustomFields($squadra);
+                            // Retrieve color values with defaults
+                            $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                            ?>
+                            <th>
+                                <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                    <span style="color:<?php echo $color2; ?>">
+                                        <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
+                                    </span>
+                                </div>
+                            </th>
+                        <?php endforeach; ?>
+                    </tr>
                     <?php foreach ($squadre as $squadra): ?>
                         <?php
                         $cf = Competizione::getCustomFields($squadra);
@@ -42,43 +60,87 @@ if (isset($_GET['id'])) {
                         $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
                         $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                         ?>
-                        <th>
-                            <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
-                                <span style="color:<?php echo $color2; ?>">
-                                    <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
-                                </span>
-                            </div>
-                        </th>
+                        <tr>
+                            <th>
+                                <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                    <span style="color:<?php echo $color2; ?>">
+                                        <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
+                                    </span>
+                                </div>
+                            </th>
+                            <!-- Nome della squadra nella prima colonna -->
+                            <?php foreach ($squadre as $squadraAvversaria): ?>
+                                <?php if ($squadra === $squadraAvversaria): ?>
+                                    <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
+                                <?php else: ?>
+                                    <td><?php echo htmlspecialchars($risultati[$squadra][$squadraAvversaria] ?? ''); ?></td>
+                                    <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </tr>
                     <?php endforeach; ?>
-                </tr>
-                <?php foreach ($squadre as $squadra): ?>
-                    <?php
-                    $cf = Competizione::getCustomFields($squadra);
-                    // Retrieve color values with defaults
-                    $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
-                    $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
-                    ?>
-                    <tr>
-                        <th>
-                            <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
-                                <span style="color:<?php echo $color2; ?>">
-                                    <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
-                                </span>
-                            </div>
-                        </th>
-                        <!-- Nome della squadra nella prima colonna -->
-                        <?php foreach ($squadre as $squadraAvversaria): ?>
-                            <?php if ($squadra === $squadraAvversaria): ?>
-                                <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
-                            <?php else: ?>
-                                <td><?php echo htmlspecialchars($risultati[$squadra][$squadraAvversaria] ?? ''); ?></td>
-                                <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
-                            <?php endif; ?>
+                </table>
+            </div>
+        <?php else: ?>
+            <?php
+            for ($i = 1; $i <= $gironi; $i++) {
+                $squadre = Competizione::getSquadreperGirone($tablePartite, $i);
+                ?>
+                <div class="table-responsive my-5">
+                    <h1 class="text-center">Girone <?php echo $i; ?></h1>
+                    <table class="table table-striped table-bordered text-center">
+                        <tr>
+                            <th><?php echo Text::_('JOOM_NUM_ITEMS'); ?></th>
+                            <!-- Spazio per l'angolo in alto a sinistra -->
+                            <?php foreach ($squadre as $squadra): ?>
+                                <?php
+                                $cf = Competizione::getCustomFields($squadra->squadra);
+                                // Retrieve color values with defaults
+                                $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                                $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                                ?>
+                                <th>
+                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                        <span style="color:<?php echo $color2; ?>">
+                                            <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra->squadra))); ?>
+                                        </span>
+                                    </div>
+                                </th>
+                            <?php endforeach; ?>
+                        </tr>
+                        <?php foreach ($squadre as $squadra): ?>
+                            <?php
+                            $cf = Competizione::getCustomFields($squadra->squadra);
+                            // Retrieve color values with defaults
+                            $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                            ?>
+                            <tr>
+                                <th>
+                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                        <span style="color:<?php echo $color2; ?>">
+                                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra)); ?>
+                                        </span>
+                                    </div>
+                                </th>
+                                <!-- Nome della squadra nella prima colonna -->
+                                <?php foreach ($squadre as $squadraAvversaria): ?>
+                                    <?php if ($squadra->squadra === $squadraAvversaria->squadra): ?>
+                                        <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
+                                    <?php else: ?>
+                                        <td><?php echo htmlspecialchars($risultati[$squadra->squadra][$squadraAvversaria->squadra] ?? ''); ?>
+                                        </td>
+                                        <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </tr>
                         <?php endforeach; ?>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
-        </div>
+                    </table>
+                </div>
+                <?php
+            }
+            ?>
+        <?php endif; ?>
     </div>
     <?php
 }
