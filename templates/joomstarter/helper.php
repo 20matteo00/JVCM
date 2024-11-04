@@ -245,7 +245,7 @@ abstract class Competizione
         }
     }
 
-    public static function GeneraCampionato($squadre, $tablePartite, $ar)
+    public static function GeneraCampionato($squadre, $tablePartite, $ar, $champ, $gir)
     {
         $db = Factory::getDbo();
 
@@ -257,7 +257,7 @@ abstract class Competizione
         $db->setQuery($query);
         $count = $db->loadResult();
 
-        if ($count == 0) {
+        if ($count == 0 || $champ) {
             // Procedi solo se ci sono già dati nella tabella
             $giornate = [];
             $numeroSquadre = count($squadre);
@@ -295,7 +295,8 @@ abstract class Competizione
                     [$squadre[1]]
                 );
             }
-
+            //var_dump($i);
+            if ($champ) $girone = $gir+1; else $girone = null;
             $numeroSquadre = count($squadre);
             foreach ($giornate as $index => $partite) {
                 foreach ($partite as $partita) {
@@ -304,6 +305,7 @@ abstract class Competizione
                         'squadra1' => $partita['squadra1'],
                         'squadra2' => $partita['squadra2'],
                         'giornata' => $index + 1,
+                        'girone' => $girone,
                     ];
 
                     // Esegui l'inserimento
@@ -319,6 +321,7 @@ abstract class Competizione
                             'squadra1' => $partita['squadra2'],
                             'squadra2' => $partita['squadra1'],
                             'giornata' => $numeroSquadre + $index,
+                            'girone' => $girone,
                         ];
 
                         // Esegui l'inserimento
@@ -490,8 +493,10 @@ abstract class Competizione
         }
 
         // Creazione delle partite per il nuovo turno
-        if ($ar === 0 ) $turno = $turnoPrecedente;
-        else $turno = $turnoPrecedente + 1;
+        if ($ar === 0)
+            $turno = $turnoPrecedente;
+        else
+            $turno = $turnoPrecedente + 1;
         self::creaTurno($squadreVincenti, $turno, $tablePartite, $ar);
     }
 
@@ -573,8 +578,37 @@ abstract class Competizione
         return $maxTurno ? $maxTurno + 1 : 1;
     }
 
-    public static function GeneraChampions($squadre, $tablePartite, $ar)
+    public static function GeneraChampions($squadre, $tablePartite, $ar, $gironi)
     {
+        if (count($squadre) % $gironi !== 0)
+            return;
+        $db = Factory::getDbo();
+
+        // Verifica se la tabella è vuota
+        $query = $db->getQuery(true)
+            ->select('COUNT(*)')
+            ->from($db->quoteName($tablePartite));
+
+        $db->setQuery($query);
+        $count = $db->loadResult();
+
+        if ($count == 0) {
+            // Mescola casualmente l'array
+            shuffle($squadre);
+
+
+            // Calcola il numero di elementi per ogni sotto-array
+            $numsquadre = count($squadre);
+            $elementiPerSottoArray = floor($numsquadre / $gironi);
+
+            // Crea i sotto-array
+            $final = [];
+            for ($i = 0; $i < $gironi; $i++) {
+                // Dividi l'array usando array_slice
+                $final[] = array_slice($squadre, $i * $elementiPerSottoArray, $elementiPerSottoArray);
+                self::GeneraCampionato($final[$i], $tablePartite, $ar, true, $i);
+            }
+        }
 
     }
 
@@ -728,11 +762,15 @@ abstract class Competizione
             foreach ($partite as $partita) {
                 // Controlla se la partita è stata giocata nella giornata valida
                 if ($view === "andata") {
-                    if ($mod === 69) $partitedaprendere = $partita->giornata %2 == 1;
-                    else $partitedaprendere = $partita->giornata < $numsquadre;
+                    if ($mod === 69)
+                        $partitedaprendere = $partita->giornata % 2 == 1;
+                    else
+                        $partitedaprendere = $partita->giornata < $numsquadre;
                 } elseif ($view === "ritorno") {
-                    if ($mod === 69) $partitedaprendere = $partita->giornata %2 == 0;
-                    else $partitedaprendere = $partita->giornata >= $numsquadre;
+                    if ($mod === 69)
+                        $partitedaprendere = $partita->giornata % 2 == 0;
+                    else
+                        $partitedaprendere = $partita->giornata >= $numsquadre;
                 }
                 if ($partitedaprendere) {
                     // Estrai le squadre e i risultati
@@ -797,8 +835,11 @@ abstract class Competizione
         $query = $db->getQuery(true)
             ->select('*')
             ->from($db->quoteName($tablePartite)) // Sostituisci con il nome corretto della tua tabella
-            ->order($db->quoteName('giornata') . ' ASC');
-
+            ->order($db->quoteName('giornata') . ' ASC')
+            ->order($db->quoteName('girone') . ' ASC')
+            ->order('LEAST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') // Ordina per il min id tra squadra1 e squadra2
+            ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC'); // Ordina per il max id tra squadra1 e squadra2
+    
         $db->setQuery($query);
         return $db->loadObjectList(); // Restituisce un array di oggetti
     }

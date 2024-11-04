@@ -22,6 +22,7 @@ $userId = $user->id;
         $mod = $competizione->modalita;
         $ar = $competizione->andata_ritorno;
         $finita = $competizione->finita;
+        $gironi = $competizione->gironi;
         $squadreJson = $competizione->squadre;
         // Decodifica la stringa JSON in un array
         $squadre = json_decode($squadreJson, true);
@@ -33,11 +34,11 @@ $userId = $user->id;
             $tablePartite = Competizione::getTablePartite($idcomp);
             $tableStatistiche = Competizione::getTableStatistiche($idcomp);
             if ($mod == 68) {
-                Competizione::GeneraCampionato($squadre, $tablePartite, $ar);
+                Competizione::GeneraCampionato($squadre, $tablePartite, $ar, false, null);
             } elseif ($mod == 69) {
                 Competizione::GeneraEliminazione($squadre, $tablePartite, $ar);
             } elseif ($mod == 70) {
-                Competizione::GeneraChampions($squadre, $tablePartite, $ar);
+                Competizione::GeneraChampions($squadre, $tablePartite, $ar, $gironi);
             }
             Competizione::GeneraStatistiche($squadre, $tableStatistiche, $tablePartite);
             // Visualizza i dettagli della competizione

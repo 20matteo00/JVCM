@@ -56,8 +56,14 @@ if (isset($_GET['id'])) {
                                 $colort2 = !empty($cf2[2]) ? $cf2[2]->value : '#ffffff';
                                 $gol1 = isset($partita['gol1']) ? $partita['gol1'] : '';
                                 $gol2 = isset($partita['gol2']) ? $partita['gol2'] : '';
+                                $girone = isset($partita['girone']) ? $partita['girone'] : '';
                                 ?>
                                 <div class="d-flex my-3 fw-bold align-items-center myinput">
+                                    <?php if($mod===70): ?>
+                                    <div class="p-1 text-center me-2" style="border-radius:50px; width: 32px; background-color:var(--nero);">
+                                        <span style="color:var(--bianco);"><?php echo htmlspecialchars($girone); ?></span>
+                                    </div>
+                                    <?php endif; ?>
                                     <div class="p-1 text-center"
                                         style="border-radius:50px; width:200px; background-color: <?php echo $colors1; ?>;">
                                         <span style="color: <?php echo $colort1; ?>;"><?php echo htmlspecialchars($s1); ?></span>
