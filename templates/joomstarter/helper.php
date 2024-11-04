@@ -1231,8 +1231,8 @@ abstract class Competizione
                     $giornataFine = $match->giornata;
                 } else {
                     if (
-                        ($location == 'casa' && ($index == 3 || $index == 4 || $index == 5)) ||
-                        ($location == 'trasferta' && ($index == 6 || $index == 7 || $index == 8)) ||
+                        ($location == 'trasferta' && ($index == 3 || $index == 4 || $index == 5)) ||
+                        ($location == 'casa' && ($index == 6 || $index == 7 || $index == 8)) ||
                         $location == "all"
                     ) {
 
