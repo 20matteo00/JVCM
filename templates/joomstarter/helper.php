@@ -1184,9 +1184,10 @@ abstract class Competizione
         $records = []; // Array per memorizzare i record massimi
 
         foreach ($squadre as $squadra) {
-            if($mod===70) $girone = "- ".self::getGironeBySquadraId($squadra, $tablePartite)."º";
+            if($mod===70) $girone = " - ".self::getGironeBySquadraId($squadra, $tablePartite)."º";
             else $girone = null;
             $stringa = self::getRecordIndividual($squadra, $tablePartite, $index);
+            if (is_null($stringa)) continue;
             $result = explode(":", $stringa);
 
             $count = (int) $result[0];
@@ -1197,21 +1198,21 @@ abstract class Competizione
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
                     $records = [
-                        "{$squadraName} {$resto} {$girone}"
+                        "{$squadraName} {$resto}{$girone}"
                     ];
                 } elseif ($count === $maxCount) {
                     // Aggiungi l'elemento al record corrente in caso di parità
-                    $records[] = "{$squadraName} {$resto} {$girone}";
+                    $records[] = "{$squadraName} {$resto}{$girone}";
                 }
             } elseif ($index >= 9 && $index < 12) {
                 if ($count > $maxCount) {
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
-                    $resto = $resto." ".$girone;
+                    $resto = $resto.$girone;
                     $resto = str_replace("<br>", "", $resto);
                     $records = explode(", ", $resto); // Separa i valori di $resto in base alle virgole e li inserisce nell'array, sostituendo le virgole con <br>
                 } elseif ($count === $maxCount) {
-                    $resto = $resto." ".$girone;
+                    $resto = $resto.$girone;
                     $resto = str_replace("<br>", "", $resto);
                     // Aggiungi l'elemento o gli elementi al record corrente in caso di parità
                     $additionalRecords = explode(", ", $resto); // Separa i valori in base alle virgole, sostituendo le virgole con <br>
@@ -1223,8 +1224,10 @@ abstract class Competizione
         }
         // Restituisci i risultati come stringa unita da linee
         if ($index >= 0 && $index < 9) {
+            if ($maxCount === 0) return;
             return $maxCount . ": " . implode("<br>", $records);
         } elseif ($index >= 9 && $index < 12) {
+            if ($count === 0) return;
             $records = array_unique($records); // Rimuovi duplicati
             // Unisci il conteggio con il primo record e poi vai a capo per i restanti
             $result = "{$count}: " . array_shift($records) . "<br>" . implode("<br>", $records);
@@ -1369,7 +1372,7 @@ abstract class Competizione
             }
 
             if ($maxcount == 0)
-                return $maxcount;
+                return;
             elseif ($maxcount == 1) {
                 // Formatta il risultato
                 $sequencesStr = implode(', ', array_map(function ($seq) {
@@ -1401,7 +1404,7 @@ abstract class Competizione
                 $result .= "$scarto: " . implode(", ", $partite) . "<br>";
             }
 
-            return $result === "" ? "-" : $result;
+            return $result === "" ? "" : $result;
         } elseif ($index == 11) {
             $resultsBySomma = [];
             foreach ($partiteScartoMax as $partita) {
@@ -1417,10 +1420,11 @@ abstract class Competizione
             // Crea la stringa finale
             $result = "";
             foreach ($resultsBySomma as $somma => $partite) {
+                if ($somma === 0) continue;
                 $result .= "$somma: " . implode(", ", $partite) . "<br>";
             }
 
-            return $result === "" ? "-" : $result;
+            return $result === "" ? "" : $result;
         }
 
     }

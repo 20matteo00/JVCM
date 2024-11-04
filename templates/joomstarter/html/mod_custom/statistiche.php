@@ -169,7 +169,11 @@ if (isset($_POST['submit'])) {
                             ?>
                         </td>
                         <td class="category-items-cell">
-                            <?php echo htmlspecialchars($match->gol1) . " - " . htmlspecialchars($match->gol2); ?>
+                            <?php
+                            if (!is_null($match->gol1) && !is_null($match->gol2)) {
+                                echo htmlspecialchars($match->gol1) . " - " . htmlspecialchars($match->gol2);
+                            }
+                            ?>
                         </td>
                     </tr>
                     <?php
@@ -188,7 +192,9 @@ if (isset($_POST['submit'])) {
             <thead class="thead-dark">
                 <tr>
                     <th class="category-header-logo" scope="col">Record</th>
-                    <th class="category-header-logo" scope="col">#: Squadre (Giornate) <?php if($mod===70) echo "- Girone"; ?></th>
+                    <th class="category-header-logo" scope="col">#: Squadre (Giornate)
+                        <?php if ($mod === 70)
+                            echo "- Girone"; ?></th>
                 </tr>
             </thead>
             <tbody>
