@@ -4,6 +4,8 @@ require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Helper\ModuleHelper; // Aggiungi questa riga per utilizzare JModuleHelper
 use Joomstarter\Helpers\Competizione;
 // Ottieni l'ID dell'utente corrente
@@ -19,6 +21,7 @@ $userId = $user->id;
 
         // Recupera la competizione utilizzando la funzione
         $competizione = Competizione::getCompetizioneById($idcomp, $userId);
+        $nome = $competizione->nome_competizione;
         $mod = $competizione->modalita;
         $ar = $competizione->andata_ritorno;
         $finita = $competizione->finita;
@@ -76,37 +79,38 @@ $userId = $user->id;
                 $totgior = ($numsquadre - 1) * 2;
                 $totpart = $totgior * ($numsquadre / 2);
             } elseif ($ar === 0 && $mod === 69) {
-                $totpart = $numsquadre-1;
+                $totpart = $numsquadre - 1;
             } elseif ($ar === 1 && $mod === 69) {
-                $totpart = ($numsquadre-1)*2 -1;
+                $totpart = ($numsquadre - 1) * 2 - 1;
             } elseif ($ar === 0 && $mod === 70) {
-                $totpartpergir = $numsquadre/$gironi;
+                $totpartpergir = $numsquadre / $gironi;
                 $totgior = $totpartpergir - 1;
-                $totpart = $totgior * ($totpartpergir/ 2) * $gironi;
+                $totpart = $totgior * ($totpartpergir / 2) * $gironi;
             } elseif ($ar === 1 && $mod === 70) {
-                $totpartpergir = $numsquadre/$gironi;
-                $totgior = ($totpartpergir-1) * 2;
-                $totpart = $totgior * ($totpartpergir/ 2) * $gironi;
+                $totpartpergir = $numsquadre / $gironi;
+                $totgior = ($totpartpergir - 1) * 2;
+                $totpart = $totgior * ($totpartpergir / 2) * $gironi;
             }
+            $checknome = Competizione::CheckNome($nome . " - Fase Finale");
             if ($numpartitevalide === $totpart && $finita === 0) {
                 ?>
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
                     <span><?php echo text::_('JOOM_COMPLIMENTI') ?></span>
                     <form action="" method="post">
-                        <button class="btn btn-warning" name="closecomp">Chiudi Competizione</button>
+                        <button class="btn btn-warning" name="closecomp"><?php echo text::_('JOOM_CHIUDICOMP') ?></button>
                     </form>
                 </div>
                 <?php
-            } /* elseif ($finita === 1) {
+            } elseif ($finita === 1 && $mod === 70 && !$checknome) {
                 ?>
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
-                    <span><?php echo text::_('JOOM_RIAPRI') ?></span>
+                    <span><?php echo text::_('JOOM_FASEFINALE') ?></span>
                     <form action="" method="post">
-                        <button class="btn btn-warning" name="opencomp">Riapri Competizione</button>
+                        <button class="btn btn-warning" name="fasefinale"><?php echo text::_('JOOM_FF') ?></button>
                     </form>
                 </div>
                 <?php
-            } */
+            }
             ?>
             <?php
         }
@@ -114,11 +118,14 @@ $userId = $user->id;
             Competizione::setCompetizioneFinita($idcomp);
             header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
             exit;
-        } /* elseif (isset($_POST['opencomp'])) {
-            Competizione::setCompetizionenonFinita($idcomp);
-            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
+        }
+        if (isset($_POST['fasefinale'])) {
+            Competizione::CreaFaseFinale($idcomp, $userId, $tableStatistiche);
+            // Costruisci l'URL completo per "competizioni in corso"
+            $url = Route::_('index.php?Itemid=106');
+            header("Location: " . $url);
             exit;
-        } */
+        }
     }
     ?>
 </div>

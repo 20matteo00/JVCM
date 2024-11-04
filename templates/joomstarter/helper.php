@@ -1184,10 +1184,13 @@ abstract class Competizione
         $records = []; // Array per memorizzare i record massimi
 
         foreach ($squadre as $squadra) {
-            if($mod===70) $girone = " - ".self::getGironeBySquadraId($squadra, $tablePartite)."º";
-            else $girone = null;
+            if ($mod === 70)
+                $girone = " - " . self::getGironeBySquadraId($squadra, $tablePartite) . "º";
+            else
+                $girone = null;
             $stringa = self::getRecordIndividual($squadra, $tablePartite, $index);
-            if (is_null($stringa)) continue;
+            if (is_null($stringa))
+                continue;
             $result = explode(":", $stringa);
 
             $count = (int) $result[0];
@@ -1208,11 +1211,11 @@ abstract class Competizione
                 if ($count > $maxCount) {
                     // Aggiorna il massimo e resetta l'array dei record
                     $maxCount = $count;
-                    $resto = $resto.$girone;
+                    $resto = $resto . $girone;
                     $resto = str_replace("<br>", "", $resto);
                     $records = explode(", ", $resto); // Separa i valori di $resto in base alle virgole e li inserisce nell'array, sostituendo le virgole con <br>
                 } elseif ($count === $maxCount) {
-                    $resto = $resto.$girone;
+                    $resto = $resto . $girone;
                     $resto = str_replace("<br>", "", $resto);
                     // Aggiungi l'elemento o gli elementi al record corrente in caso di parità
                     $additionalRecords = explode(", ", $resto); // Separa i valori in base alle virgole, sostituendo le virgole con <br>
@@ -1224,10 +1227,12 @@ abstract class Competizione
         }
         // Restituisci i risultati come stringa unita da linee
         if ($index >= 0 && $index < 9) {
-            if ($maxCount === 0) return;
+            if ($maxCount === 0)
+                return;
             return $maxCount . ": " . implode("<br>", $records);
         } elseif ($index >= 9 && $index < 12) {
-            if ($maxCount === 0) return;
+            if ($maxCount === 0)
+                return;
             $records = array_unique($records); // Rimuovi duplicati
             // Unisci il conteggio con il primo record e poi vai a capo per i restanti
             $result = "{$maxCount}: " . array_shift($records) . "<br>" . implode("<br>", $records);
@@ -1420,7 +1425,8 @@ abstract class Competizione
             // Crea la stringa finale
             $result = "";
             foreach ($resultsBySomma as $somma => $partite) {
-                if ($somma === 0) continue;
+                if ($somma === 0)
+                    continue;
                 $result .= "$somma: " . implode(", ", $partite) . "<br>";
             }
 
@@ -1526,7 +1532,7 @@ abstract class Competizione
 
         // Esegui la query
         $db->setQuery($query);
-        
+
         try {
             // Restituisce un array di oggetti con tutte le squadre uniche del girone specificato
             return $db->loadObjectList();
@@ -1536,4 +1542,111 @@ abstract class Competizione
         }
     }
 
+    public static function CreaFaseFinale($id, $user, $tableStatistiche)
+    {
+        $com = self::getCompetizioneById($id, $user);
+        $mod = $com->modalita;
+        $ar = $com->andata_ritorno;
+        $nome = $com->nome_competizione;
+        $gironi = $com->gironi;
+        $ff = $com->fase_finale;
+        $finita = $com->finita;
+        $squadreperfasefinale = $ff / $gironi;
+
+
+        $passati = []; // Array per contenere i valori di 'squadra'
+
+        if ($mod === 70 && $finita === 1) {
+            for ($i = 1; $i <= $gironi; $i++) {
+                // Ottieni la classifica per il girone corrente
+                $array = self::getClassificaGironi($tableStatistiche, $i);
+
+                // Verifica che $array non sia vuoto
+                if (!empty($array)) {
+                    // Prendi i primi 'squadreperfasefinale' valori
+                    $primiDueValori = array_slice($array, 0, $squadreperfasefinale);
+
+                    // Aggiungi i valori all'array $passati
+                    foreach ($primiDueValori as $valore) {
+                        if (isset($valore->squadra)) { // Assicurati che la proprietà 'squadra' esista
+                            $passati[] = $valore->squadra; // Aggiungi il valore 'squadra' all'array
+                        }
+                    }
+                }
+            }
+        }
+        self::TabellaFaseFinale($passati, $nome, $user, $ar);
+
+    }
+
+    public static function TabellaFaseFinale($squadre, $nome, $user, $ar)
+    {
+        sort($squadre);
+        $squadre = array_map('strval', $squadre);
+        $squadrenew = json_encode($squadre);
+        $db = Factory::getDbo(); // Get the database object
+        // Crea un array di dati per l'inserimento
+        $data = array(
+            'user_id' => $user, // ID dell'utente
+            'nome_competizione' => $nome . " - Fase Finale", // Nome della competizione
+            'modalita' => 69, // Modalità
+            'gironi' => 0, // Numero di gironi
+            'squadre' => $squadrenew, // ID delle squadre
+            'andata_ritorno' => $ar, // Modalità andata/ritorno
+            'partecipanti' => count($squadre), // Numero di partecipanti
+            'fase_finale' => 0, // Stato fase finale
+            'finita' => 0, // Stato finita
+        );
+
+        // Crea un oggetto di query
+        $query = $db->getQuery(true);
+
+        // Imposta i campi e i valori da inserire
+        $query
+            ->insert($db->quoteName('#__competizioni')) // Sostituisci con il nome corretto della tua tabella
+            ->columns(array(
+                $db->quoteName('user_id'),
+                $db->quoteName('nome_competizione'),
+                $db->quoteName('modalita'),
+                $db->quoteName('gironi'),
+                $db->quoteName('squadre'),
+                $db->quoteName('andata_ritorno'),
+                $db->quoteName('partecipanti'),
+                $db->quoteName('fase_finale'),
+                $db->quoteName('finita')
+            ))
+            ->values(implode(',', array_map([$db, 'quote'], array_values($data)))); // Assicurati che i valori siano quotati correttamente
+
+        // Esegui la query
+        $db->setQuery($query);
+
+        try {
+            $db->execute(); // Esegui l'inserimento
+        } catch (Exception $e) {
+            echo "Errore: " . $e->getMessage(); // Gestione degli errori
+        }
+    }
+
+    public static function CheckNome($nome)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+
+        // Crea un oggetto di query
+        $query = $db->getQuery(true);
+
+        // Seleziona il conteggio delle competizioni con il nome specificato
+        $query->select('COUNT(*)')
+            ->from($db->quoteName('#__competizioni')) // Sostituisci con il nome corretto della tua tabella
+            ->where($db->quoteName('nome_competizione') . ' = ' . $db->quote($nome)); // Condizione per il nome
+
+        // Imposta la query
+        $db->setQuery($query);
+
+        // Ottieni il conteggio
+        $count = $db->loadResult();
+
+        // Ritorna true se esiste almeno una competizione con quel nome, altrimenti false
+        return $count > 0;
+    }
 }
