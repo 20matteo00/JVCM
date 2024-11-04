@@ -1227,10 +1227,10 @@ abstract class Competizione
             if ($maxCount === 0) return;
             return $maxCount . ": " . implode("<br>", $records);
         } elseif ($index >= 9 && $index < 12) {
-            if ($count === 0) return;
+            if ($maxCount === 0) return;
             $records = array_unique($records); // Rimuovi duplicati
             // Unisci il conteggio con il primo record e poi vai a capo per i restanti
-            $result = "{$count}: " . array_shift($records) . "<br>" . implode("<br>", $records);
+            $result = "{$maxCount}: " . array_shift($records) . "<br>" . implode("<br>", $records);
             return $result; // Restituisci il risultato finale
         }
 
