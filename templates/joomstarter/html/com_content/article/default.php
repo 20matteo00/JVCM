@@ -36,7 +36,7 @@ $color1 = !empty($customFields[1]) ? $customFields[1]->value : '#000000'; // Col
 $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff'; // Colore del testo
 $strength = !empty($customFields[3]) ? $customFields[3]->value : 'N/A'; // Forza di default
 
-$params  = $this->item->params;
+$params = $this->item->params;
 
 // ... (il tuo codice PHP esistente)
 
@@ -50,40 +50,44 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
 // Stampa l'immagine per il DOM
 ?>
 <div class="com-content-article item-page<?php echo $this->pageclass_sfx; ?>">
-    <meta itemprop="inLanguage" content="<?php echo ($this->item->language === '*') ? $app->get('language') : $this->item->language; ?>">
+    <meta itemprop="inLanguage"
+        content="<?php echo ($this->item->language === '*') ? $app->get('language') : $this->item->language; ?>">
 
-    <div class="row text-center">
+    <div class="row">
         <div class="col-md-8">
-            <?php if ($this->params->get('show_title')) : ?>
-                <div class="com-content-article__header" style="background-color: <?php echo $color1; ?>;">
-                    <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;"><?php echo $this->escape($this->item->title); ?></h1>
+            <?php if ($this->params->get('show_title')): ?>
+                <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;">
+                    <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;">
+                        <?php echo $this->escape($this->item->title); ?></h1>
                 </div>
             <?php endif; ?>
             <div class="com-content-article__body" style="color: <?php echo $color2; ?>;">
                 <?php echo $this->item->text; ?>
             </div>
+            <div class="com-content-article__strength">
+                <span class="h4 fw-bold">Valore: <?php echo $strength; ?>Mln €</span>
+            </div>
+            <br>
+
+            <div class="com-content-article__metadata">
+                <?php
+                // Verifica se la categoria è presente
+                if (!empty($this->item->catid)) {
+                    $categories = '<a class="campionato" href="' . Route::_('index.php?option=com_content&view=category&id=' . $this->item->catid) . '">' . $this->escape($this->item->category_title) . '</a>';
+                }
+                echo '<span class="h4 fw-bold">Campionato: ' . $categories . '</span>';
+                ?>
+            </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4  text-center">
             <div class="com-content-article__image">
-                <img id="articleImage" src="<?php echo htmlspecialchars($imageSrc); ?>" alt="<?php echo htmlspecialchars($this->item->title); ?>">
+                <img id="articleImage" src="<?php echo htmlspecialchars($imageSrc); ?>"
+                    alt="<?php echo htmlspecialchars($this->item->title); ?>">
             </div>
         </div>
     </div>
 
-    <div class="com-content-article__strength">
-        <span class="h4 fw-bold">Valore: <?php echo $strength; ?>Mln €</span>
-    </div>
-    <br>
 
-    <div class="com-content-article__metadata">
-        <?php
-        // Verifica se la categoria è presente
-        if (!empty($this->item->catid)) {
-            $categories = '<a class="campionato" href="' . Route::_('index.php?option=com_content&view=category&id=' . $this->item->catid) . '">' . $this->escape($this->item->category_title) . '</a>';
-        }
-        echo '<span class="h4 fw-bold">Campionato: ' . $categories . '</span>';
-        ?>
-    </div>
 
     <?php echo $this->item->event->afterDisplayContent; ?>
 </div>
