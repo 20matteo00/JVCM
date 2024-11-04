@@ -698,7 +698,7 @@ abstract class Competizione
     }
 
 
-    public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view)
+    public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod)
     {
         if ($ar === 0) {
             return [];
@@ -728,9 +728,11 @@ abstract class Competizione
             foreach ($partite as $partita) {
                 // Controlla se la partita è stata giocata nella giornata valida
                 if ($view === "andata") {
-                    $partitedaprendere = $partita->giornata < $numsquadre;
+                    if ($mod === 69) $partitedaprendere = $partita->giornata %2 == 1;
+                    else $partitedaprendere = $partita->giornata < $numsquadre;
                 } elseif ($view === "ritorno") {
-                    $partitedaprendere = $partita->giornata >= $numsquadre;
+                    if ($mod === 69) $partitedaprendere = $partita->giornata %2 == 0;
+                    else $partitedaprendere = $partita->giornata >= $numsquadre;
                 }
                 if ($partitedaprendere) {
                     // Estrai le squadre e i risultati

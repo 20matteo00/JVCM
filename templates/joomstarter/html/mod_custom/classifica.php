@@ -14,6 +14,7 @@ if (isset($_GET['id'])) {
     $tablePartite = Competizione::getTablePartite($idcomp);
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $ar = $competizione->andata_ritorno;
+    $mod = $competizione->modalita;
 
     $checkgol = Competizione::checkGolNull($tablePartite);
 
@@ -29,9 +30,9 @@ if (isset($_GET['id'])) {
                     (isset($_POST['Andamento']) ? 'andamento' : 'totale'))));
 
     if ($view === 'andata' && $ar === 1) {
-        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view);
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod);
     } elseif ($view === 'ritorno' && $ar === 1) {
-        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view);
+        $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod);
     } elseif ($view === 'andamento') {
         $classifica = NULL;
         $andamento = Competizione::getAndamento($tablePartite);
