@@ -26,7 +26,8 @@ use Joomstarter\Helpers\Competizione;
 // Creiamo un oggetto per l'articolo attuale
 $app = Factory::getApplication();
 $db = Factory::getDbo();
-$user = $app->getIdentity();
+$user = Factory::getUser();
+$userId = $user->id;
 $id = (int) $this->item->id;
 
 $customFields = Competizione::getCustomFields($id);
@@ -87,13 +88,11 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
         </div>
     </div>
 
-
+    <div class="row">
+        <?php 
+            $c = Competizione::getAllCompetizioni($id, $userId); 
+        ?>
+    </div>
 
     <?php echo $this->item->event->afterDisplayContent; ?>
 </div>
-
-<!-- Sezione per i colori dominanti -->
-<!-- <div class="dominant-colors" id="dominantColors">
-    <h3>Colori Dominanti:</h3>
-    <div id="colorBoxes"></div>
-</div> -->

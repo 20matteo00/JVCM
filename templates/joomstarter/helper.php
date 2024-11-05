@@ -1649,4 +1649,36 @@ abstract class Competizione
         // Ritorna true se esiste almeno una competizione con quel nome, altrimenti false
         return $count > 0;
     }
+
+    public static function getAllCompetizioni($squadraId, $user)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query
+        $query = $db->getQuery(true)
+            ->select('id')
+            ->from($db->quoteName('#__competizioni'));
+
+        // Esegui la query
+        $db->setQuery($query);
+
+        try {
+            $competizioni = $db->loadColumn(); // Restituisce un array con gli ID delle competizioni
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle competizioni: ' . $e->getMessage();
+            return [];
+        }
+        $c = [];
+        foreach ($competizioni as $competizione) {
+            $comp = self::getCompetizioneById($competizione, $user);
+            $squadre = json_decode($comp->squadre, true);
+
+            if (is_array($squadre) && in_array($squadraId, $squadre)) {
+                $c[] = $competizione;
+            }
+        }
+        return $c;
+    }
+
 }
