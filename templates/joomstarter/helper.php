@@ -851,7 +851,7 @@ abstract class Competizione
             ->order($db->quoteName('giornata') . ' ASC')
             ->order($db->quoteName('girone') . ' ASC')
             /* ->order('LEAST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') // Ordina per il min id tra squadra1 e squadra2
-            ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') */; // Ordina per il max id tra squadra1 e squadra2
+            ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') */ ; // Ordina per il max id tra squadra1 e squadra2
 
         $db->setQuery($query);
         return $db->loadObjectList(); // Restituisce un array di oggetti
@@ -1680,5 +1680,36 @@ abstract class Competizione
         }
         return $c;
     }
+
+    public static function getScontriDiretti($squadra1, $squadra2)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per trovare le partite tra le due squadre
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName('#__partite'))
+            ->where(
+                '(' . $db->quoteName('squadra1') . ' = ' . (int) $squadra1 .
+                ' AND ' . $db->quoteName('squadra2') . ' = ' . (int) $squadra2 . ')'
+            )
+            ->orWhere(
+                '(' . $db->quoteName('squadra1') . ' = ' . (int) $squadra2 .
+                ' AND ' . $db->quoteName('squadra2') . ' = ' . (int) $squadra1 . ')'
+            )
+            ->order('data_partita DESC');
+
+        // Esegui la query
+        $db->setQuery($query);
+
+        try {
+            return $db->loadObjectList();
+        } catch (Exception $e) {
+            echo 'Errore durante il recupero delle partite: ' . $e->getMessage();
+            return [];
+        }
+    }
+
 
 }
