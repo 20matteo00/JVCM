@@ -850,8 +850,8 @@ abstract class Competizione
             ->from($db->quoteName($tablePartite)) // Sostituisci con il nome corretto della tua tabella
             ->order($db->quoteName('giornata') . ' ASC')
             ->order($db->quoteName('girone') . ' ASC')
-            ->order('LEAST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') // Ordina per il min id tra squadra1 e squadra2
-            ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC'); // Ordina per il max id tra squadra1 e squadra2
+            /* ->order('LEAST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') // Ordina per il min id tra squadra1 e squadra2
+            ->order('GREATEST(' . $db->quoteName('squadra1') . ', ' . $db->quoteName('squadra2') . ') ASC') */; // Ordina per il max id tra squadra1 e squadra2
 
         $db->setQuery($query);
         return $db->loadObjectList(); // Restituisce un array di oggetti

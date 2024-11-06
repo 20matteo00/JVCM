@@ -59,7 +59,8 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             <?php if ($this->params->get('show_title')): ?>
                 <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;">
                     <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;">
-                        <?php echo $this->escape($this->item->title); ?></h1>
+                        <?php echo $this->escape($this->item->title); ?>
+                    </h1>
                 </div>
             <?php endif; ?>
             <div class="com-content-article__body" style="color: <?php echo $color2; ?>;">
@@ -88,11 +89,62 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
         </div>
     </div>
 
-    <div class="row">
-        <?php 
-            $c = Competizione::getAllCompetizioni($id, $userId); 
-        ?>
+    <div class="accordion my-5" id="archivioAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingArchivio">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseArchivio" aria-expanded="false" aria-controls="collapseArchivio">
+                    Archivio
+                </button>
+            </h2>
+            <div id="collapseArchivio" class="accordion-collapse collapse" aria-labelledby="headingArchivio"
+                data-bs-parent="#archivioAccordion">
+                <div class="accordion-body">
+                    <?php
+                    $c = Competizione::getAllCompetizioni($id, $userId);
+                    echo '<div class="row text-center">';
+                    for ($i = 0; $i < count($c); $i++) {
+                        $tablePartite = Competizione::getTablePartite($c[$i]);
+                        $partite = Competizione::getPartitePerSquadra($id, $tablePartite);
+
+                        $competizione = Competizione::getCompetizioneById($c[$i], $userId);
+                        echo '<div class="col-12 my-4">';
+                        echo '<h3>' . htmlspecialchars($competizione->nome_competizione) . '</h3>';
+                        echo '<table class="table table-striped table-bordered">';
+                        echo '<thead>';
+                        echo '<tr>';
+                        echo '<th>Giornata</th>';
+                        echo '<th>Partita</th>';
+                        echo '<th>Risultato</th>';
+                        echo '</tr>';
+                        echo '</thead>';
+                        echo '<tbody>';
+
+                        if (!empty($partite)) {
+                            foreach ($partite as $partita) {
+                                echo '<tr>';
+                                echo '<td>' . htmlspecialchars($partita->giornata) . '</td>';
+                                echo '<td>' . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra1)) . " - " . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra2)) . '</td>';
+                                echo '<td>' . htmlspecialchars($partita->gol1) . " - " . htmlspecialchars($partita->gol2) . '</td>';
+                                echo '</tr>';
+                            }
+                        } else {
+                            echo '<tr>
+                                <td colspan="3" class="text-center">Nessuna partita trovata</td>
+                              </tr>';
+                        }
+
+                        echo '</tbody>';
+                        echo '</table>';
+                        echo '</div>';
+                    }
+                    echo "</div>";
+                    ?>
+                </div>
+            </div>
+        </div>
     </div>
+
 
     <?php echo $this->item->event->afterDisplayContent; ?>
 </div>
