@@ -1681,35 +1681,45 @@ abstract class Competizione
         return $c;
     }
 
-    public static function getScontriDiretti($squadra1, $squadra2)
+    public static function getScontriDiretti($squadra1, $squadra2, $user)
     {
         // Ottieni il database
         $db = Factory::getDbo();
 
         // Crea la query per trovare le partite tra le due squadre
+        // Crea la query per ottenere tutte le competizioni
         $query = $db->getQuery(true)
-            ->select('*')
-            ->from($db->quoteName('#__partite'))
-            ->where(
-                '(' . $db->quoteName('squadra1') . ' = ' . (int) $squadra1 .
-                ' AND ' . $db->quoteName('squadra2') . ' = ' . (int) $squadra2 . ')'
-            )
-            ->orWhere(
-                '(' . $db->quoteName('squadra1') . ' = ' . (int) $squadra2 .
-                ' AND ' . $db->quoteName('squadra2') . ' = ' . (int) $squadra1 . ')'
-            )
-            ->order('data_partita DESC');
+            ->select('*') // Seleziona tutte le competizioni
+            ->from($db->quoteName('#__competizioni'))
+            ->where($db->quoteName('user_id') . ' = ' . $user);
 
         // Esegui la query
         $db->setQuery($query);
 
         try {
-            return $db->loadObjectList();
+            $comp = $db->loadObjectList();
         } catch (Exception $e) {
             echo 'Errore durante il recupero delle partite: ' . $e->getMessage();
             return [];
         }
+        $scontriDiretti = [];
+        foreach ($comp as $c) {
+            $tablePartite = self::getTablePartite($c->id);
+            $partite = self::getPartite($tablePartite);
+            foreach ($partite as $partita) {
+                // Controlla se la partita coinvolge squadra1 e squadra2
+                if (
+                    ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
+                    ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1)
+                ) {
+                    // Aggiungi la partita agli scontri diretti
+                    $scontriDiretti[] = [
+                        'partita' => $partita,
+                        'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
+                    ];                }
+            }
+        }
+        return $scontriDiretti;
     }
-
-
+    
 }

@@ -10,10 +10,10 @@ $user = Factory::getUser();
 $userId = $user->id;
 // Gestisci l'invio del form
 $scontriDiretti = [];
-if (isset($_POST['squadra1']) && isset($_POST['squadra2'])) {
+if (isset($_POST['submit'])) {
     $squadra1 = (int) $_POST['squadra1'];
     $squadra2 = (int) $_POST['squadra2'];
-    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2);
+    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $userId);
 }
 $squadre = Competizione::getArticlesFromSubcategories(8);
 
@@ -21,7 +21,6 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
 
 <div class="container my-5">
     <h1 class="text-center">Scontri Diretti tra Due Squadre</h1>
-
     <form method="POST" class="my-4">
         <div class="container">
             <div class="row justify-content-center">
@@ -51,7 +50,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
 
                 <!-- Bottone per invio -->
                 <div class="col-12 text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Mostra Scontri Diretti</button>
+                    <button type="submit" name="submit" class="btn btn-primary btn-lg">Mostra Scontri Diretti</button>
                 </div>
             </div>
         </div>
@@ -60,21 +59,26 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
 
     <?php if (!empty($scontriDiretti)): ?>
         <h2 class="my-4">Risultati degli Scontri Diretti</h2>
-        <table class="table table-striped table-bordered">
+        <table class="table table-striped table-bordered text-center">
             <thead>
                 <tr>
-                    <th>Data</th>
+                    <th>Competizione</th>
+                    <th>Giornata</th>
                     <th>Partita</th>
                     <th>Risultato</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($scontriDiretti as $partita): ?>
+                <?php foreach ($scontriDiretti as $scontro): ?>
+                    <?php
+                    $partita = $scontro['partita']; // Dettagli della partita
+                    $competizioneId = $scontro['competizione']; // ID della competizione
+                    ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($partita->data_partita); ?></td>
-                        <td><?php echo htmlspecialchars($partita->squadra1); ?> vs
-                            <?php echo htmlspecialchars($partita->squadra2); ?>
-                        </td>
+                        <td><?php echo htmlspecialchars($competizioneId); ?></td>
+                        <td><?php echo htmlspecialchars($partita->giornata); ?></td>
+                        <td><?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra1)); ?> vs
+                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra2)); ?> </td>
                         <td><?php echo htmlspecialchars($partita->gol1); ?> - <?php echo htmlspecialchars($partita->gol2); ?>
                         </td>
                     </tr>
