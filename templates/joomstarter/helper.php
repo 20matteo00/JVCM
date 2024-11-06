@@ -1716,10 +1716,11 @@ abstract class Competizione
                     $scontriDiretti[] = [
                         'partita' => $partita,
                         'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
-                    ];                }
+                    ];
+                }
             }
         }
         return $scontriDiretti;
     }
-    
+
 }

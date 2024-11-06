@@ -54,6 +54,8 @@ if (isset($_GET['id'])) {
                                 $colort1 = !empty($cf1[2]) ? $cf1[2]->value : '#ffffff';
                                 $colors2 = !empty($cf2[1]) ? $cf2[1]->value : '#000000';
                                 $colort2 = !empty($cf2[2]) ? $cf2[2]->value : '#ffffff';
+                                $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
+                                $forza2 = !empty($cf2[3]) ? $cf2[3]->value : 0;
                                 $gol1 = isset($partita['gol1']) ? $partita['gol1'] : '';
                                 $gol2 = isset($partita['gol2']) ? $partita['gol2'] : '';
                                 $girone = isset($partita['girone']) ? $partita['girone'] : '';
@@ -75,6 +77,8 @@ if (isset($_GET['id'])) {
                                     </div>
                                     <form action="" class="d-flex align-items-center ms-3" method="post">
                                         <input type="hidden" name="module_id" value="116">
+                                        <input type="hidden" name="strength1" value="<?php echo $forza1; ?>">
+                                        <input type="hidden" name="strength2" value="<?php echo $forza2; ?>">
                                         <input type="hidden" name="ar" value="<?php echo $ar; ?>">
                                         <input type="hidden" name="modalita" value="<?php echo $mod; ?>">
                                         <input type="hidden" name="giornata" value="<?php echo $index; ?>">
@@ -94,6 +98,10 @@ if (isset($_GET['id'])) {
                                         <button type="submit" name="delete" class="btn btn-danger ms-1"
                                             style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
                                             <span class="bi bi-x text-white" style="font-size:25px;"></span>
+                                        </button>
+                                        <button type="submit" name="simulate" class="btn btn-warning ms-1"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                            <span class="bi bi-magic text-white" style="font-size:25px;"></span>
                                         </button>
                                         <?php //endif; ?>
                                     </form>
@@ -255,6 +263,12 @@ if (isset($_POST['save'])) {
 
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
+} elseif (isset($_POST['simulate'])) {
+    $squadra1 = $_POST['squadra1'];
+    $squadra2 = $_POST['squadra2'];
+    $giornata = $_POST['giornata'];
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
 } elseif (isset($_POST['saveall'])) {
     $module_ID = $_POST['module_id'];
     $giornata = $_POST['giornata'];
