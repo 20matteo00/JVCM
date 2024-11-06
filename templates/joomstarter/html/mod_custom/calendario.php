@@ -26,6 +26,10 @@ if (isset($_GET['id'])) {
     // Riorganizza le partite in giornate
     $giornate = [];
     foreach ($giornateRaw as $partita) {
+        $cf1 = Competizione::getCustomFields($partita->squadra1);
+        $cf2 = Competizione::getCustomFields($partita->squadra2);
+        $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
+        $forza2 = !empty($cf2[3]) ? $cf2[3]->value : 0;
         $giornate[$partita->giornata][] = [
             'squadra1' => $partita->squadra1,
             'squadra2' => $partita->squadra2,
@@ -33,6 +37,8 @@ if (isset($_GET['id'])) {
             'gol2' => $partita->gol2,
             'giornata' => $partita->giornata,
             'girone' => $partita->girone,
+            'forza1' => $forza1,
+            'forza2' => $forza2,
         ];
     } ?>
     <div class="container calendario">
@@ -61,10 +67,11 @@ if (isset($_GET['id'])) {
                                 $girone = isset($partita['girone']) ? $partita['girone'] : '';
                                 ?>
                                 <div class="d-flex my-3 fw-bold align-items-center myinput">
-                                    <?php if($mod===70): ?>
-                                    <div class="p-1 text-center me-2" style="border-radius:50px; width: 32px; background-color:var(--nero);">
-                                        <span style="color:var(--bianco);"><?php echo htmlspecialchars($girone); ?></span>
-                                    </div>
+                                    <?php if ($mod === 70): ?>
+                                        <div class="p-1 text-center me-2"
+                                            style="border-radius:50px; width: 32px; background-color:var(--nero);">
+                                            <span style="color:var(--bianco);"><?php echo htmlspecialchars($girone); ?></span>
+                                        </div>
                                     <?php endif; ?>
                                     <div class="p-1 text-center"
                                         style="border-radius:50px; width:200px; background-color: <?php echo $colors1; ?>;">
@@ -95,13 +102,13 @@ if (isset($_GET['id'])) {
                                             style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
                                             <span class="bi bi-check2 text-white" style="font-size:25px;"></span>
                                         </button>
-                                        <button type="submit" name="delete" class="btn btn-danger ms-1"
-                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
-                                            <span class="bi bi-x text-white" style="font-size:25px;"></span>
-                                        </button>
                                         <button type="submit" name="simulate" class="btn btn-warning ms-1"
                                             style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
                                             <span class="bi bi-magic text-white" style="font-size:25px;"></span>
+                                        </button>
+                                        <button type="submit" name="delete" class="btn btn-danger ms-1"
+                                            style="width: 30px; height: 30px; border-radius: 50%;" <?php echo $disabled; ?>>
+                                            <span class="bi bi-x text-white" style="font-size:25px;"></span>
                                         </button>
                                         <?php //endif; ?>
                                     </form>
@@ -119,6 +126,8 @@ if (isset($_GET['id'])) {
                                 <?php foreach ($partite as $i => $partita): ?>
                                     <input type="hidden" name="squadra1[]" value="<?php echo $partita['squadra1']; ?>">
                                     <input type="hidden" name="squadra2[]" value="<?php echo $partita['squadra2']; ?>">
+                                    <input type="hidden" name="strength1[]" value="<?php echo $partita['forza1']; ?>">
+                                    <input type="hidden" name="strength2[]" value="<?php echo $partita['forza2']; ?>">
                                     <input type="hidden" name="gol1[]" id="hidden-gol1-<?php echo $index . '-' . $i; ?>"
                                         value="<?php echo $gol1; ?>">
                                     <input type="hidden" name="gol2[]" id="hidden-gol2-<?php echo $index . '-' . $i; ?>"
@@ -126,6 +135,7 @@ if (isset($_GET['id'])) {
                                 <?php endforeach; ?>
 
                                 <button type="submit" name="saveall" class="btn btn-success" style="width: 80px;" <?php echo $disabled; ?>>Salva</button>
+                                <button type="submit" name="simulateall" class="btn btn-warning" style="width: 80px;" <?php echo $disabled; ?>>Simula</button>
                                 <button type="submit" name="deleteall" class="btn btn-danger" style="width: 80px;" <?php echo $disabled; ?>>Elimina</button>
                             </form>
                         </div>
@@ -225,6 +235,47 @@ if (isset($_POST['save'])) {
     }
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
+} elseif (isset($_POST['simulate'])) {
+    $squadra1 = $_POST['squadra1'];
+    $squadra2 = $_POST['squadra2'];
+    $giornata = $_POST['giornata'];
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
+    $module_ID = $_POST['module_id'];
+    $forza1 = $_POST['strength1'];
+    $forza2 = $_POST['strength2'];
+    $ris = Competizione::ris($forza1, $forza2);
+    $gol1 = $ris['squadra1'];
+    $gol2 = $ris['squadra2'];
+    $db = Factory::getDbo();
+    $query = $db->getQuery(true)
+        ->update($db->quoteName($tablePartite))
+        ->set([
+            'gol1 = ' . $db->quote($gol1),
+            'gol2 = ' . $db->quote($gol2)
+        ])
+        ->where([
+            'squadra1 = ' . $db->quote($squadra1),
+            'squadra2 = ' . $db->quote($squadra2)
+        ]);
+    $db->setQuery($query);
+    $db->execute();
+    if ($mod == 69) {
+        $gio = $giornata;
+        if ($gio % 2 == 1 && $ar == 1)
+            $gio += 1;
+
+        // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+        $deleteQuery = $db->getQuery(true)
+            ->delete($db->quoteName($tablePartite))
+            ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+        // Esegui la query per eliminare le partite successive
+        $db->setQuery($deleteQuery);
+        $db->execute();
+    }
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
+    exit;
 } elseif (isset($_POST['delete'])) {
     $squadra1 = $_POST['squadra1'];
     $squadra2 = $_POST['squadra2'];
@@ -263,12 +314,6 @@ if (isset($_POST['save'])) {
 
     header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
-} elseif (isset($_POST['simulate'])) {
-    $squadra1 = $_POST['squadra1'];
-    $squadra2 = $_POST['squadra2'];
-    $giornata = $_POST['giornata'];
-    $mod = $_POST['modalita'];
-    $ar = $_POST['ar'];
 } elseif (isset($_POST['saveall'])) {
     $module_ID = $_POST['module_id'];
     $giornata = $_POST['giornata'];
@@ -292,6 +337,71 @@ if (isset($_POST['save'])) {
             $s2 = $db->quote($squadre2[$i]);
             $g1 = is_numeric($gol1[$i]) ? $db->quote($gol1[$i]) : 0;
             $g2 = is_numeric($gol2[$i]) ? $db->quote($gol2[$i]) : 0;
+
+            // Costruisci la query di aggiornamento
+            $query = $db->getQuery(true)
+                ->update($db->quoteName($tablePartite))
+                ->set([
+                    $db->quoteName('gol1') . ' = ' . $g1,
+                    $db->quoteName('gol2') . ' = ' . $g2
+                ])
+                ->where([
+                    $db->quoteName('squadra1') . ' = ' . $s1,
+                    $db->quoteName('squadra2') . ' = ' . $s2,
+                    $db->quoteName('giornata') . ' = ' . (int) $giornata // filtro per la giornata, se necessario
+                ]);
+
+            // Esegui la query
+            $db->setQuery($query);
+            $db->execute();
+            if ($mod == 69) {
+                $gio = $giornata;
+                if ($gio % 2 == 1 && $ar == 1)
+                    $gio += 1;
+
+                // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+                $deleteQuery = $db->getQuery(true)
+                    ->delete($db->quoteName($tablePartite))
+                    ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+                // Esegui la query per eliminare le partite successive
+                $db->setQuery($deleteQuery);
+                $db->execute();
+            }
+        }
+        $gio = $giornata + 1;
+    }
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$gio");
+    exit;
+} elseif (isset($_POST['simulateall'])) {
+    $module_ID = $_POST['module_id'];
+    $giornata = $_POST['giornata'];
+    // Recupera i valori delle squadre e dei gol
+    $squadre1 = $_POST['squadra1']; // Array di squadre1
+    $squadre2 = $_POST['squadra2']; // Array di squadre2
+    $forza1 = $_POST['strength1']; // Array di forza1
+    $forza2 = $_POST['strength2']; // Array di forza2
+    $gol1 = $_POST['gol1']; // Array di gol1
+    $gol2 = $_POST['gol2']; // Array di gol2
+    $mod = $_POST['modalita'];
+    $ar = $_POST['ar'];
+
+    // Assicurati che tutti gli array abbiano la stessa lunghezza
+    $count = count($squadre1);
+
+    if ($count === count($squadre2) && $count === count($gol1) && $count === count($gol2)) {
+        $db = Factory::getDbo();
+
+        for ($i = 0; $i < $count; $i++) {
+            // Prepara i dati
+            $s1 = $db->quote($squadre1[$i]);
+            $s2 = $db->quote($squadre2[$i]);
+            $f1 = $forza1[$i]; // Rimuovi il quote() per lavorare con i numeri direttamente
+            $f2 = $forza2[$i]; // Rimuovi il quote() per lavorare con i numeri direttamente
+
+            $ris = Competizione::ris($f1, $f2);
+            $g1 = $ris['squadra1'];
+            $g2 = $ris['squadra2'];
 
             // Costruisci la query di aggiornamento
             $query = $db->getQuery(true)

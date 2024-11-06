@@ -1723,4 +1723,30 @@ abstract class Competizione
         return $scontriDiretti;
     }
 
+    public static function ris($n1, $n2)
+    {
+        $diff = $n1 - $n2;
+        $sum = $n1 + $n2;
+        $pv1 = round($n1 / $sum, 2);
+        $pv2 = round($n2 / $sum, 2);
+
+        $random = rand(0, 100) / 100;
+
+        if($random < $pv1){
+            $gol1 = rand(0,5);
+            $gol2 = rand(0, $gol1);
+        } elseif ($pv1 == $random) {
+            $gol1 = $gol2 = rand(0, 4);
+        } else{
+            $gol2 = rand(0,5);
+            $gol1 = rand(0, $gol2);
+        }
+        // Restituisci il risultato finale
+        return [
+            'squadra1' => $gol1,
+            'squadra2' => $gol2
+        ];
+    }
+
+
 }
