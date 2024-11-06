@@ -92,7 +92,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
     <div class="accordion my-5" id="archivioAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingArchivio">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapseArchivio" aria-expanded="false" aria-controls="collapseArchivio">
                     Archivio
                 </button>
@@ -125,7 +125,11 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                                 echo '<tr>';
                                 echo '<td>' . htmlspecialchars($partita->giornata) . '</td>';
                                 echo '<td>' . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra1)) . " - " . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra2)) . '</td>';
-                                echo '<td>' . htmlspecialchars($partita->gol1) . " - " . htmlspecialchars($partita->gol2) . '</td>';
+                                if ($partita->gol1 !== null && $partita->gol2 !== null) {
+                                    echo '<td>' . htmlspecialchars($partita->gol1) . " - " . htmlspecialchars($partita->gol2) . '</td>';
+                                } else{
+                                    echo '<td> - </td>';
+                                }
                                 echo '</tr>';
                             }
                         } else {

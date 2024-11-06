@@ -434,9 +434,8 @@ if (isset($_POST['save'])) {
                 $db->execute();
             }
         }
-        $gio = $giornata + 1;
     }
-    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$gio");
+    header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
     exit;
 } elseif (isset($_POST['deleteall'])) {
     $giornata = $_POST['giornata'];
