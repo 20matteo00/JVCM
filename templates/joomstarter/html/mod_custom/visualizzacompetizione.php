@@ -25,6 +25,11 @@ $userId = $user->id;
         $mod = $competizione->modalita;
         $ar = $competizione->andata_ritorno;
         $finita = $competizione->finita;
+        if ($finita === 1)
+            $disabled = "disabled";
+        else
+            $disabled = "";
+
         $gironi = $competizione->gironi;
         $squadreJson = $competizione->squadre;
         // Decodifica la stringa JSON in un array
@@ -53,7 +58,8 @@ $userId = $user->id;
                     <button type="submit" name="module_id" value="117" class="btn btn-success mx-3">Classifica</button>
                     <button type="submit" name="module_id" value="118" class="btn btn-success mx-3">Tabellone</button>
                     <button type="submit" name="module_id" value="119" class="btn btn-success mx-3">Statistiche</button>
-                    <button type="submit" name="simulation" class="btn btn-warning mx-3">Simula</button>
+                    <button type="submit" name="simulation" class="btn btn-warning mx-3" <?php echo $disabled; ?>>Simula</button>
+                    <button type="submit" name="elimination" class="btn btn-danger mx-3" <?php echo $disabled; ?>>Elimina</button>
                 </div>
             </form>
 
@@ -71,29 +77,63 @@ $userId = $user->id;
             if (isset($_POST['simulation'])) {
                 $simpar = Competizione::getPartite($tablePartite);
                 $module_ID = 116;
-                foreach ($simpar as $partita) {
-                    $cf1 = Competizione::getCustomFields($partita->squadra1);
-                    $cf2 = Competizione::getCustomFields($partita->squadra2);
-                    $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
-                    $forza2 = !empty($cf2[3]) ? $cf2[3]->value : 0;
-                    $ris = Competizione::ris($forza1, $forza2);
-                    $gol1 = $ris['squadra1'];
-                    $gol2 = $ris['squadra2'];
-                    $db = Factory::getDbo();
-                    $query = $db->getQuery(true)
-                        ->update($db->quoteName($tablePartite))
-                        ->set([
-                            'gol1 = ' . $db->quote($gol1),
-                            'gol2 = ' . $db->quote($gol2)
-                        ])
-                        ->where([
-                            'squadra1 = ' . $db->quote($partita->squadra1),
-                            'squadra2 = ' . $db->quote($partita->squadra2)
-                        ]);
-                    $db->setQuery($query);
-                    $db->execute();
+                if ($mod !== 69) {
+                    foreach ($simpar as $partita) {
+                        $cf1 = Competizione::getCustomFields($partita->squadra1);
+                        $cf2 = Competizione::getCustomFields($partita->squadra2);
+                        $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
+                        $forza2 = !empty($cf2[3]) ? $cf2[3]->value : 0;
+                        $ris = Competizione::ris($forza1, $forza2);
+                        $gol1 = $ris['squadra1'];
+                        $gol2 = $ris['squadra2'];
+                        $db = Factory::getDbo();
+                        $query = $db->getQuery(true)
+                            ->update($db->quoteName($tablePartite))
+                            ->set([
+                                'gol1 = ' . $db->quote($gol1),
+                                'gol2 = ' . $db->quote($gol2)
+                            ])
+                            ->where([
+                                'squadra1 = ' . $db->quote($partita->squadra1),
+                                'squadra2 = ' . $db->quote($partita->squadra2)
+                            ]);
+                        $db->setQuery($query);
+                        $db->execute();
+                    }
                 }
                 header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
+                exit;
+            }
+            if (isset($_POST['elimination'])) {
+                $module_ID = 116;
+                $db = Factory::getDbo();
+
+                // Prepara la query per impostare a NULL i gol della giornata specificata
+                $query = $db->getQuery(true)
+                    ->update($db->quoteName($tablePartite))
+                    ->set([
+                        $db->quoteName('gol1') . ' = NULL',
+                        $db->quoteName('gol2') . ' = NULL'
+                    ]);
+
+                // Esegui la query per aggiornare i gol
+                $db->setQuery($query);
+                $db->execute();
+                if ($mod == 69) {
+                    $gio = 1;
+                    if ($ar == 1)
+                        $gio += 1;
+
+                    // Prepara una seconda query per eliminare tutte le partite dopo la giornata specificata
+                    $deleteQuery = $db->getQuery(true)
+                        ->delete($db->quoteName($tablePartite))
+                        ->where($db->quoteName('giornata') . ' > ' . (int) $gio);
+
+                    // Esegui la query per eliminare le partite successive
+                    $db->setQuery($deleteQuery);
+                    $db->execute();
+                }
+                header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
                 exit;
             }
             ?>
