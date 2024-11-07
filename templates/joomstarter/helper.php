@@ -1738,12 +1738,12 @@ abstract class Competizione
 
         if ($pw1 > $pw2) {
             $gol1 = self::pesoRand(0, 5);  
-            $gol2 = rand(0, $gol1);
+            $gol2 = self::pesoRand(0, $gol1);
         } elseif ($pw1 === $pw2) {
-            $gol1 = $gol2 = rand(0, 4);
+            $gol1 = $gol2 = self::pesoRand(0, 4);
         } else {
             $gol2 = self::pesoRand(0, 5);  
-            $gol1 = rand(0, $gol2);
+            $gol1 = self::pesoRand(0, $gol2);
         }
 
         // Restituisce il risultato finale
