@@ -1729,32 +1729,21 @@ abstract class Competizione
 
     public static function ris($forza1, $forza2)
     {
-        // Calcola la differenza di forza
-        $differenzaForza = $forza1 - $forza2;
+        $pw1 = rand(0, $forza1);
+        $pw2 = rand(0, $forza2);
 
         // Inizializza i gol
         $gol1 = 0;
         $gol2 = 0;
 
-        // Genera una probabilità casuale per influenzare l'esito
-        $chance = rand(0, 100);
-
-        // Usa la differenza di forza e una probabilità casuale per determinare i gol
-        if ($differenzaForza >= 750) {  // Squadra 1 molto più forte
-            $gol1 = rand(2, 5);
-            $gol2 = ($chance < 20) ? rand(1, 3) : rand(0, 2);  // Squadra debole ha una piccola chance di segnare 2-3 gol
-        } elseif ($differenzaForza >= 250) {  // Squadra 1 leggermente più forte
-            $gol1 = rand(1, 4);
-            $gol2 = ($chance < 30) ? rand(1, 3) : rand(0, 3);  // Piccola chance per squadra debole di fare 2-3 gol
-        } elseif ($differenzaForza <= -250) {  // Squadra 2 leggermente più forte
-            $gol2 = rand(1, 4);
-            $gol1 = ($chance < 30) ? rand(1, 3) : rand(0, 3);  // Squadra debole ha chance per 2-3 gol
-        } elseif ($differenzaForza <= -750) {  // Squadra 2 molto più forte
-            $gol2 = rand(2, 5);
-            $gol1 = ($chance < 20) ? rand(1, 3) : rand(0, 2);  // Piccola chance per squadra debole di fare 2-3 gol
-        } else{  // Forza equilibrata
-            $gol1 = rand(0, 3);
-            $gol2 = rand(0, 3);
+        if ($pw1 > $pw2) {
+            $gol1 = self::pesoRand(0, 5);  
+            $gol2 = rand(0, $gol1);
+        } elseif ($pw1 === $pw2) {
+            $gol1 = $gol2 = rand(0, 4);
+        } else {
+            $gol2 = self::pesoRand(0, 5);  
+            $gol1 = rand(0, $gol2);
         }
 
         // Restituisce il risultato finale
@@ -1763,5 +1752,32 @@ abstract class Competizione
             'squadra2' => $gol2
         ];
     }
-
+    public static function pesoRand($min, $max)
+    {
+        // Definisci i pesi per ogni numero (più alto è il peso, più probabile è che venga scelto)
+        $pesi = [
+            0 => 15,
+            1 => 30,
+            2 => 25,
+            3 => 15,
+            4 => 10,
+            5 => 5
+        ];
+    
+        // Calcola la somma totale dei pesi
+        $sommaPesi = array_sum($pesi);
+    
+        // Estrai un numero casuale compreso tra 0 e la somma dei pesi
+        $random = rand(0, $sommaPesi - 1);
+    
+        // Usa il numero casuale per determinare quale numero restituire
+        $soglia = 0;
+        foreach ($pesi as $numero => $peso) {
+            $soglia += $peso;
+            if ($random < $soglia) {
+                return $numero;
+            }
+        }
+    }
+    
 }
