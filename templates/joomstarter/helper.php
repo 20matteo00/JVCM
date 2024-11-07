@@ -1672,11 +1672,15 @@ abstract class Competizione
         $c = [];
         foreach ($competizioni as $competizione) {
             $comp = self::getCompetizioneById($competizione, $user);
-            $squadre = json_decode($comp->squadre, true);
+            $squadre = [];
+            if (!is_null($comp) && !is_null($comp->squadre)) {
+                $squadre = json_decode($comp->squadre, true);
+            }
 
             if (is_array($squadre) && in_array($squadraId, $squadre)) {
                 $c[] = $competizione;
             }
+
         }
         return $c;
     }
@@ -1723,20 +1727,35 @@ abstract class Competizione
         return $scontriDiretti;
     }
 
-    public static function ris($n1, $n2)
+    public static function ris($forza1, $forza2)
     {
-        // Calcolo dei livelli delle due squadre in base ai punteggi
-        $l1 = self::calcolaLivello($n1);
-        $l2 = self::calcolaLivello($n2);
+        // Calcola la differenza di forza
+        $differenzaForza = $forza1 - $forza2;
 
-        // Somma dei punteggi per calcolare la probabilità
-        $sum = $n1 + $n2;
-        $p1 = round($n1 / $sum, 3);  // Probabilità della squadra 1 di vincere
+        // Inizializza i gol
+        $gol1 = 0;
+        $gol2 = 0;
 
-        // Generazione dei gol in base ai livelli e probabilità
-        $gol = self::generaGol($l1, $l2, $p1);
-        $gol1 = $gol['squadra1'];
-        $gol2 = $gol['squadra2'];
+        // Genera una probabilità casuale per influenzare l'esito
+        $chance = rand(0, 100);
+
+        // Usa la differenza di forza e una probabilità casuale per determinare i gol
+        if ($differenzaForza >= 750) {  // Squadra 1 molto più forte
+            $gol1 = rand(2, 5);
+            $gol2 = ($chance < 20) ? rand(1, 3) : rand(0, 2);  // Squadra debole ha una piccola chance di segnare 2-3 gol
+        } elseif ($differenzaForza >= 250) {  // Squadra 1 leggermente più forte
+            $gol1 = rand(1, 4);
+            $gol2 = ($chance < 30) ? rand(1, 3) : rand(0, 3);  // Piccola chance per squadra debole di fare 2-3 gol
+        } elseif ($differenzaForza <= -250) {  // Squadra 2 leggermente più forte
+            $gol2 = rand(1, 4);
+            $gol1 = ($chance < 30) ? rand(1, 3) : rand(0, 3);  // Squadra debole ha chance per 2-3 gol
+        } elseif ($differenzaForza <= -750) {  // Squadra 2 molto più forte
+            $gol2 = rand(2, 5);
+            $gol1 = ($chance < 20) ? rand(1, 3) : rand(0, 2);  // Piccola chance per squadra debole di fare 2-3 gol
+        } else{  // Forza equilibrata
+            $gol1 = rand(0, 3);
+            $gol2 = rand(0, 3);
+        }
 
         // Restituisce il risultato finale
         return [
@@ -1744,62 +1763,5 @@ abstract class Competizione
             'squadra2' => $gol2
         ];
     }
-
-    // Funzione per calcolare il livello in base al punteggio
-    private static function calcolaLivello($punteggio)
-    {
-        if ($punteggio > 750)
-            return 3;  // Squadra molto forte
-        elseif ($punteggio >= 300)
-            return 2;  // Squadra forte
-        elseif ($punteggio >= 50)
-            return 1;  // Squadra debole
-        else
-            return 0;  // Squadra molto debole
-    }
-
-    // Funzione per generare i gol in base al livello e alla probabilità
-    private static function generaGol($l1, $l2, $p1)
-    {
-        // Genera un numero casuale per decidere il risultato
-        $p = rand(0, 1000) / 1000;  // Probabilità casuale tra 0 e 1
-
-        // Inizializzazione dei gol
-        $gol1 = 0;
-        $gol2 = 0;
-
-        if ($p < $p1) {  // Squadra 1 ha una probabilità maggiore di vincere
-            if ($l1 > $l2) {
-                $gol1 = rand(2, 5);  // Squadra 1 è forte, segna tra 2 e 5 gol
-                $gol2 = rand(0, $gol1 - 1);  // Squadra 2 segna meno
-            } elseif ($l1 == $l2) {
-                $gol1 = rand(1, 4);  // Pareggio, entrambe segnano gol simili
-                $gol2 = rand(0, $gol1);  // Squadra 2 segna un numero casuale di gol
-            } else {
-                $gol1 = rand(1, 3);  // Squadra 1 è più debole, segna meno
-                $gol2 = rand(0, $gol1+1);  // Squadra 2 segna almeno quanto squadra 1
-            }
-        } elseif ($p == $p1) {  // Caso di pareggio, probabilità di pareggio esatta
-            $gol1 = $gol2 = rand(0, 3);  // Pareggio, entrambi segnano lo stesso numero di gol
-        } else {  // Squadra 2 ha una probabilità maggiore di vincere
-            if ($l2 > $l1) {
-                $gol2 = rand(2, 5);  // Squadra 2 è forte, segna tra 2 e 5 gol
-                $gol1 = rand(0, $gol2 - 1);  // Squadra 1 segna meno
-            } elseif ($l2 == $l1) {
-                $gol2 = rand(1, 4);  // Pareggio, entrambe segnano gol simili
-                $gol1 = rand(0, $gol2);  // Squadra 1 segna un numero casuale di gol
-            } else {
-                $gol2 = rand(1, 3);  // Squadra 2 è più debole, segna meno
-                $gol1 = rand(0, $gol2+1);  // Squadra 1 segna almeno quanto squadra 2
-            }
-        }
-
-        // Restituisce i gol per entrambe le squadre
-        return [
-            'squadra1' => $gol1,
-            'squadra2' => $gol2
-        ];
-    }
-
 
 }
