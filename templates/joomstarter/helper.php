@@ -1729,21 +1729,23 @@ abstract class Competizione
 
     public static function ris($forza1, $forza2)
     {
+        // Generiamo potenza casuale in base alla forza delle due squadre
         $pw1 = rand(0, $forza1);
         $pw2 = rand(0, $forza2);
 
-        // Inizializza i gol
+        // Inizializziamo i gol
         $gol1 = 0;
         $gol2 = 0;
 
+        // Calcoliamo i gol in base alla forza e alla casualità
         if ($pw1 > $pw2) {
-            $gol1 = self::pesoRand(0, 5);  
-            $gol2 = self::pesoRand(0, $gol1);
+            $gol1 = self::pesoRand(2, 5);  // Squadra più forte ha un range di gol più alto
+            $gol2 = self::pesoRand(0, $gol1); // Squadra più debole segna meno
         } elseif ($pw1 === $pw2) {
-            $gol1 = $gol2 = self::pesoRand(0, 4);
+            $gol1 = $gol2 = self::pesoRand(0, 3);  // Pareggio probabile con pochi gol
         } else {
-            $gol2 = self::pesoRand(0, 5);  
-            $gol1 = self::pesoRand(0, $gol2);
+            $gol2 = self::pesoRand(2, 5);  // Squadra 2 è più forte e segna di più
+            $gol1 = self::pesoRand(0, $gol2); // Squadra più debole segna meno
         }
 
         // Restituisce il risultato finale
@@ -1752,32 +1754,39 @@ abstract class Competizione
             'squadra2' => $gol2
         ];
     }
+
     public static function pesoRand($min, $max)
     {
-        // Definisci i pesi per ogni numero (più alto è il peso, più probabile è che venga scelto)
+        // Imposta pesi per risultati bassi con piccola probabilità di risultati alti
         $pesi = [
-            0 => 15,
+            0 => 20,
             1 => 30,
             2 => 25,
             3 => 15,
-            4 => 10,
-            5 => 5
+            4 => 7,
+            5 => 3
         ];
-    
-        // Calcola la somma totale dei pesi
-        $sommaPesi = array_sum($pesi);
-    
-        // Estrai un numero casuale compreso tra 0 e la somma dei pesi
+
+        // Filtra i pesi per l'intervallo desiderato
+        $pesiFiltrati = array_filter($pesi, function ($k) use ($min, $max) {
+            return $k >= $min && $k <= $max;
+        }, ARRAY_FILTER_USE_KEY);
+
+        // Calcola la somma dei pesi filtrati
+        $sommaPesi = array_sum($pesiFiltrati);
+
+        // Genera un numero casuale tra 0 e la somma dei pesi
         $random = rand(0, $sommaPesi - 1);
-    
-        // Usa il numero casuale per determinare quale numero restituire
+
+        // Seleziona un numero in base ai pesi
         $soglia = 0;
-        foreach ($pesi as $numero => $peso) {
+        foreach ($pesiFiltrati as $numero => $peso) {
             $soglia += $peso;
             if ($random < $soglia) {
                 return $numero;
             }
         }
     }
-    
+
+
 }

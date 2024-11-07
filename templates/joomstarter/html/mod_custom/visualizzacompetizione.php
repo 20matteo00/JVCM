@@ -53,6 +53,7 @@ $userId = $user->id;
                     <button type="submit" name="module_id" value="117" class="btn btn-success mx-3">Classifica</button>
                     <button type="submit" name="module_id" value="118" class="btn btn-success mx-3">Tabellone</button>
                     <button type="submit" name="module_id" value="119" class="btn btn-success mx-3">Statistiche</button>
+                    <button type="submit" name="simulation" class="btn btn-warning mx-3">Simula</button>
                 </div>
             </form>
 
@@ -66,6 +67,34 @@ $userId = $user->id;
                 $modulo = $_GET['module_id'];
                 $module = ModuleHelper::getModuleById($modulo);
                 echo ModuleHelper::renderModule($module);
+            }
+            if (isset($_POST['simulation'])) {
+                $simpar = Competizione::getPartite($tablePartite);
+                $module_ID = 116;
+                foreach ($simpar as $partita) {
+                    $cf1 = Competizione::getCustomFields($partita->squadra1);
+                    $cf2 = Competizione::getCustomFields($partita->squadra2);
+                    $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
+                    $forza2 = !empty($cf2[3]) ? $cf2[3]->value : 0;
+                    $ris = Competizione::ris($forza1, $forza2);
+                    $gol1 = $ris['squadra1'];
+                    $gol2 = $ris['squadra2'];
+                    $db = Factory::getDbo();
+                    $query = $db->getQuery(true)
+                        ->update($db->quoteName($tablePartite))
+                        ->set([
+                            'gol1 = ' . $db->quote($gol1),
+                            'gol2 = ' . $db->quote($gol2)
+                        ])
+                        ->where([
+                            'squadra1 = ' . $db->quote($partita->squadra1),
+                            'squadra2 = ' . $db->quote($partita->squadra2)
+                        ]);
+                    $db->setQuery($query);
+                    $db->execute();
+                }
+                header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID#$giornata");
+                exit;
             }
             ?>
 
