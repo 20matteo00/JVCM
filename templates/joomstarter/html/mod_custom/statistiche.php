@@ -31,6 +31,10 @@ if (isset($_GET['id'])) {
         'Partita Persa con Maggior Scarto di Goal',
         'Partita con Maggior Numero di Goal',
     ];
+    $general = [
+        'Partite Totali',
+        'Gol Totali',
+    ];
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
     $numsquadre = count($classifica);
@@ -194,10 +198,26 @@ if (isset($_POST['submit'])) {
                     <th class="category-header-logo" scope="col">Record</th>
                     <th class="category-header-logo" scope="col">#: Squadre (Giornate)
                         <?php if ($mod === 70)
-                            echo "- Girone"; ?></th>
+                            echo "- Girone"; ?>
+                    </th>
                 </tr>
             </thead>
             <tbody>
+                <?php
+                // Loop through $record and display them
+                foreach ($general as $index => $recordItem) {
+                    ?>
+                    <tr>
+                        <td class="category-items-cell"><?php echo htmlspecialchars($recordItem); ?></td>
+                        <td class="category-items-cell">
+                            <?php
+                            echo Competizione::getGeneral($tablePartite, $index);
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                }
+                ?>
                 <?php
                 // Loop through $record and display them
                 foreach ($record as $index => $recordItem) {

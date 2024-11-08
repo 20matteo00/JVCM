@@ -40,7 +40,8 @@ $strength = !empty($customFields[3]) ? $customFields[3]->value : 'N/A'; // Forza
 $params = $this->item->params;
 
 // ... (il tuo codice PHP esistente)
-
+$stato = Competizione::getCategoriaTag($id);
+var_dump($stato);
 // Ottieni l'immagine dell'articolo
 $images = json_decode($this->item->images);
 $imageSrc = isset($images->image_intro) && !empty($images->image_intro) ? $images->image_intro : '';
@@ -78,6 +79,17 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                     $categories = '<a class="campionato" href="' . Route::_('index.php?option=com_content&view=category&id=' . $this->item->catid) . '">' . $this->escape($this->item->category_title) . '</a>';
                 }
                 echo '<span class="h4 fw-bold">Campionato: ' . $categories . '</span>';
+                ?>
+            </div>
+            <br>
+
+            <div class="com-content-article__metadata">
+                <?php
+                // Verifica se la categoria è presente
+                if ($stato !== null) {
+                    $tag = '<a class="campionato" href="' . htmlspecialchars($stato['link']) . '">' . htmlspecialchars($stato['title']) . '</a>';
+                }
+                echo '<span class="h4 fw-bold">Stato: ' . $tag . '</span>';
                 ?>
             </div>
         </div>

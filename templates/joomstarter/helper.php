@@ -7,10 +7,52 @@ defined(constant_name: '_JEXEC') or die; // Assicurati che il file venga caricat
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Exception;
+use Joomla\CMS\Table\Table;
 use Symfony\Component\VarDumper\VarDumper;
 
 abstract class Competizione
 {
+    public static function getCategoriaTag($articleId)
+    {
+        // Carica l'oggetto articolo
+        $article = Table::getInstance('content');
+        $article->load($articleId);
+
+        // Recupera l'ID della categoria dell'articolo
+        $categoryId = $article->catid;
+
+        // Verifica se esiste una categoria
+        if (!$categoryId) {
+            return null;
+        }
+
+        // Usa il database di Joomla per ottenere i tag associati alla categoria
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true)
+            ->select('t.id, t.title')
+            ->from($db->quoteName('#__tags', 't'))
+            ->join('INNER', $db->quoteName('#__contentitem_tag_map', 'm') . ' ON m.tag_id = t.id')
+            ->where('m.content_item_id = ' . (int) $categoryId)
+            ->where('m.type_alias = ' . $db->quote('com_content.category'))
+            ->setLimit(1); // Prende solo un tag
+
+        $db->setQuery($query);
+        $tag = $db->loadObject();
+
+        // Se non ci sono tag associati
+        if (!$tag) {
+            return null;
+        }
+
+        // Crea il link alla pagina del tag
+        $tagLink = Route::_('index.php?option=com_tags&view=tag&id=' . $tag->id);
+
+        // Restituisce il nome del tag e il link
+        return [
+            'title' => $tag->title,
+            'link' => $tagLink
+        ];
+    }
 
     public static function getCustomFields($itemId)
     {
@@ -1178,6 +1220,61 @@ abstract class Competizione
         return $matches; // Return the list of matches
     }
 
+    public static function getPartitePerSquadraCasa($squadraId, $tablePartite)
+    {
+        // Get a database connection
+        $db = Factory::getDbo();
+
+        // Create a query to fetch matches for the specified team
+        $query = $db->getQuery(true)
+            ->select('*') // Select all fields, adjust as necessary
+            ->from($db->quoteName($tablePartite)) // Replace with your actual table name
+            ->where($db->quoteName('squadra1') . ' = ' . (int) $squadraId)
+            ->order($db->quoteName('giornata') . ' ASC'); // Replace 'giornata' with your actual column name for matchday
+
+        // Set the query and load the results
+        $db->setQuery($query);
+        $matches = $db->loadObjectList();
+
+        return $matches; // Return the list of matches
+    }
+
+    public static function getPartitePerSquadraTrasferta($squadraId, $tablePartite)
+    {
+        // Get a database connection
+        $db = Factory::getDbo();
+
+        // Create a query to fetch matches for the specified team
+        $query = $db->getQuery(true)
+            ->select('*') // Select all fields, adjust as necessary
+            ->from($db->quoteName($tablePartite)) // Replace with your actual table name
+            ->where($db->quoteName('squadra2') . ' = ' . (int) $squadraId)
+            ->order($db->quoteName('giornata') . ' ASC'); // Replace 'giornata' with your actual column name for matchday
+
+        // Set the query and load the results
+        $db->setQuery($query);
+        $matches = $db->loadObjectList();
+
+        return $matches; // Return the list of matches
+    }
+
+    public static function getGeneral($tablePartite, $i)
+    {
+        if ($i === 0) {
+            return self::getNumeroPartite($tablePartite);
+        } elseif ($i === 1) {
+            $tot = 0;
+            $partite = self::getPartite($tablePartite);
+            $numpartite = self::getNumeroPartite($tablePartite);
+            foreach ($partite as $partita) {
+                $tot += $partita->gol1 + $partita->gol2;
+            }
+            $golxincontro = round($tot / $numpartite, 2);
+            return $tot . " (" . $golxincontro . " per incontro)";
+        }
+        return 0;
+    }
+
     public static function getRecord($squadre, $tablePartite, $index, $mod)
     {
         $maxCount = 0;
@@ -1250,13 +1347,12 @@ abstract class Competizione
         $partiteScartoMax = []; // Array per salvare le partite con margine massimo
 
         if ($index == 0 || $index == 1 || $index == 2)
-            $location = "all";
+            $matches = self::getPartitePerSquadra($squadra, $tablePartite);
         elseif ($index == 3 || $index == 4 || $index == 5)
-            $location = "casa";
+            $matches = self::getPartitePerSquadraCasa($squadra, $tablePartite);
         elseif ($index == 6 || $index == 7 || $index == 8)
-            $location = "trasferta";
-        else
-            $location = null;
+            $matches = self::getPartitePerSquadraTrasferta($squadra, $tablePartite);
+
 
         // Helper function to check if the condition is met
         $checkCondition = function ($match, $squadra, $index) {
@@ -1299,24 +1395,19 @@ abstract class Competizione
                     }
                     $giornataFine = $match->giornata;
                 } else {
-                    if (
-                        ($location == 'trasferta' && ($index == 3 || $index == 4 || $index == 5)) ||
-                        ($location == 'casa' && ($index == 6 || $index == 7 || $index == 8)) ||
-                        $location == "all"
-                    ) {
 
-                        // Verifica se la sequenza corrente è la massima
-                        if ($count > $maxcount) {
-                            $maxcount = $count;
-                            $maxSequences = [['inizio' => $giornataInizio, 'fine' => $giornataFine]]; // Reset delle sequenze
-                        } elseif ($count == $maxcount) {
-                            // Aggiungi la sequenza se ha la stessa lunghezza massima
-                            $maxSequences[] = ['inizio' => $giornataInizio, 'fine' => $giornataFine];
-                        }
-
-                        // Reset dei contatori
-                        $giornataInizio = $giornataFine = $count = 0;
+                    // Verifica se la sequenza corrente è la massima
+                    if ($count > $maxcount) {
+                        $maxcount = $count;
+                        $maxSequences = [['inizio' => $giornataInizio, 'fine' => $giornataFine]]; // Reset delle sequenze
+                    } elseif ($count == $maxcount) {
+                        // Aggiungi la sequenza se ha la stessa lunghezza massima
+                        $maxSequences[] = ['inizio' => $giornataInizio, 'fine' => $giornataFine];
                     }
+
+                    // Reset dei contatori
+                    $giornataInizio = $giornataFine = $count = 0;
+
                 }
             } elseif ($index == 9 || $index == 10) {
                 if ($checkCondition($match, $squadra, $index)) {
@@ -1739,12 +1830,12 @@ abstract class Competizione
 
         // Calcoliamo i gol in base alla forza e alla casualità
         if ($pw1 > $pw2) {
-            $gol1 = self::pesoRand(2, 5);  // Squadra più forte ha un range di gol più alto
+            $gol1 = self::pesoRand(1, 6);  // Squadra più forte ha un range di gol più alto
             $gol2 = self::pesoRand(0, $gol1); // Squadra più debole segna meno
         } elseif ($pw1 === $pw2) {
             $gol1 = $gol2 = self::pesoRand(0, 3);  // Pareggio probabile con pochi gol
         } else {
-            $gol2 = self::pesoRand(2, 5);  // Squadra 2 è più forte e segna di più
+            $gol2 = self::pesoRand(1, 6);  // Squadra 2 è più forte e segna di più
             $gol1 = self::pesoRand(0, $gol2); // Squadra più debole segna meno
         }
 
@@ -1759,12 +1850,13 @@ abstract class Competizione
     {
         // Imposta pesi per risultati bassi con piccola probabilità di risultati alti
         $pesi = [
-            0 => 20,
-            1 => 30,
-            2 => 25,
+            0 => 25,
+            1 => 25,
+            2 => 20,
             3 => 15,
-            4 => 7,
-            5 => 3
+            4 => 10,
+            5 => 4,
+            6 => 1,
         ];
 
         // Filtra i pesi per l'intervallo desiderato
