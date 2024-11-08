@@ -78,9 +78,16 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                         <td><?php echo htmlspecialchars($competizioneId); ?></td>
                         <td><?php echo htmlspecialchars($partita->giornata); ?></td>
                         <td><?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra1)); ?> vs
-                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra2)); ?> </td>
-                        <td><?php echo htmlspecialchars($partita->gol1); ?> - <?php echo htmlspecialchars($partita->gol2); ?>
+                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra2)); ?>
                         </td>
+                        <td>
+                            <?php if ($partita->gol1 !== null && $partita->gol2 !== null): ?>
+                                <?php echo htmlspecialchars($partita->gol1); ?> - <?php echo htmlspecialchars($partita->gol2); ?>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>
