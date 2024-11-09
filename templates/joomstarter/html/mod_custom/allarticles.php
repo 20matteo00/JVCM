@@ -11,8 +11,7 @@ use Joomstarter\Helpers\Competizione;
 
 // Utilizzo della funzione
 $categoryId = 8; // ID della categoria principale
-$articles = Competizione::getArticlesFromSubcategories($categoryId);
-
+$articles = Competizione::getArticlesFromSubcategories( $categoryId);
 // Controlla se ci sono articoli
 if ($articles) :
 ?>

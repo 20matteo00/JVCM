@@ -1,43 +1,17 @@
 <?php
-
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Helper\TagsHelper;
+use Joomla\CMS\Language\Text;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
+use Joomstarter\Helpers\Competizione;
 
-// Ottieni l'ID della categoria corrente dalla vista
-$categoryId = $this->category->id;  // Questo prende l'ID della categoria corrente dinamicamente
-
-// Ottieni il database
-$db = Factory::getDbo();
-$query = $db->getQuery(true);
-
-// Query per ottenere gli articoli della categoria e i valori degli extra fields
-$query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, f3.value as forza')
-    ->from('#__content as a')
-    ->join('LEFT', '#__categories as c ON a.catid = c.id') // Aggiungi la join per il titolo della categoria
-    ->join('LEFT', '#__fields_values AS f1 ON f1.item_id = a.id AND f1.field_id = 1') // Extra field Colore 1
-    ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Extra field Colore 2
-    ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Extra field Forza
-    ->where('a.catid = ' . (int) $categoryId) // Filtro per la categoria corrente
-    ->where('a.state = 1') // Solo articoli pubblicati
-    ->order('a.title ASC');
-
-$db->setQuery($query);
-$articles = $db->loadObjectList();
-
-// Creazione della query per ottenere il titolo della categoria
-$query = $db->getQuery(true)
-    ->select($db->quoteName('title')) // Seleziona solo il titolo
-    ->from($db->quoteName('#__categories')) // Seleziona dalla tabella delle categorie
-    ->where($db->quoteName('id') . ' = ' . (int) $categoryId); // Confronta con l'ID della categoria
-
-// Esegui la query
-$db->setQuery($query);
-$categoryTitle = $db->loadResult(); // Carica solo il valore del titolo
+$categoryId = $this->category->id; // ID della categoria corrente
+$articles = Competizione::getArticlesFromCategory($categoryId);
+$categoryTitle = Competizione::getCategoryTitleById($categoryId); // Carica solo il valore del titolo
 
 // Verifica se il titolo è stato recuperato correttamente
 if ($categoryTitle) {

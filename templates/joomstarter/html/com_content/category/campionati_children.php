@@ -9,11 +9,13 @@
  */
 
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
+use Joomstarter\Helpers\Competizione;
 
 
 /** @var \Joomla\Component\Content\Site\View\Category\HtmlView $this */
