@@ -81,7 +81,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                             $articleTitle = htmlspecialchars(Competizione::getArticleTitleById($id));
                                             $articleUrl = Competizione::getArticleUrlById($id); ?>
                                             <div class="p-1 mx-2 my-1" style="background-color:<?php echo $color1; ?>; display: inline-block; border-radius:50px;">
-                                                <a class="h5 fw-bold" style="color:<?php echo $color2; ?>" href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
+                                                <a class="h5 fw-bold px-2" style="color:<?php echo $color2; ?>" href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>

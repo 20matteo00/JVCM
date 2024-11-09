@@ -40,14 +40,13 @@ if (isset($_GET['id'])) {
         $classifica = Competizione::getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod, $gironi);
     } elseif ($view === 'andamento') {
         $classifica = NULL;
-        $andamento = Competizione::getAndamento(tablePartite: $tablePartite);
+        $andamento = Competizione::getAndamento($tablePartite);
     } elseif ($view === 'gironi') {
         $classifica = NULL;
         $gir = true;
     }
     ?>
     <div class="container classifica">
-
         <form method="post" action="">
             <div class="d-flex justify-content-around p-2">
                 <input type="hidden" name="module_id" value="117">
@@ -146,6 +145,48 @@ if (isset($_GET['id'])) {
             </div>
         <?php elseif (!empty($andamento) && !$checkgol): ?>
             <div class="table-responsive my-5">
+                <?php
+                $maxGiornate = max(array_map(function ($squadra) {
+                    return count($squadra['risultati']);
+                }, $andamento));
+                ?>
+                <table class="table table-striped table-bordered text-center">
+                    <tr>
+                        <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
+                            <?php
+                            // Raccogli tutti i risultati della giornata corrente
+                            $giornataRisultati = array_column($andamento, 'risultati', $giornata);
+
+                            // Filtra solo i risultati validi per la giornata
+                            $giornataRisultati = array_filter(array_column($giornataRisultati, $giornata), 'is_numeric');
+
+                            // Ottieni il massimo valore della giornata
+                            $maxRisultato = !empty($giornataRisultati) ? max($giornataRisultati) : null;
+
+                            // Conta quante squadre hanno ottenuto il massimo valore
+                            $conteggioMax = array_count_values($giornataRisultati)[$maxRisultato] ?? 0;
+                            $entrato = false;
+                            ?>
+                            <?php foreach ($andamento as $squadra): ?>
+                                <?php
+                                if (isset($squadra['risultati'][$giornata]) && $squadra['risultati'][$giornata] == $maxRisultato && $conteggioMax == 1) {
+                                    $cf = Competizione::getCustomFields($squadra['squadra']);
+                                    $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
+                                    $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
+                                    echo '<td class="px-1" style="background-color:'.$colors.'; color:'.$colort.';font-size:10px;font-weight:bold;"><div>' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
+                                    $entrato = true;
+                                }
+                                ?>
+                            <?php endforeach; ?>
+                            <?php
+                            if(!$entrato){
+                                echo '<td class="px-1" style="background-color:#000000; color:#ffffff;font-size:10px;font-weight:bold;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
+                            }
+                            ?>
+                        <?php endfor; ?>
+                    </tr>
+
+                </table>
                 <table class="table table-striped table-bordered text-center category-table">
                     <thead class="thead-dark">
                         <tr>
@@ -161,10 +202,7 @@ if (isset($_GET['id'])) {
                                 <th class="category-header-logo">Squadra</th>
                                 <?php
                             // Trova il numero massimo di giornate
-                            $maxGiornate = max(array_map(function ($squadra) {
-                                return count($squadra['risultati']);
-                            }, $andamento));
-
+                    
                             for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
                                 <th class="category-header-logo"><?php echo $giornata; ?>
                                 </th>
@@ -208,7 +246,7 @@ if (isset($_GET['id'])) {
                     <table class="table table-striped table-bordered text-center category-table">
                         <thead class="thead-dark">
                             <tr>
-                                <td class="fw-bold" colspan="2">Girone <?php echo $i;?></td>
+                                <td class="fw-bold" colspan="2">Girone <?php echo $i; ?></td>
                                 <td class="fw-bold" colspan="8"><?php echo "Totale"; ?></td>
                             </tr>
                             <tr>
@@ -230,7 +268,7 @@ if (isset($_GET['id'])) {
                             foreach ($classifica as $squadra):
                                 // Calcola le statistiche
                                 $stats = Competizione::calculateStatistics($squadra, $view, $ar, $tablePartite);
-                                
+
                                 if (isset($squadra->squadra)) {
                                     $cf = Competizione::getCustomFields($squadra->squadra);
                                 } else {
