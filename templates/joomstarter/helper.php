@@ -1261,7 +1261,7 @@ abstract class Competizione
     public static function getGeneral($tablePartite, $i)
     {
         if ($i === 0) {
-            return self::getNumeroPartite($tablePartite);
+            return number_format(self::getNumeroPartite($tablePartite), 0, '', '.');
         } elseif ($i === 1) {
             $tot = 0;
             $partite = self::getPartite($tablePartite);
@@ -1269,8 +1269,9 @@ abstract class Competizione
             foreach ($partite as $partita) {
                 $tot += $partita->gol1 + $partita->gol2;
             }
-            $golxincontro = round($tot / $numpartite, 2);
-            return $tot . " (" . $golxincontro . " per incontro)";
+            if($numpartite === 0) $golxincontro = 0;
+            else $golxincontro = round($tot / $numpartite, 2);
+            return number_format($tot, 0, '', '.') . " (" . $golxincontro . " per incontro)";
         }
         return 0;
     }

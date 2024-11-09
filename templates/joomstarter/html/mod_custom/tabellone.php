@@ -20,7 +20,6 @@ if (isset($_GET['id'])) {
     $squadreJson = $competizione->squadre;
     // Decodifica la stringa JSON in un array
     $squadre = json_decode($squadreJson, true);
-
     // Recupera le partite
     $partite = Competizione::getPartite($tablePartite); // Funzione da implementare
 
@@ -44,8 +43,8 @@ if (isset($_GET['id'])) {
                             $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
                             $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                             ?>
-                            <th>
-                                <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                            <th style="min-width:50px;">
+                                <div class="px-2" style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                     <span style="color:<?php echo $color2; ?>">
                                         <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra))); ?>
                                     </span>
@@ -62,7 +61,7 @@ if (isset($_GET['id'])) {
                         ?>
                         <tr>
                             <th>
-                                <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                <div class="px-2" style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                     <span style="color:<?php echo $color2; ?>">
                                         <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra)); ?>
                                     </span>
@@ -100,7 +99,7 @@ if (isset($_GET['id'])) {
                                 $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                                 ?>
                                 <th>
-                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                    <div class="px-2" style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                         <span style="color:<?php echo $color2; ?>">
                                             <?php echo htmlspecialchars(Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra->squadra))); ?>
                                         </span>
@@ -117,7 +116,7 @@ if (isset($_GET['id'])) {
                             ?>
                             <tr>
                                 <th>
-                                    <div style="border-radius:50px; background-color:<?php echo $color1; ?>">
+                                    <div class="px-2" style="border-radius:50px; background-color:<?php echo $color1; ?>">
                                         <span style="color:<?php echo $color2; ?>">
                                             <?php echo htmlspecialchars(Competizione::getArticleTitleById($squadra->squadra)); ?>
                                         </span>

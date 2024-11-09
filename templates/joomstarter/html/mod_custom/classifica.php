@@ -150,7 +150,7 @@ if (isset($_GET['id'])) {
                     return count($squadra['risultati']);
                 }, $andamento));
                 ?>
-                <table class="table table-striped table-bordered text-center">
+                <table class="table table-striped text-center">
                     <tr>
                         <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
                             <?php
@@ -173,14 +173,14 @@ if (isset($_GET['id'])) {
                                     $cf = Competizione::getCustomFields($squadra['squadra']);
                                     $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
                                     $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
-                                    echo '<td class="px-1" style="background-color:'.$colors.'; color:'.$colort.';font-size:10px;font-weight:bold;"><div>' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
+                                    echo '<td class="px-0" style="background-color:'.$colors.'; color:'.$colort.';font-size:1em;font-weight:bold;min-width:25px;"><div class="px-2">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
                                     $entrato = true;
                                 }
                                 ?>
                             <?php endforeach; ?>
                             <?php
                             if(!$entrato){
-                                echo '<td class="px-1" style="background-color:#000000; color:#ffffff;font-size:10px;font-weight:bold;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
+                                echo '<td class="px-0" style="background-color:#000000; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
                             }
                             ?>
                         <?php endfor; ?>
