@@ -16,6 +16,7 @@ if (isset($_GET['id'])) {
     $ar = $competizione->andata_ritorno;
     $mod = $competizione->modalita;
     $squadre = json_decode($competizione->squadre, true); // Decodifica JSON in array
+    $squadre = Competizione::getSquadreOrdinate($squadre);
     $checkgol = Competizione::checkGolNull($tablePartite);
     $record = [
         'Maggior Numero di Vittorie Consecutive',
