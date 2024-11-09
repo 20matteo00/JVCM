@@ -8,6 +8,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Exception;
 use Joomla\CMS\Table\Table;
+use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Symfony\Component\VarDumper\VarDumper;
 
 abstract class Competizione
@@ -54,6 +55,23 @@ abstract class Competizione
         ];
     }
 
+    public static function getUrlMenu($menuId)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Creazione della query per ottenere l'elemento di menu con l'ID specificato
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('link')) // Seleziona il campo 'link' (URL) dell'elemento di menu
+            ->from($db->quoteName('#__menu')) // Tabella del menu
+            ->where($db->quoteName('id') . ' = ' . (int) $menuId); // Filtro per l'ID della voce di menu
+        // Esegui la query
+        $db->setQuery($query);
+
+        // Ottieni l'URL dell'elemento di menu
+        return $db->loadResult();
+    }
+
     public static function getCategoryTitleById($categoryId)
     {
         // Ottieni l'oggetto del database
@@ -85,6 +103,28 @@ abstract class Competizione
         // Restituisci i campi personalizzati come array indicizzati per field_id
         return $db->loadObjectList('field_id');
     }
+
+    public static function setCustomFields($idsquadra, $color1, $color2, $forza)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+
+        // Crea la query con un unico UPDATE usando CASE
+        $query = $db->getQuery(true)
+            ->update('#__fields_values')
+            ->set($db->quoteName('value') . ' = CASE ' . $db->quoteName('field_id') .
+                ' WHEN 1 THEN ' . $db->quote($color1) .
+                ' WHEN 2 THEN ' . $db->quote($color2) .
+                ' WHEN 3 THEN ' . $db->quote($forza) .
+                ' END')
+            ->where('item_id = ' . (int) $idsquadra)
+            ->where('field_id IN (1, 2, 3)');
+
+        // Esegui la query
+        $db->setQuery($query);
+        $db->execute();
+    }
+
     public static function getArticlesFromSubcategories($categoryId)
     {
         // Ottieni l'oggetto del database
@@ -105,6 +145,31 @@ abstract class Competizione
 
         // Restituisci gli articoli come array di oggetti
         return $db->loadObjectList();
+    }
+
+    public static function getCategoryUrlByArticleId($articleId)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Crea la query per ottenere l'ID della categoria
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('catid'))
+            ->from($db->quoteName('#__content'))
+            ->where($db->quoteName('id') . ' = ' . (int) $articleId);
+
+        // Esegui la query
+        $db->setQuery($query);
+        $categoryId = $db->loadResult();
+
+        // Verifica se l'ID della categoria è stato trovato
+        if ($categoryId) {
+            // Ottieni l'URL della categoria
+            $categoryUrl = Route::_(RouteHelper::getCategoryRoute($categoryId));
+            return $categoryUrl;
+        }
+
+        return null; // Restituisce null se la categoria non è trovata
     }
 
     public static function getArticlesFromCategory($categoryId)
