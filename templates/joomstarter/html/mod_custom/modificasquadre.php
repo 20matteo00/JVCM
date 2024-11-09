@@ -46,7 +46,7 @@ if (isset($_GET['modifica'])) {
 
             <!-- Salva -->
             <div class="col-md-3 text-center">
-                <button type="submit" name="save" class="btn btn-success btn-lg w-100">Salva</button>
+                <button type="submit" name="save" class="btn btn-success btn-lg w-100 mt-3">Salva</button>
             </div>
         </div>
     </fieldset>

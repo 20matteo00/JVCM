@@ -179,7 +179,7 @@ abstract class Competizione
         $query = $db->getQuery(true);
 
         // Query per ottenere gli articoli della categoria e i valori degli extra fields
-        $query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, f3.value as forza')
+        $query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, CAST(f3.value AS UNSIGNED) as forza')
             ->from('#__content as a')
             ->join('LEFT', '#__categories as c ON a.catid = c.id') // Aggiungi la join per il titolo della categoria
             ->join('LEFT', '#__fields_values AS f1 ON f1.item_id = a.id AND f1.field_id = 1') // Extra field Colore 1
@@ -187,11 +187,12 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Extra field Forza
             ->where('a.catid = ' . (int) $categoryId) // Filtro per la categoria corrente
             ->where('a.state = 1') // Solo articoli pubblicati
-            ->order('a.title ASC');
+            ->order('CAST(f3.value AS UNSIGNED) DESC, a.title ASC'); // Ordina per forza in modo numerico, poi per titolo
 
         $db->setQuery($query);
         return $db->loadObjectList();
     }
+
     // Funzione per ottenere il titolo dell'articolo
     public static function getArticleTitleById($articleId)
     {
@@ -1912,7 +1913,8 @@ abstract class Competizione
         $query = $db->getQuery(true)
             ->select('*') // Seleziona tutte le competizioni
             ->from($db->quoteName('#__competizioni'))
-            ->where($db->quoteName('user_id') . ' = ' . $user);
+            ->where($db->quoteName('user_id') . ' = ' . $user)
+            ->where($db->quoteName('finita') . ' = 1');
 
         // Esegui la query
         $db->setQuery($query);

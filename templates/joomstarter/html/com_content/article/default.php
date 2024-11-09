@@ -91,6 +91,8 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 echo '<span class="h4 fw-bold">Stato: ' . $tag . '</span>';
                 ?>
             </div>
+            <br>
+            <span class="h4 fw-bold"><a class="campionato" href="/jvcm/index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
         </div>
         <div class="col-md-4  text-center">
             <div class="com-content-article__image">
