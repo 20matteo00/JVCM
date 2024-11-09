@@ -338,7 +338,6 @@ abstract class Competizione
                     [$squadre[1]]
                 );
             }
-            //var_dump($i);
             if ($champ)
                 $girone = $gir + 1;
             else

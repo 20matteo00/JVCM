@@ -41,7 +41,6 @@ $params = $this->item->params;
 
 // ... (il tuo codice PHP esistente)
 $stato = Competizione::getCategoriaTag($id);
-var_dump($stato);
 // Ottieni l'immagine dell'articolo
 $images = json_decode($this->item->images);
 $imageSrc = isset($images->image_intro) && !empty($images->image_intro) ? $images->image_intro : '';
