@@ -22,7 +22,7 @@ if (isset($_GET['id'])) {
     $squadre = json_decode($squadreJson, true);
     // Recupera le partite
     $partite = Competizione::getPartite($tablePartite); // Funzione da implementare
-
+    $squadre = Competizione::getSquadreOrdinate($squadre);
     // Creiamo un array per memorizzare i risultati
     $risultati = [];
     foreach ($partite as $partita) {

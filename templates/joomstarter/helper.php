@@ -97,6 +97,7 @@ abstract class Competizione
         $db = Factory::getDbo();
         return $db->setQuery("SELECT title FROM #__content WHERE id = " . (int) $articleId)->loadResult() ?: '';
     }
+
     // Funzione per ottenere l'URL dell'articolo
     public static function getArticleUrlById($articleId)
     {
@@ -918,6 +919,28 @@ abstract class Competizione
         return $numeroPartite; // Restituisce il numero di partite
     }
 
+    public static function getSquadreOrdinate($squadre)
+    {
+        $nomisquadre = [];
+
+        // Popola l'array con ID e nome della squadra
+        foreach ($squadre as $squadra) {
+            $nomisquadre[] = [
+                'id' => $squadra,
+                'nome' => Competizione::getArticleTitleById($squadra),
+            ];
+        }
+
+        // Ordina l'array per il nome
+        usort($nomisquadre, function ($a, $b) {
+            return strcmp($a['nome'], $b['nome']);
+        });
+
+        // Estrai solo gli ID in un array separato
+        $idsOrdinati = array_column($nomisquadre, 'id');
+
+        return $idsOrdinati;
+    }
 
     public static function getTablePartite($ID)
     {
@@ -1269,8 +1292,10 @@ abstract class Competizione
             foreach ($partite as $partita) {
                 $tot += $partita->gol1 + $partita->gol2;
             }
-            if($numpartite === 0) $golxincontro = 0;
-            else $golxincontro = round($tot / $numpartite, 2);
+            if ($numpartite === 0)
+                $golxincontro = 0;
+            else
+                $golxincontro = round($tot / $numpartite, 2);
             return number_format($tot, 0, '', '.') . " (" . $golxincontro . " per incontro)";
         }
         return 0;
