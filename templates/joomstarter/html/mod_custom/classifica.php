@@ -61,8 +61,7 @@ if (isset($_GET['id'])) {
                 </div>
             </form>
 
-            <?php
-                if (!empty($classifica) && !$checkgol): ?>
+        <?php if (!empty($classifica) && !$checkgol): ?>
             <div class="table-responsive my-5">
                 <table class="table table-striped table-bordered text-center category-table">
                     <thead class="thead-dark">
@@ -173,13 +172,13 @@ if (isset($_GET['id'])) {
                                     $cf = Competizione::getCustomFields($squadra['squadra']);
                                     $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
                                     $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
-                                    echo '<td class="px-0" style="background-color:'.$colors.'; color:'.$colort.';font-size:1em;font-weight:bold;min-width:25px;"><div class="px-2">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
+                                    echo '<td class="px-0" style="background-color:' . $colors . '; color:' . $colort . ';font-size:1em;font-weight:bold;min-width:25px;"><div class="px-2">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
                                     $entrato = true;
                                 }
                                 ?>
                             <?php endforeach; ?>
                             <?php
-                            if(!$entrato){
+                            if (!$entrato) {
                                 echo '<td class="px-0" style="background-color:#000000; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
                             }
                             ?>
