@@ -83,7 +83,25 @@ if (isset($_GET['id'])) {
         <?php else: ?>
             <?php
             for ($i = 1; $i <= $gironi; $i++) {
+
+                // Ottieni le squadre per il girone
                 $squadre = Competizione::getSquadreperGirone($tablePartite, $i);
+
+                // Estrai solo i numeri delle squadre
+                $squad = array_map(function ($squadra) {
+                    return $squadra->squadra;
+                }, $squadre);
+
+                // Ottieni le squadre ordinate
+                $newsquad = Competizione::getSquadreOrdinate($squad);
+
+                // Crea direttamente l'array di oggetti
+                $squadre = array_map(function ($numero) {
+                    $obj = new stdClass();
+                    $obj->squadra = $numero;
+                    return $obj;
+                }, $newsquad);
+
                 ?>
                 <div class="table-responsive my-5">
                     <h1 class="text-center">Girone <?php echo $i; ?></h1>
