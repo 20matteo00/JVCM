@@ -78,10 +78,18 @@ if ($paramsFontScheme) {
 // Enable assets
 $wa->usePreset('template.cassiopeia.' . ($this->direction === 'rtl' ? 'rtl' : 'ltr'))
     ->useStyle('template.active.language')
-    ->useStyle('template.active')
+    ->registerAndUseStyle($assetColorName, 'global/' . $paramsColorName . '.css')
     ->useStyle('template.user')
     ->useScript('template.user')
-;
+    ->addInlineStyle(":root {
+		--hue: 214;
+		--template-bg-light: #f0f4fb;
+		--template-text-dark: #495057;
+		--template-text-light: #ffffff;
+		--template-link-color: var(--link-color);
+		--template-special-color: #001B4C;
+		$fontStyles
+	}");
 
 // Override 'template.active' asset to set correct ltr/rtl dependency
 $wa->registerStyle('template.active', '', [], [], ['template.cassiopeia.' . ($this->direction === 'rtl' ? 'rtl' : 'ltr')]);
@@ -122,20 +130,25 @@ $wa->getAsset('style', 'fontawesome')->setAttribute('rel', 'lazy-stylesheet');
     <jdoc:include type="metas" />
     <jdoc:include type="styles" />
     <jdoc:include type="scripts" />
-
 </head>
 
 <body class="site <?php echo $option
-                        . ' ' . $wrapper
-                        . ' view-' . $view
-                        . ($layout ? ' layout-' . $layout : ' no-layout')
-                        . ($task ? ' task-' . $task : ' no-task')
-                        . ($itemid ? ' itemid-' . $itemid : '')
-                        . ($pageclass ? ' ' . $pageclass : '')
-                        . $hasClass
-                        . ($this->direction == 'rtl' ? ' rtl' : '');
-                    ?>">
+    . ' ' . $wrapper
+    . ' view-' . $view
+    . ($layout ? ' layout-' . $layout : ' no-layout')
+    . ($task ? ' task-' . $task : ' no-task')
+    . ($itemid ? ' itemid-' . $itemid : '')
+    . ($pageclass ? ' ' . $pageclass : '')
+    . $hasClass
+    . ($this->direction == 'rtl' ? ' rtl' : '');
+?>">
     <header class="header container-header full-width<?php echo $stickyHeader ? ' ' . $stickyHeader : ''; ?>">
+
+        <?php if ($this->countModules('topbar')) : ?>
+            <div class="container-topbar">
+                <jdoc:include type="modules" name="topbar" style="none" />
+            </div>
+        <?php endif; ?>
 
         <?php if ($this->countModules('below-top')) : ?>
             <div class="grid-child container-below-top">
@@ -145,27 +158,16 @@ $wa->getAsset('style', 'fontawesome')->setAttribute('rel', 'lazy-stylesheet');
 
         <?php if ($this->params->get('brand', 1)) : ?>
             <div class="grid-child">
-                <div class="navbar-brand d-flex align-items-center justify-content-between w-100">
-                    <!-- Logo -->
+                <div class="navbar-brand">
                     <a class="brand-logo" href="<?php echo $this->baseurl; ?>/">
                         <?php echo $logo; ?>
                     </a>
-
-                    <!-- Site Description -->
                     <?php if ($this->params->get('siteDescription')) : ?>
                         <div class="site-description"><?php echo htmlspecialchars($this->params->get('siteDescription')); ?></div>
-                    <?php endif; ?>
-
-                    <!-- Topbar Modules (Menu) -->
-                    <?php if ($this->countModules('topbar')) : ?>
-                        <div class="container-topbar w-100"> <!-- Aggiunge un margine sinistro per distanziare il menu -->
-                            <jdoc:include type="modules" name="topbar" style="none" />
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>
         <?php endif; ?>
-
 
         <?php if ($this->countModules('menu', true) || $this->countModules('search', true)) : ?>
             <div class="grid-child container-nav">
