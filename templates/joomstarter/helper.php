@@ -139,7 +139,7 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
             ->where('c.parent_id = ' . (int) $categoryId)
-            ->order('c.id ASC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
+            ->order('CAST(f3.value AS UNSIGNED) DESC, c.id ASC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
 
         $db->setQuery($query);
 
