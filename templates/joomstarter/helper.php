@@ -1935,6 +1935,7 @@ abstract class Competizione
                     ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
                     ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1)
                 ) {
+                    
                     // Aggiungi la partita agli scontri diretti
                     $scontriDiretti[] = [
                         'partita' => $partita,
