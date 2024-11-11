@@ -1382,7 +1382,7 @@ abstract class Competizione
         return $matches; // Return the list of matches
     }
 
-    public static function getGeneral($tablePartite, $i)
+    public static function getGeneral($tablePartite, $tableStatistiche, $i)
     {
         if ($i === 0) {
             return number_format(self::getNumeroPartite($tablePartite), 0, '', '.');
@@ -1398,8 +1398,204 @@ abstract class Competizione
             else
                 $golxincontro = round($tot / $numpartite, 2);
             return number_format($tot, 0, '', '.') . " (" . $golxincontro . " per incontro)";
+        } else {
+            // Ottieni l'oggetto di connessione al database di Joomla
+            $db = Factory::getDbo();
+
+            // Costruisci la query
+            $query = $db->getQuery(true)
+                ->select('*') // Seleziona tutte le colonne
+                ->from($db->quoteName($tableStatistiche)); // La tabella è dinamica, quindi la gestiamo come variabile
+
+            // Esegui la query
+            $db->setQuery($query);
+
+            // Ottieni i risultati come array associativo
+            $stats = $db->loadAssocList(); // o puoi usare loadObjectList() se preferisci oggetti
+
+            // Inizializzazione delle variabili per massimo e minimo
+            $maxVittorie = -1;
+            $minVittorie = PHP_INT_MAX;
+            $squadreMaxVittorie = [];
+            $squadreMinVittorie = [];
+
+            $maxPareggi = -1;
+            $minPareggi = PHP_INT_MAX;
+            $squadreMaxPareggi = [];
+            $squadreMinPareggi = [];
+
+            $maxSconfitte = -1;
+            $minSconfitte = PHP_INT_MAX;
+            $squadreMaxSconfitte = [];
+            $squadreMinSconfitte = [];
+
+            $maxGolFatti = -1;
+            $minGolFatti = PHP_INT_MAX;
+            $squadreMaxGolFatti = [];
+            $squadreMinGolFatti = [];
+
+            $maxGolSubiti = -1;
+            $minGolSubiti = PHP_INT_MAX;
+            $squadreMaxGolSubiti = [];
+            $squadreMinGolSubiti = [];
+
+            $maxDiff = -1;
+            $minDiff = PHP_INT_MAX;
+            $squadreMaxDiff = [];
+            $squadreMinDiff = [];
+
+            // Itera su tutte le squadre per calcolare i record
+            foreach ($stats as $squadra) {
+                // Somma dei valori per ogni squadra
+                $v = $squadra['VC'] + $squadra['VT'];
+                $n = $squadra['NC'] + $squadra['NT'];
+                $p = $squadra['PC'] + $squadra['PT'];
+                $gf = $squadra['GFC'] + $squadra['GFT'];
+                $gs = $squadra['GSC'] + $squadra['GST'];
+                $diff = $gf - $gs;
+
+                // Gestione dei massimi e minimi per ciascun parametro
+                switch ($i) {
+                    case 2: // Max vittorie
+                        if ($v > $maxVittorie) {
+                            $maxVittorie = $v;
+                            $squadreMaxVittorie = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($v === $maxVittorie) {
+                            $squadreMaxVittorie[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 3: // Min vittorie
+                        if ($v < $minVittorie) {
+                            $minVittorie = $v;
+                            $squadreMinVittorie = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($v === $minVittorie) {
+                            $squadreMinVittorie[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 4: // Max pareggi
+                        if ($n > $maxPareggi) {
+                            $maxPareggi = $n;
+                            $squadreMaxPareggi = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($n === $maxPareggi) {
+                            $squadreMaxPareggi[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 5: // Min pareggi
+                        if ($n < $minPareggi) {
+                            $minPareggi = $n;
+                            $squadreMinPareggi = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($n === $minPareggi) {
+                            $squadreMinPareggi[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 6: // Max sconfitte
+                        if ($p > $maxSconfitte) {
+                            $maxSconfitte = $p;
+                            $squadreMaxSconfitte = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($p === $maxSconfitte) {
+                            $squadreMaxSconfitte[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 7: // Min sconfitte
+                        if ($p < $minSconfitte) {
+                            $minSconfitte = $p;
+                            $squadreMinSconfitte = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($p === $minSconfitte) {
+                            $squadreMinSconfitte[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 8: // Max gol fatti
+                        if ($gf > $maxGolFatti) {
+                            $maxGolFatti = $gf;
+                            $squadreMaxGolFatti = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($gf === $maxGolFatti) {
+                            $squadreMaxGolFatti[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 9: // Min gol fatti
+                        if ($gf < $minGolFatti) {
+                            $minGolFatti = $gf;
+                            $squadreMinGolFatti = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($gf === $minGolFatti) {
+                            $squadreMinGolFatti[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 10: // Min gol subiti
+                        if ($gs < $minGolSubiti) {
+                            $minGolSubiti = $gs;
+                            $squadreMinGolSubiti = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($gs === $minGolSubiti) {
+                            $squadreMinGolSubiti[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 11: // Max gol subiti
+                        if ($gs > $maxGolSubiti) {
+                            $maxGolSubiti = $gs;
+                            $squadreMaxGolSubiti = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($gs === $maxGolSubiti) {
+                            $squadreMaxGolSubiti[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 12: // Max differenza gol
+                        if ($diff > $maxDiff) {
+                            $maxDiff = $diff;
+                            $squadreMaxDiff = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($diff === $maxDiff) {
+                            $squadreMaxDiff[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+
+                    case 13: // Min differenza gol
+                        if ($diff < $minDiff) {
+                            $minDiff = $diff;
+                            $squadreMinDiff = [self::getArticleTitleById($squadra['squadra'])];
+                        } elseif ($diff === $minDiff) {
+                            $squadreMinDiff[] = self::getArticleTitleById($squadra['squadra']);
+                        }
+                        break;
+                }
+            }
+
+            // Restituire i risultati in base al parametro $i
+            switch ($i) {
+                case 2: // Max vittorie
+                    return $maxVittorie . ": " . implode(', ', $squadreMaxVittorie);
+                case 3: // Min vittorie
+                    return $minVittorie . ": " . implode(', ', $squadreMinVittorie);
+                case 4: // Max pareggi
+                    return $maxPareggi . ": " . implode(', ', $squadreMaxPareggi);
+                case 5: // Min pareggi
+                    return $minPareggi . ": " . implode(', ', $squadreMinPareggi);
+                case 6: // Max sconfitte
+                    return $maxSconfitte . ": " . implode(', ', $squadreMaxSconfitte);
+                case 7: // Min sconfitte
+                    return $minSconfitte . ": " . implode(', ', $squadreMinSconfitte);
+                case 8: // Max gol fatti
+                    return $maxGolFatti . ": " . implode(', ', $squadreMaxGolFatti);
+                case 9: // Min gol fatti
+                    return $minGolFatti . ": " . implode(', ', $squadreMinGolFatti);
+                case 10: // Min gol subiti
+                    return $minGolSubiti . ": " . implode(', ', $squadreMinGolSubiti);
+                case 11: // Max gol subiti
+                    return $maxGolSubiti . ": " . implode(', ', $squadreMaxGolSubiti);
+                case 12: // Max differenza gol
+                    return $maxDiff . ": " . implode(', ', $squadreMaxDiff);
+                case 13: // Min differenza gol
+                    return $minDiff . ": " . implode(', ', $squadreMinDiff);
+                default:
+                    return 'Parametro non valido';
+            }
         }
-        return 0;
     }
 
     public static function getRecord($squadre, $tablePartite, $index, $mod)
@@ -1935,7 +2131,7 @@ abstract class Competizione
                     ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
                     ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1)
                 ) {
-                    
+
                     // Aggiungi la partita agli scontri diretti
                     $scontriDiretti[] = [
                         'partita' => $partita,
@@ -1958,39 +2154,39 @@ abstract class Competizione
         $gol2 = 0;
 
         // Calcoliamo i gol in base alla forza e alla casualità
-        if($diff >= 1000){
-            $gol1 = self::pesoRand(2, 7);  
-            $gol2 = self::pesoRand(0, $gol1-2); 
-        } elseif($diff >= 500){
-            $gol1 = self::pesoRand(1, 6);  
-            $gol2 = self::pesoRand(0, $gol1-1); 
-        } elseif($diff >= 250){
-            $gol1 = self::pesoRand(1, 5);  
-            $gol2 = self::pesoRand(0, $gol1); 
-        } elseif($diff >= 100){
-            $gol1 = self::pesoRand(0, 4);  
-            $gol2 = self::pesoRand(0, $gol1); 
-        } elseif($diff >= 50){
-            $gol1 = self::pesoRand(0, 3);  
-            $gol2 = self::pesoRand(0, $gol1+1); 
-        } elseif($diff < 50 && $diff > -50){
-            $gol1 = self::pesoRand(0, 3);  
-            $gol2 = self::pesoRand(0, 3); 
-        } elseif($diff <= -50){
-            $gol2 = self::pesoRand(0, 3);  
-            $gol1 = self::pesoRand(0, $gol2+1); 
-        } elseif($diff <= -100){
-            $gol2 = self::pesoRand(0, 4);  
-            $gol1 = self::pesoRand(0, $gol2); 
-        } elseif($diff <= -250){
-            $gol2 = self::pesoRand(1, 5);  
-            $gol1 = self::pesoRand(0, $gol2); 
-        } elseif($diff <= -500){
-            $gol2 = self::pesoRand(1, 6);  
-            $gol1 = self::pesoRand(0, $gol2-1); 
-        } elseif($diff <= -1000){
-            $gol2 = self::pesoRand(2, 7);  
-            $gol1 = self::pesoRand(0, $gol2-2); 
+        if ($diff >= 1000) {
+            $gol1 = self::pesoRand(3, 7);
+            $gol2 = self::pesoRand(0, $gol1 - 3);
+        } elseif ($diff >= 500) {
+            $gol1 = self::pesoRand(2, 6);
+            $gol2 = self::pesoRand(0, $gol1 - 2);
+        } elseif ($diff >= 250) {
+            $gol1 = self::pesoRand(1, 5);
+            $gol2 = self::pesoRand(0, $gol1 - 1);
+        } elseif ($diff >= 100) {
+            $gol1 = self::pesoRand(0, 4);
+            $gol2 = self::pesoRand(0, $gol1);
+        } elseif ($diff >= 50) {
+            $gol1 = self::pesoRand(0, 3);
+            $gol2 = self::pesoRand(0, $gol1 + 1);
+        } elseif ($diff < 50 && $diff > -50) {
+            $gol1 = self::pesoRand(0, 3);
+            $gol2 = self::pesoRand(0, 3);
+        } elseif ($diff <= -50) {
+            $gol2 = self::pesoRand(0, 3);
+            $gol1 = self::pesoRand(0, $gol2 + 1);
+        } elseif ($diff <= -100) {
+            $gol2 = self::pesoRand(0, 4);
+            $gol1 = self::pesoRand(0, $gol2);
+        } elseif ($diff <= -250) {
+            $gol2 = self::pesoRand(1, 5);
+            $gol1 = self::pesoRand(0, $gol2 - 1);
+        } elseif ($diff <= -500) {
+            $gol2 = self::pesoRand(2, 6);
+            $gol1 = self::pesoRand(0, $gol2 - 2);
+        } elseif ($diff <= -1000) {
+            $gol2 = self::pesoRand(3, 7);
+            $gol1 = self::pesoRand(0, $gol2 - 3);
         }
 
         // Restituisce il risultato finale

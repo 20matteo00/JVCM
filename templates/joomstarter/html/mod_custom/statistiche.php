@@ -35,6 +35,18 @@ if (isset($_GET['id'])) {
     $general = [
         'Partite Totali',
         'Gol Totali',
+        'Maggior Numero di Vittorie',
+        'Minor Numero di Vittorie',
+        'Maggior Numero di Pareggi',
+        'Minor Numero di Pareggi',
+        'Maggior Numero di Sconfitte',
+        'Minor Numero di Sconfitte',
+        'Miglior Attacco',
+        'Peggior Attacco',
+        'Miglior Difesa',
+        'Peggior Difesa',
+        'Miglior Differenza Reti',
+        'Peggior Differenza Reti',
     ];
     // Ottieni la classifica
     $classifica = Competizione::getClassifica($tableStatistiche);
@@ -212,7 +224,7 @@ if (isset($_POST['submit'])) {
                         <td class="category-items-cell"><?php echo htmlspecialchars($recordItem); ?></td>
                         <td class="category-items-cell">
                             <?php
-                            echo Competizione::getGeneral($tablePartite, $index);
+                            echo Competizione::getGeneral($tablePartite, $tableStatistiche, $index);
                             ?>
                         </td>
                     </tr>
