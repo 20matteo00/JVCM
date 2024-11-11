@@ -14,6 +14,8 @@ if (isset($_POST['submit'])) {
     $squadra1 = (int) $_POST['squadra1'];
     $squadra2 = (int) $_POST['squadra2'];
     $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $userId);
+} elseif (isset($_POST['reset'])) {
+    $_POST = [];
 }
 $squadre = Competizione::getArticlesFromSubcategories(8);
 
@@ -48,10 +50,12 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     </select>
                 </div>
 
-                <!-- Bottone per invio -->
-                <div class="col-12 text-center mt-4">
-                    <button type="submit" name="submit" class="btn btn-primary btn-lg">Mostra Scontri Diretti</button>
+                <!-- Bottone per invio e reset sulla stessa riga -->
+                <div class="col-12 text-center mt-4 d-flex justify-content-center">
+                    <button type="submit" name="submit" class="btn btn-primary btn-lg mx-2">Cerca</button>
+                    <button type="submit" name="reset" class="btn btn-dark btn-lg mx-2">Pulisci</button>
                 </div>
+
             </div>
         </div>
     </form>

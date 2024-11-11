@@ -305,11 +305,31 @@ abstract class Competizione
         $db = Factory::getDbo();
         $tableName = $db->getPrefix() . 'competizioni';
 
-        // Prepara l'oggetto di inserimento
+        // Trova il primo ID mancante (il più basso disponibile)
+        $query = $db->getQuery(true)
+            ->select('id')
+            ->from($db->quoteName($tableName))
+            ->order('id ASC');  // Ordina per ID in ordine crescente
+        $db->setQuery($query);
+
+        // Ottieni tutti gli ID presenti nella tabella
+        $ids = $db->loadColumn();
+
+        // Trova il primo ID disponibile (manualmente)
+        $nextId = 1; // Partiamo dal primo ID
+        foreach ($ids as $id) {
+            if ($id != $nextId) {
+                break;  // Trova il primo ID mancante
+            }
+            $nextId++;  // Se l'ID corrente è presente, prova con il successivo
+        }
+
+        // Ora prepariamo l'inserimento con l'ID trovato
         $query = $db->getQuery(true);
-        $columns = ['user_id', 'nome_competizione', 'modalita', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
+        $columns = ['id', 'user_id', 'nome_competizione', 'modalita', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
         $values = [
-            (int) $data['user_id'], // Assicurati di impostare l'ID utente correttamente
+            (int) $nextId, // Usa il primo ID disponibile
+            (int) $data['user_id'],
             $db->quote($data['nome_competizione']),
             (int) $data['modalita'],
             (int) $data['gironi'],
@@ -320,13 +340,13 @@ abstract class Competizione
             $db->quote(json_encode($data['squadre'])) // Codifica l'array in JSON
         ];
 
-        // Crea la query di inserimento
+        // Creiamo la query di inserimento
         $query
             ->insert($db->quoteName($tableName))
             ->columns($db->quoteName($columns))
             ->values(implode(',', $values));
 
-        // Esegui la query di inserimento
+        // Eseguiamo la query
         $db->setQuery($query);
         $db->execute();
     }
@@ -1996,10 +2016,7 @@ abstract class Competizione
     public static function TabellaFaseFinale($squadre, $nome, $user, $ar)
     {
         sort($squadre);
-        $squadre = array_map('strval', $squadre);
-        $squadrenew = json_encode($squadre);
-        $db = Factory::getDbo(); // Get the database object
-        // Crea un array di dati per l'inserimento
+        $squadrenew = array_map('strval', $squadre);
         $data = array(
             'user_id' => $user, // ID dell'utente
             'nome_competizione' => $nome . " - Fase Finale", // Nome della competizione
@@ -2012,33 +2029,7 @@ abstract class Competizione
             'finita' => 0, // Stato finita
         );
 
-        // Crea un oggetto di query
-        $query = $db->getQuery(true);
-
-        // Imposta i campi e i valori da inserire
-        $query
-            ->insert($db->quoteName('#__competizioni')) // Sostituisci con il nome corretto della tua tabella
-            ->columns(array(
-                $db->quoteName('user_id'),
-                $db->quoteName('nome_competizione'),
-                $db->quoteName('modalita'),
-                $db->quoteName('gironi'),
-                $db->quoteName('squadre'),
-                $db->quoteName('andata_ritorno'),
-                $db->quoteName('partecipanti'),
-                $db->quoteName('fase_finale'),
-                $db->quoteName('finita')
-            ))
-            ->values(implode(',', array_map([$db, 'quote'], array_values($data)))); // Assicurati che i valori siano quotati correttamente
-
-        // Esegui la query
-        $db->setQuery($query);
-
-        try {
-            $db->execute(); // Esegui l'inserimento
-        } catch (Exception $e) {
-            echo "Errore: " . $e->getMessage(); // Gestione degli errori
-        }
+        self::insertCompetizione($data);
     }
 
     public static function CheckNome($nome)
@@ -2200,14 +2191,14 @@ abstract class Competizione
     {
         // Imposta pesi per risultati bassi con piccola probabilità di risultati alti
         $pesi = [
-            0 => 250,
-            1 => 250,
-            2 => 250,
-            3 => 125,
-            4 => 75,
-            5 => 35,
-            6 => 10,
-            7 => 5
+            0 => 50,
+            1 => 60,
+            2 => 40,
+            3 => 25,
+            4 => 12,
+            5 => 8,
+            6 => 4,
+            7 => 1
         ];
 
         // Filtra i pesi per l'intervallo desiderato
