@@ -5,6 +5,7 @@ require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomstarter\Helpers\Competizione;
+use Joomla\CMS\Uri\Uri;
 
 // Ottieni l'ID della voce di menu attiva
 $menu = Factory::getApplication()->getMenu();
@@ -81,8 +82,10 @@ if (in_array($menuItemId, $pagconsentite)) {
                                             $color2 = !empty($customFields[2]) ? $customFields[2]->value : '#ffffff';
                                             $articleTitle = htmlspecialchars(Competizione::getArticleTitleById($id));
                                             $articleUrl = Competizione::getArticleUrlById($id); ?>
-                                            <div class="p-1 mx-2 my-1" style="background-color:<?php echo $color1; ?>; display: inline-block; border-radius:50px;">
-                                                <a class="h5 fw-bold px-2" style="color:<?php echo $color2; ?>" href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
+                                            <div class="p-1 mx-2 my-1"
+                                                style="background-color:<?php echo $color1; ?>; display: inline-block; border-radius:50px;">
+                                                <a class="h5 fw-bold px-2" style="color:<?php echo $color2; ?>"
+                                                    href="<?php echo htmlspecialchars($articleUrl); ?>"><?php echo $articleTitle; ?></a>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -95,12 +98,13 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     </form>
                                 </td>
                             </tr>
-                    <?php endif;
+                        <?php endif;
                     endforeach; ?>
                 </tbody>
             </table>
         </div>
-<?php } else {
+        <div class="text-center"> <a href="<?php echo Uri::base(); ?>" class="btn btn-primary btn-sm">Crea Nuova</a> </div>
+    <?php } else {
         echo "<p class='h1'>Nessuna competizione presente.</p>";
     }
 }
