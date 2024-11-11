@@ -213,13 +213,15 @@ abstract class Competizione
     {
         $db = Factory::getDbo();
         $query = $db->getQuery(true)
-            ->select('id, title, images, catid') // Aggiungi 'catid' qui
+            ->select('id, title, images, catid, hits') // Aggiungi 'hits' qui per ordinare
             ->from('#__content')
             ->where('catid IN (' . implode(',', array_map('intval', $subcategoryIds)) . ')')
-            ->where('state = 1'); // Solo articoli pubblicati
+            ->where('state = 1') // Solo articoli pubblicati
+            ->order('catid ASC, hits DESC'); // Ordina prima per 'catid' in ordine crescente, poi per 'hits' in ordine decrescente
 
         return $db->setQuery($query)->loadObjectList();
     }
+
     // Funzione per recuperare il titolo della categoria
     public static function getCategoryNameById($categoryId)
     {

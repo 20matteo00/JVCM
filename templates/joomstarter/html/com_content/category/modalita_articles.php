@@ -10,7 +10,8 @@ use Joomla\CMS\Router\Route;
 $currentCategoryId = $this->category->id;
 $user = Factory::getUser();
 $userId = $user->id; // ID dell'utente corrente
-if ($userId == 0) $userId = 988;
+if ($userId == 0)
+    $userId = 988;
 
 
 
@@ -56,7 +57,8 @@ if (in_array($this->category->id, $modalita)): ?>
                             <!-- Campo "Nome" -->
                             <div class="form-group">
                                 <label for="nome_campionato">Nome:</label>
-                                <input type="text" class="form-control" id="nome_campionato" name="nome_campionato" required="" placeholder="Competizione...">
+                                <input type="text" class="form-control" id="nome_campionato" name="nome_campionato"
+                                    required="" placeholder="Competizione...">
                             </div>
 
                             <!-- Campo "Andata/Ritorno" -->
@@ -72,10 +74,12 @@ if (in_array($this->category->id, $modalita)): ?>
                             <div class="form-group">
                                 <?php if ($this->category->id == 68): ?>
                                     <label for="numero_partecipanti">Partecipanti (multipli di 2):</label>
-                                    <input type="number" class="form-control" id="numero_partecipanti" name="numero_partecipanti" min="2" max="24" step="2" required="" value="4">
+                                    <input type="number" class="form-control" id="numero_partecipanti"
+                                        name="numero_partecipanti" min="2" max="24" step="2" required="" value="4">
                                 <?php elseif ($this->category->id == 69): ?>
                                     <label for="numero_partecipanti">Partecipanti (esponenti di 2):</label>
-                                    <select class="form-control" id="numero_partecipanti" name="numero_partecipanti" required="">
+                                    <select class="form-control" id="numero_partecipanti" name="numero_partecipanti"
+                                        required="">
                                         <option value="2">2</option>
                                         <option value="4">4</option>
                                         <option value="8">8</option>
@@ -93,44 +97,58 @@ if (in_array($this->category->id, $modalita)): ?>
                                     </select>
 
                                     <label for="numero_partecipanti">Partecipanti:</label>
-                                    <select class="form-control" id="numero_partecipanti" name="numero_partecipanti" required=""></select>
+                                    <select class="form-control" id="numero_partecipanti" name="numero_partecipanti"
+                                        required=""></select>
 
                                     <label for="numero_partecipanti_fasefinale">Fase Finale:</label>
-                                    <select class="form-control" id="numero_partecipanti_fasefinale" name="fase_finale" required=""></select>
+                                    <select class="form-control" id="numero_partecipanti_fasefinale" name="fase_finale"
+                                        required=""></select>
                                 <?php endif; ?>
                             </div>
-                            <button type="submit" class="btn btn-primary my-3" id="submit-button" name="submit-button" disabled>Invia</button>
+                            <button type="submit" class="btn btn-primary my-3" id="submit-button" name="submit-button"
+                                disabled>Invia</button>
                         </div> <!-- Fine card body -->
                     </div> <!-- Fine card -->
                 </div> <!-- Fine colonna -->
             </div> <!-- Fine row -->
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="form-group mt-4">
+                        <label for="search">Cerca:</label>
+                        <input type="text" id="search" name="search" class="form-control"
+                            placeholder="Inserisci il termine di ricerca" aria-describedby="searchHelp">
+                        <small id="searchHelp" class="form-text text-muted">Inserisci un termine di ricerca per trovare
+                            contenuti specifici.</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
                     <!-- Campo "TAG" -->
                     <div class="form-group mt-4">
                         <label for="tags">Stati:</label>
                         <select class="form-control" id="tags" name="tags[]" multiple>
-                            <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                            <option value="all" selected>Tutti</option> <!-- Opzione "Tutti" -->
                             <?php foreach ($subTags as $tag): ?>
                                 <option value="<?= $tag->id; ?>"><?= htmlspecialchars($tag->title); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="form-text text-muted">Seleziona gli stati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
+                        <small class="form-text text-muted">Seleziona gli stati desiderati. Tieni premuto Ctrl (Windows) o
+                            Cmd (Mac) per selezionare più di uno.</small>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <!-- Campo "CATEGORIA" -->
                     <div class="form-group mt-4">
                         <label for="cat">Campionati:</label>
                         <select class="form-control" id="cat" name="cat[]" multiple>
-                            <option value="all">Tutti</option> <!-- Opzione "Tutti" -->
+                            <option value="all" selected>Tutti</option> <!-- Opzione "Tutti" -->
                             <?php foreach ($campionati as $camp): ?>
                                 <option value="<?= $camp->id; ?>">
                                     <?= htmlspecialchars($camp->title); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="form-text text-muted">Seleziona i campionati desiderati. Tieni premuto Ctrl (Windows) o Cmd (Mac) per selezionare più di uno.</small>
+                        <small class="form-text text-muted">Seleziona i campionati desiderati. Tieni premuto Ctrl (Windows)
+                            o Cmd (Mac) per selezionare più di uno.</small>
                     </div>
                 </div>
             </div>
@@ -143,25 +161,20 @@ if (in_array($this->category->id, $modalita)): ?>
                     // Recupera il tag della categoria dell'articolo
                     $categoryTag = Competizione::getCategoryTag($article->catid);
                     ?>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>" data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-3" data-tag="<?= htmlspecialchars($categoryTag); ?>"
+                        data-cat="<?= htmlspecialchars($article->catid); ?>"> <!-- Layout responsive con colonne adattive -->
                         <div class="form-check">
                             <!-- Input checkbox per selezionare l'articolo -->
-                            <input
-                                class="form-check-input"
-                                type="checkbox"
-                                value="<?= $article->id; ?>"
-                                id="article-<?= $article->id; ?>"
-                                name="articles[]"
-                                style="margin-top: 20px;">
+                            <input class="form-check-input" type="checkbox" value="<?= $article->id; ?>"
+                                id="article-<?= $article->id; ?>" name="articles[]" style="margin-top: 20px;">
                             <label class="form-check-label d-flex align-items-center" for="article-<?= $article->id; ?>">
                                 <?php
                                 // Decodifica JSON per estrarre l'immagine introduttiva
                                 $images = json_decode($article->images);
-                                if (isset($images->image_intro)) : ?>
-                                    <img
-                                        src="<?= htmlspecialchars($images->image_intro); ?>"
-                                        alt="<?= htmlspecialchars($article->title); ?>"
-                                        class="me-2 miniimg" /> <!-- Aggiunge margine a destra dell'immagine -->
+                                if (isset($images->image_intro)): ?>
+                                    <img src="<?= htmlspecialchars($images->image_intro); ?>"
+                                        alt="<?= htmlspecialchars($article->title); ?>" class="me-2 miniimg" />
+                                    <!-- Aggiunge margine a destra dell'immagine -->
                                 <?php endif; ?>
                                 <!-- Nome dell'articolo -->
                                 <span class="overflow-hidden"><?= htmlspecialchars($article->title); ?></span>
@@ -178,25 +191,31 @@ if (in_array($this->category->id, $modalita)): ?>
 <?php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
-    if($_POST['andata_ritorno']!=0 && $_POST['andata_ritorno']!=1) return;
-    if($this->category->id == 68){
-        if($_POST['numero_partecipanti']<2 || $_POST['numero_partecipanti']>24) return;
-    }elseif($this->category->id == 69){
-        if($_POST['numero_partecipanti']!=2 && $_POST['numero_partecipanti']!=4 && $_POST['numero_partecipanti']!=8 && $_POST['numero_partecipanti']!=16 && $_POST['numero_partecipanti']!=32 && $_POST['numero_partecipanti']!=64 && $_POST['numero_partecipanti']!=128) return;
-    }elseif($this->category->id == 70){
-        if($_POST['gironi'] != 2 && $_POST['gironi'] != 4 && $_POST['gironi'] != 8) return;
-        if($_POST['numero_partecipanti']!=8 && $_POST['numero_partecipanti']!=16 && $_POST['numero_partecipanti']!=32 && $_POST['numero_partecipanti']!=64 && $_POST['numero_partecipanti']!=128) return;
-        if($_POST['fase_finale']!=2 && $_POST['fase_finale']!=4 && $_POST['fase_finale']!=8 && $_POST['fase_finale']!=16 && $_POST['fase_finale']!=32 && $_POST['fase_finale']!=64) return;
+    if ($_POST['andata_ritorno'] != 0 && $_POST['andata_ritorno'] != 1)
+        return;
+    if ($this->category->id == 68) {
+        if ($_POST['numero_partecipanti'] < 2 || $_POST['numero_partecipanti'] > 24)
+            return;
+    } elseif ($this->category->id == 69) {
+        if ($_POST['numero_partecipanti'] != 2 && $_POST['numero_partecipanti'] != 4 && $_POST['numero_partecipanti'] != 8 && $_POST['numero_partecipanti'] != 16 && $_POST['numero_partecipanti'] != 32 && $_POST['numero_partecipanti'] != 64 && $_POST['numero_partecipanti'] != 128)
+            return;
+    } elseif ($this->category->id == 70) {
+        if ($_POST['gironi'] != 2 && $_POST['gironi'] != 4 && $_POST['gironi'] != 8)
+            return;
+        if ($_POST['numero_partecipanti'] != 8 && $_POST['numero_partecipanti'] != 16 && $_POST['numero_partecipanti'] != 32 && $_POST['numero_partecipanti'] != 64 && $_POST['numero_partecipanti'] != 128)
+            return;
+        if ($_POST['fase_finale'] != 2 && $_POST['fase_finale'] != 4 && $_POST['fase_finale'] != 8 && $_POST['fase_finale'] != 16 && $_POST['fase_finale'] != 32 && $_POST['fase_finale'] != 64)
+            return;
     }
     // Assicurati di convalidare e filtrare i dati di input
     $data = [
         'user_id' => (int) $userId, // ID dell'utente
         'nome_competizione' => $_POST['nome_campionato'], // Nome della competizione
         'modalita' => (int) $this->category->id, // Modalità
-        'gironi' => isset($_POST['gironi']) ? (int)$_POST['gironi'] : 0, // Gironi
-        'andata_ritorno' => (int)$_POST['andata_ritorno'], // Andata/Ritorno
-        'partecipanti' => (int)$_POST['numero_partecipanti'], // Partecipanti
-        'fase_finale' => isset($_POST['gironi']) ? (int)$_POST['fase_finale'] : 0, // Fase Finale
+        'gironi' => isset($_POST['gironi']) ? (int) $_POST['gironi'] : 0, // Gironi
+        'andata_ritorno' => (int) $_POST['andata_ritorno'], // Andata/Ritorno
+        'partecipanti' => (int) $_POST['numero_partecipanti'], // Partecipanti
+        'fase_finale' => isset($_POST['gironi']) ? (int) $_POST['fase_finale'] : 0, // Fase Finale
         'finita' => 0, // Finita, di default a 0
         'squadre' => isset($_POST['articles']) ? $_POST['articles'] : [] // Squadre
     ];
