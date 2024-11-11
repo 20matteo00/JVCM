@@ -73,7 +73,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     ?>
                                 </td>
                                 <td class="category-title-cell">
-                                    <div class="overflow-auto" style="max-height: 200px;">
+                                    <div class="overflow-auto" style="max-height: 100px;">
                                         <?php $squadre = Competizione::getSquadreOrdinate($squadre); ?>
                                         <?php foreach ($squadre as $id):
                                             $customFields = Competizione::getCustomFields($id);
