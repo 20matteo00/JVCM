@@ -32,7 +32,10 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     <select name="squadra1" id="squadra1" class="form-select form-select-lg">
                         <?php
                         foreach ($squadre as $squadra) {
-                            echo '<option value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
+                            $cf = Competizione::getCustomFields($squadra->id);
+                            $colors = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $colort = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
                         }
                         ?>
                     </select>
@@ -44,7 +47,10 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     <select name="squadra2" id="squadra2" class="form-select form-select-lg">
                         <?php
                         foreach ($squadre as $squadra) {
-                            echo '<option value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
+                            $cf = Competizione::getCustomFields($squadra->id);
+                            $colors = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
+                            $colort = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
+                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
                         }
                         ?>
                     </select>

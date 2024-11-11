@@ -56,7 +56,7 @@ if (in_array($this->category->id, $modalita)): ?>
                             <!-- Campo "Nome" -->
                             <div class="form-group">
                                 <label for="nome_campionato">Nome:</label>
-                                <input type="text" class="form-control" id="nome_campionato" name="nome_campionato" required="">
+                                <input type="text" class="form-control" id="nome_campionato" name="nome_campionato" required="" placeholder="Competizione...">
                             </div>
 
                             <!-- Campo "Andata/Ritorno" -->
@@ -72,7 +72,7 @@ if (in_array($this->category->id, $modalita)): ?>
                             <div class="form-group">
                                 <?php if ($this->category->id == 68): ?>
                                     <label for="numero_partecipanti">Partecipanti (multipli di 2):</label>
-                                    <input type="number" class="form-control" id="numero_partecipanti" name="numero_partecipanti" min="2" max="24" step="2" required="">
+                                    <input type="number" class="form-control" id="numero_partecipanti" name="numero_partecipanti" min="2" max="24" step="2" required="" value="4">
                                 <?php elseif ($this->category->id == 69): ?>
                                     <label for="numero_partecipanti">Partecipanti (esponenti di 2):</label>
                                     <select class="form-control" id="numero_partecipanti" name="numero_partecipanti" required="">
@@ -178,6 +178,16 @@ if (in_array($this->category->id, $modalita)): ?>
 <?php
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
+    if($_POST['andata_ritorno']!=0 && $_POST['andata_ritorno']!=1) return;
+    if($this->category->id == 68){
+        if($_POST['numero_partecipanti']<2 || $_POST['numero_partecipanti']>24) return;
+    }elseif($this->category->id == 69){
+        if($_POST['numero_partecipanti']!=2 && $_POST['numero_partecipanti']!=4 && $_POST['numero_partecipanti']!=8 && $_POST['numero_partecipanti']!=16 && $_POST['numero_partecipanti']!=32 && $_POST['numero_partecipanti']!=64 && $_POST['numero_partecipanti']!=128) return;
+    }elseif($this->category->id == 70){
+        if($_POST['gironi'] != 2 && $_POST['gironi'] != 4 && $_POST['gironi'] != 8) return;
+        if($_POST['numero_partecipanti']!=8 && $_POST['numero_partecipanti']!=16 && $_POST['numero_partecipanti']!=32 && $_POST['numero_partecipanti']!=64 && $_POST['numero_partecipanti']!=128) return;
+        if($_POST['fase_finale']!=2 && $_POST['fase_finale']!=4 && $_POST['fase_finale']!=8 && $_POST['fase_finale']!=16 && $_POST['fase_finale']!=32 && $_POST['fase_finale']!=64) return;
+    }
     // Assicurati di convalidare e filtrare i dati di input
     $data = [
         'user_id' => (int) $userId, // ID dell'utente
