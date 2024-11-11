@@ -1952,20 +1952,45 @@ abstract class Competizione
         // Generiamo potenza casuale in base alla forza delle due squadre
         $pw1 = rand(0, $forza1);
         $pw2 = rand(0, $forza2);
-
+        $diff = $pw1 - $pw2;
         // Inizializziamo i gol
         $gol1 = 0;
         $gol2 = 0;
 
         // Calcoliamo i gol in base alla forza e alla casualità
-        if ($pw1 > $pw2) {
-            $gol1 = self::pesoRand(1, 6);  // Squadra più forte ha un range di gol più alto
-            $gol2 = self::pesoRand(0, $gol1); // Squadra più debole segna meno
-        } elseif ($pw1 === $pw2) {
-            $gol1 = $gol2 = self::pesoRand(0, 3);  // Pareggio probabile con pochi gol
-        } else {
-            $gol2 = self::pesoRand(1, 6);  // Squadra 2 è più forte e segna di più
-            $gol1 = self::pesoRand(0, $gol2); // Squadra più debole segna meno
+        if($diff >= 1000){
+            $gol1 = self::pesoRand(2, 7);  
+            $gol2 = self::pesoRand(0, $gol1-2); 
+        } elseif($diff >= 500){
+            $gol1 = self::pesoRand(1, 6);  
+            $gol2 = self::pesoRand(0, $gol1-1); 
+        } elseif($diff >= 250){
+            $gol1 = self::pesoRand(1, 5);  
+            $gol2 = self::pesoRand(0, $gol1); 
+        } elseif($diff >= 100){
+            $gol1 = self::pesoRand(0, 4);  
+            $gol2 = self::pesoRand(0, $gol1); 
+        } elseif($diff >= 50){
+            $gol1 = self::pesoRand(0, 3);  
+            $gol2 = self::pesoRand(0, $gol1+1); 
+        } elseif($diff < 50 && $diff > -50){
+            $gol1 = self::pesoRand(0, 3);  
+            $gol2 = self::pesoRand(0, 3); 
+        } elseif($diff <= -50){
+            $gol2 = self::pesoRand(0, 3);  
+            $gol1 = self::pesoRand(0, $gol2+1); 
+        } elseif($diff <= -100){
+            $gol2 = self::pesoRand(0, 4);  
+            $gol1 = self::pesoRand(0, $gol2); 
+        } elseif($diff <= -250){
+            $gol2 = self::pesoRand(1, 5);  
+            $gol1 = self::pesoRand(0, $gol2); 
+        } elseif($diff <= -500){
+            $gol2 = self::pesoRand(1, 6);  
+            $gol1 = self::pesoRand(0, $gol2-1); 
+        } elseif($diff <= -1000){
+            $gol2 = self::pesoRand(2, 7);  
+            $gol1 = self::pesoRand(0, $gol2-2); 
         }
 
         // Restituisce il risultato finale
@@ -1979,13 +2004,14 @@ abstract class Competizione
     {
         // Imposta pesi per risultati bassi con piccola probabilità di risultati alti
         $pesi = [
-            0 => 25,
-            1 => 25,
-            2 => 20,
-            3 => 15,
-            4 => 10,
-            5 => 4,
-            6 => 1,
+            0 => 250,
+            1 => 250,
+            2 => 250,
+            3 => 125,
+            4 => 75,
+            5 => 35,
+            6 => 10,
+            7 => 5
         ];
 
         // Filtra i pesi per l'intervallo desiderato
