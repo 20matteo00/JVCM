@@ -115,7 +115,7 @@ if (in_array($this->category->id, $modalita)): ?>
                 <div class="col-md-4">
                     <div class="form-group mt-4">
                         <label for="search">Cerca:</label>
-                        <input type="text" id="search" name="search" class="form-control"
+                        <input type="text" id="search" name="search" class="form-control" style="height:116px;"
                             placeholder="Inserisci il termine di ricerca" aria-describedby="searchHelp">
                         <small id="searchHelp" class="form-text text-muted">Inserisci un termine di ricerca per trovare
                             contenuti specifici.</small>
