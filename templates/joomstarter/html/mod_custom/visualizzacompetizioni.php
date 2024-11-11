@@ -6,6 +6,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
 use Joomstarter\Helpers\Competizione;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Language\Text;
 
 // Ottieni l'ID della voce di menu attiva
 $menu = Factory::getApplication()->getMenu();
@@ -103,12 +104,13 @@ if (in_array($menuItemId, $pagconsentite)) {
                 </tbody>
             </table>
         </div>
-        <div class="text-center"> <a href="<?php echo Uri::base(); ?>" class="btn btn-primary btn-sm">Crea Nuova</a> </div>
     <?php } else {
-        echo "<p class='h1'>Nessuna competizione presente.</p>";
+        echo "<p class='h1 text-center'>".text::_('JOOM_NESSUNA_COMPETIZIONE_PRESENTE')."</p>";
     }
 }
-
+?>
+<div class="text-center mt-5"> <a href="<?php echo Uri::base(); ?>" class="btn btn-primary btn-sm">Crea Nuova</a> </div>
+<?php
 // Gestione della richiesta POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
     $id = (int) $_POST['id'];

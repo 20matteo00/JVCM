@@ -179,7 +179,7 @@ if (isset($_GET['id'])) {
                             <?php endforeach; ?>
                             <?php
                             if (!$entrato) {
-                                echo '<td class="px-0" style="background-color:#000000; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
+                                echo '<td class="px-0" style="background-color:#8a8a8a; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
                             }
                             ?>
                         <?php endfor; ?>
