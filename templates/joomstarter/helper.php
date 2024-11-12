@@ -139,7 +139,7 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
             ->where('c.parent_id = ' . (int) $categoryId)
-            ->order('CAST(f3.value AS UNSIGNED) DESC, c.id ASC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
+            ->order('c.id ASC, CAST(f3.value AS UNSIGNED) DESC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
 
         $db->setQuery($query);
 
@@ -2092,7 +2092,7 @@ abstract class Competizione
         return $c;
     }
 
-    public static function getScontriDiretti($squadra1, $squadra2, $user)
+    public static function getScontriDiretti($squadra1, $squadra2, $modalita, $user)
     {
         // Ottieni il database
         $db = Factory::getDbo();
@@ -2119,17 +2119,36 @@ abstract class Competizione
             $tablePartite = self::getTablePartite($c->id);
             $partite = self::getPartite($tablePartite);
             foreach ($partite as $partita) {
-                // Controlla se la partita coinvolge squadra1 e squadra2
-                if (
-                    ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
-                    ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1)
-                ) {
-
-                    // Aggiungi la partita agli scontri diretti
-                    $scontriDiretti[] = [
-                        'partita' => $partita,
-                        'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
-                    ];
+                if ($modalita === 0) {
+                    // Controlla se la partita coinvolge squadra1 e squadra2
+                    if (
+                        ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
+                        ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1)
+                    ) {
+                        // Aggiungi la partita agli scontri diretti
+                        $scontriDiretti[] = [
+                            'partita' => $partita,
+                            'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
+                        ];
+                    }
+                }elseif ($modalita === 1) {
+                    // Controlla se la partita coinvolge squadra1 e squadra2
+                    if ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2){
+                        // Aggiungi la partita agli scontri diretti
+                        $scontriDiretti[] = [
+                            'partita' => $partita,
+                            'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
+                        ];
+                    }
+                }elseif ($modalita === 2) {
+                    // Controlla se la partita coinvolge squadra1 e squadra2
+                    if ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1){
+                        // Aggiungi la partita agli scontri diretti
+                        $scontriDiretti[] = [
+                            'partita' => $partita,
+                            'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
+                        ];
+                    }
                 }
             }
         }

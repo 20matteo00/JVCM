@@ -13,7 +13,8 @@ $scontriDiretti = [];
 if (isset($_POST['submit'])) {
     $squadra1 = (int) $_POST['squadra1'];
     $squadra2 = (int) $_POST['squadra2'];
-    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $userId);
+    $modalita = (int) $_POST['modalita'];
+    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $modalita, $userId);
 } elseif (isset($_POST['reset'])) {
     $_POST = [];
 }
@@ -27,32 +28,57 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
         <div class="container">
             <div class="row justify-content-center">
                 <!-- Campo per la prima squadra -->
-                <div class="col-md-6 col-12 mb-3">
+                <div class="col-md-5 col-12 mb-3">
                     <label for="squadra1" class="form-label fs-5 fw-bold">Squadra 1</label>
                     <select name="squadra1" id="squadra1" class="form-select form-select-lg">
                         <?php
+                        $selectedSquadra = isset($_POST['squadra1']) ? $_POST['squadra1'] : ''; // Puoi anche usare $_GET se necessario
                         foreach ($squadre as $squadra) {
+                            // Imposta l'attributo "selected" se l'ID della squadra corrisponde al valore selezionato
+                            $selected = ($squadra->id == $selectedSquadra) ? ' selected' : '';
                             $cf = Competizione::getCustomFields($squadra->id);
                             $colors = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
                             $colort = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
-                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
+                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '"' . $selected . '>' . htmlspecialchars($squadra->title) . '</option>';
                         }
                         ?>
                     </select>
                 </div>
 
                 <!-- Campo per la seconda squadra -->
-                <div class="col-md-6 col-12 mb-3">
+                <div class="col-md-5 col-12 mb-3">
                     <label for="squadra2" class="form-label fs-5 fw-bold">Squadra 2</label>
                     <select name="squadra2" id="squadra2" class="form-select form-select-lg">
                         <?php
+                        $selectedSquadra = isset($_POST['squadra2']) ? $_POST['squadra2'] : ''; // Puoi anche usare $_GET se necessario
                         foreach ($squadre as $squadra) {
+                            $selected = ($squadra->id == $selectedSquadra) ? ' selected' : '';
                             $cf = Competizione::getCustomFields($squadra->id);
                             $colors = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
                             $colort = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
-                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '">' . htmlspecialchars($squadra->title) . '</option>';
+                            echo '<option style="background-color:' . $colors . '; color:' . $colort . '" value="' . $squadra->id . '"' . $selected . '>' . htmlspecialchars($squadra->title) . '</option>';
                         }
                         ?>
+                    </select>
+                </div>
+
+                <!-- Campo per la modalita -->
+                <div class="col-md-2 col-12 mb-3">
+                    <label for="modalita" class="form-label fs-5 fw-bold">Modalita</label>
+                    <select name="modalita" id="modalita" class="form-select form-select-lg">
+                        <?php
+                        $selectedModalita = isset($_POST['modalita']) ? (int) $_POST['modalita'] : 0;
+                        $casa = $trasferta = "";
+                        if ($selectedModalita === 1) {
+                            $casa = "selected";
+                        } elseif ($selectedModalita === 2) {
+                            $trasferta = "selected";
+                        }
+                        ?>
+                        <option value="0" <?php echo ($selectedModalita === 0) ? 'selected' : ''; ?>>Tutto</option>
+                        <option value="1" <?php echo $casa; ?>>Casa</option>
+                        <option value="2" <?php echo $trasferta; ?>>Trasferta</option>
+
                     </select>
                 </div>
 
@@ -175,6 +201,12 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                 $d2 = $dc2 + $dt2;
             }
         }
+        $class = "";
+        $col = "";
+        if ($modalita === 1 || $modalita === 2) {
+            $class = "d-none";
+            $col = "col-md-12";
+        }
         // A questo punto avrai aggiornato tutte le statistiche relative alle due squadre ($squadra1 e $squadra2)            
         ?>
         <div class="row g-4">
@@ -186,7 +218,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $col; ?>">
                                 <h4 class="text-muted">Totale</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between">
@@ -212,7 +244,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                                     </li>
                                 </ul>
                             </div>
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $class; ?>">
                                 <h4 class="text-muted">Casa</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between">
@@ -238,7 +270,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                                     </li>
                                 </ul>
                             </div>
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $class; ?>">
                                 <h4 class="text-muted">Trasferta</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between"><strong>Giocate:</strong>
@@ -277,7 +309,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $col; ?>">
                                 <h4 class="text-muted">Totale</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between">
@@ -303,7 +335,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                                     </li>
                                 </ul>
                             </div>
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $class; ?>">
                                 <h4 class="text-muted">Casa</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between"><strong>Giocate:</strong>
@@ -329,7 +361,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                                     </li>
                                 </ul>
                             </div>
-                            <div class="col-md-4 col-12 ">
+                            <div class="col-md-4 col-12 <?php echo $class; ?>">
                                 <h4 class="text-muted">Trasferta</h4>
                                 <ul class="list-unstyled">
                                     <li class="d-flex justify-content-between"><strong>Giocate:</strong>
