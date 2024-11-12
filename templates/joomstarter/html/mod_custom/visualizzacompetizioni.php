@@ -144,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
                 //$squadre = json_encode($squadre);
                 $data = array(
                     'user_id' => $result->user_id, // ID dell'utente
-                    'nome_competizione' => $result->nome_competizione . " - New - " . $id, // Nome della competizione
+                    'nome_competizione' => $result->nome_competizione . " - Copia", // Nome della competizione
                     'modalita' => $result->modalita, // Modalità
                     'gironi' => $result->gironi, // Numero di gironi
                     'squadre' => $squadre, // ID delle squadre
