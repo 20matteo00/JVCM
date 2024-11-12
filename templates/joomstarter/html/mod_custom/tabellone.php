@@ -72,7 +72,7 @@ if (isset($_GET['id'])) {
                                 <?php if ($squadra === $squadraAvversaria): ?>
                                     <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
                                 <?php else: ?>
-                                    <td><?php echo htmlspecialchars($risultati[$squadra][$squadraAvversaria] ?? ''); ?></td>
+                                    <td style="vertical-align:middle;"><?php echo htmlspecialchars($risultati[$squadra][$squadraAvversaria] ?? ''); ?></td>
                                     <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
                                 <?php endif; ?>
                             <?php endforeach; ?>
@@ -145,7 +145,7 @@ if (isset($_GET['id'])) {
                                     <?php if ($squadra->squadra === $squadraAvversaria->squadra): ?>
                                         <td style="background-color: black; color: white;"></td> <!-- Casella nera per le stesse squadre -->
                                     <?php else: ?>
-                                        <td><?php echo htmlspecialchars($risultati[$squadra->squadra][$squadraAvversaria->squadra] ?? ''); ?>
+                                        <td style="vertical-align:middle;"><?php echo htmlspecialchars($risultati[$squadra->squadra][$squadraAvversaria->squadra] ?? ''); ?>
                                         </td>
                                         <!-- Mostra il risultato se disponibile, altrimenti lascia vuota -->
                                     <?php endif; ?>
