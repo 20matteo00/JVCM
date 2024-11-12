@@ -40,8 +40,8 @@ if (in_array($menuItemId, $pagconsentite)) {
                         <th class="category-header-title" style="min-width:150px;">Andata/Ritorno</th>
                         <th class="category-header-title" style="min-width:100px;">Partecipanti</th>
                         <th class="category-header-title" style="min-width:100px;">Fase Finale</th>
-                        <th class="category-header-title" style="min-width:300px;">Squadre</th>
-                        <th class="category-header-title" style="min-width:200px;">Azioni</th>
+                        <th class="category-header-title" style="min-width:400px;">Squadre</th>
+                        <th class="category-header-title" style="min-width:100px;">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="allarticles">
@@ -75,7 +75,7 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     ?>
                                 </td>
                                 <td class="category-title-cell">
-                                    <div class="overflow-auto" style="max-height: 100px;">
+                                    <div class="overflow-auto" style="max-height: 120px;">
                                         <?php $squadre = Competizione::getSquadreOrdinate($squadre); ?>
                                         <?php foreach ($squadre as $id):
                                             $customFields = Competizione::getCustomFields($id);
@@ -92,10 +92,11 @@ if (in_array($menuItemId, $pagconsentite)) {
                                     </div>
                                 </td>
                                 <td class="category-title-cell">
-                                    <form action="" method="post">
+                                    <form class="text-center" action="" method="post">
                                         <input type="hidden" value="<?php echo $idcomp; ?>" name="id">
-                                        <button type="submit" class="btn btn-success btn-sm me-1" name="visualizza">Visualizza</button>
-                                        <button type="submit" class="btn btn-danger btn-sm" name="elimina">Elimina</button>
+                                        <button type="submit" class="btn btn-success btn-sm my-1" name="visualizza">Visualizza</button>
+                                        <button type="submit" class="btn btn-warning btn-sm my-1" name="duplica">Duplica</button>
+                                        <button type="submit" class="btn btn-danger btn-sm my-1" name="elimina">Elimina</button>
                                     </form>
                                 </td>
                             </tr>
@@ -105,7 +106,7 @@ if (in_array($menuItemId, $pagconsentite)) {
             </table>
         </div>
     <?php } else {
-        echo "<p class='h1 text-center'>".text::_('JOOM_NESSUNA_COMPETIZIONE_PRESENTE')."</p>";
+        echo "<p class='h1 text-center'>" . text::_('JOOM_NESSUNA_COMPETIZIONE_PRESENTE') . "</p>";
     }
 }
 ?>
@@ -124,11 +125,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             header("Location: " . $url);
             exit; // Assicurati di uscire dopo il reindirizzamento
         }
+    } elseif (isset($_POST['duplica'])) {
+        // Ottieni l'oggetto database di Joomla
+        $db = Factory::getDbo();
+        // Crea la query per selezionare i dati dalla tabella 'competizione' con l'ID specificato
+        $query = $db->getQuery(true)
+            ->select('*')  // Seleziona tutte le colonne
+            ->from($db->quoteName('#__competizioni'))  // Nome della tabella (assicurati che sia corretta)
+            ->where($db->quoteName('id') . ' = ' . (int) $id);  // Condizione per l'ID
+        // Esegui la query
+        $db->setQuery($query);
+        try {
+            // Ottieni il risultato come un oggetto
+            $result = $db->loadObject();
+            // Se i dati sono trovati, mostra i risultati (oppure fai altro con i dati)
+            if ($result) {
+                $squadre = json_decode($result->squadre);
+                //$squadre = json_encode($squadre);
+                $data = array(
+                    'user_id' => $result->user_id, // ID dell'utente
+                    'nome_competizione' => $result->nome_competizione . " - New - " . $id, // Nome della competizione
+                    'modalita' => $result->modalita, // Modalità
+                    'gironi' => $result->gironi, // Numero di gironi
+                    'squadre' => $squadre, // ID delle squadre
+                    'andata_ritorno' => $result->andata_ritorno, // Modalità andata/ritorno
+                    'partecipanti' => $result->partecipanti, // Numero di partecipanti
+                    'fase_finale' => $result->fase_finale, // Stato fase finale
+                    'finita' => 0, // Stato finita
+                );
+                Competizione::insertCompetizione($data);
+            }
+        } catch (Exception $e) {
+            // Gestisci gli errori
+            echo 'Errore nel recupero dei dati: ' . $e->getMessage();
+        }
+
+        // Ricarica la pagina
+        header("Location: /jvcm/index.php/competizioni-in-corso" );
+        exit;
+
     } elseif (isset($_POST['elimina'])) {
         $db = Factory::getDbo();
         $prefix = $db->getPrefix();
-        $tablePartite = $prefix . 'competizione' . $id . '_partite';
-        $tableStatistiche = $prefix . 'competizione' . $id . '_statistiche';
+        $tablePartite = Competizione::getTablePartite($id);
+        $tableStatistiche = Competizione::getTableStatistiche($id);
 
         // Inizia una transazione per garantire che tutte le eliminazioni siano atomiche
         $db->transactionStart();
