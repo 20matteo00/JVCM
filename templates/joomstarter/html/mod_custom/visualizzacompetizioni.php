@@ -141,9 +141,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             if ($result) {
                 $squadre = json_decode($result->squadre);
                 //$squadre = json_encode($squadre);
+                $newname = explode("-", $result->nome_competizione);
+                $joinedName = implode("-", array_slice($newname, 1));
+
                 $data = array(
                     'user_id' => $result->user_id, // ID dell'utente
-                    'nome_competizione' => $result->nome_competizione, // Nome della competizione
+                    'nome_competizione' => $joinedName, // Nome della competizione
                     'modalita' => $result->modalita, // Modalità
                     'gironi' => $result->gironi, // Numero di gironi
                     'squadre' => $squadre, // ID delle squadre
@@ -158,9 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             // Gestisci gli errori
             echo 'Errore nel recupero dei dati: ' . $e->getMessage();
         }
-        
+
         // Ricarica la pagina
-        header("Location: /jvcm/index.php/competizioni-in-corso" );
+        header("Location: /jvcm/index.php/competizioni-in-corso");
         exit;
 
     } elseif (isset($_POST['elimina'])) {

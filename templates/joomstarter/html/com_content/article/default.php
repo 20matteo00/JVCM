@@ -57,7 +57,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
     <div class="row">
         <div class="col-md-8 my-3">
             <?php if ($this->params->get('show_title')): ?>
-                <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;">
+                <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;border-radius:50px;">
                     <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;">
                         <?php echo $this->escape($this->item->title); ?>
                     </h1>
@@ -103,10 +103,31 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
         </div>
     </div>
 
+    <div class="row">
+        
+        <?php
+        $c = Competizione::getAllCompetizioni($id, $userId);
+        if ($c!=null) echo '<h2 class="text-center">Competizioni</h2>';
+        for ($i = 0; $i < count($c); $i++) {
+            $competizione = Competizione::getCompetizioneById($c[$i], $userId);
+            echo "
+            <div class='col-12 col-sm-6 col-md-4 col-lg-3 mb-4'>
+                <div class='text-center p-3'>
+                    <a style='border-radius:50px;' href='/jvcm/index.php/visualizza-competizione?id=" . $competizione->id . "' class='btn btn-outline-dark w-100'>
+                        " . $competizione->nome_competizione . "
+                    </a>
+                </div>
+            </div>
+        ";
+        }
+        ?>
+    </div>
+
+
     <div class="accordion my-5" id="archivioAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingarchivio">
-                <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse"
+                <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapsearchivio" aria-expanded="false" aria-controls="collapsearchivio">
                     Archivio
                 </button>
@@ -166,7 +187,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
     <div class="accordion my-5" id="statisticheAccordion">
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingstatistiche">
-                <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse"
+                <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse"
                     data-bs-target="#collapsestatistiche" aria-expanded="false" aria-controls="collapsestatistiche">
                     Statistiche
                 </button>
@@ -176,37 +197,101 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 <div class="accordion-body">
                     <?php
                     $c = Competizione::getAllCompetizioni($id, $userId);
-                    $campWin = $elimWin = 0;
+                    $campWin = $elimWin = $countpartite = 0;
+                    $vc = $nc = $pc = $gfc = $gsc = $vt = $nt = $pt = $gft = $gst = 0;
                     for ($i = 0; $i < count($c); $i++) {
                         $tableStatistiche = Competizione::getTableStatistiche($c[$i]);
                         $tablePartite = Competizione::getTablePartite($c[$i]);
+                        $countpartite += count(Competizione::getPartitePerSquadra($id, $tablePartite));
+                        $stats = Competizione::getStats($tableStatistiche, $id);
+                        $vc += $stats[0]->VC;
+                        $nc += $stats[0]->NC;
+                        $pc += $stats[0]->PC;
+                        $gfc += $stats[0]->GFC;
+                        $gsc += $stats[0]->GSC;
+                        $vt += $stats[0]->VT;
+                        $nt += $stats[0]->NT;
+                        $pt += $stats[0]->PT;
+                        $gft += $stats[0]->GFT;
+                        $gst += $stats[0]->GST;
                         $competizione = Competizione::getCompetizioneById($c[$i], $userId);
                         $mod = $competizione->modalita;
-                        $winner = Competizione::checkWinner($tablePartite,$tableStatistiche, $id, $mod);
+                        $winner = Competizione::checkWinner($tablePartite, $tableStatistiche, $id, $mod);
                         if ($mod === 68 && $winner)
                             $campWin++;
                         elseif ($mod === 69 && $winner)
                             $elimWin++;
                     }
+                    $gc = $vc + $nc + $pc;
+                    $gt = $vt + $nt + $pt;
+                    $dc = $gfc - $gsc;
+                    $dt = $gft - $gst;
+                    $v = $vc + $vt;
+                    $n = $nc + $nt;
+                    $p = $pc + $pt;
+                    $gf = $gfc + $gft;
+                    $gs = $gsc + $gst;
+                    $d = $dc + $dt;
+                    if ($d > 0)
+                        $d = "<span style='color:limegreen'>+" . $d . "</span>";
+                    elseif ($d < 0)
+                        $d = "<span style='color:crimson'>" . $d . "</span>";
+                    if ($dc > 0)
+                        $dc = "<span style='color:limegreen'>+" . $dc . "</span>";
+                    elseif ($dc < 0)
+                        $dc = "<span style='color:crimson'>" . $dc . "</span>";
+                    if ($dt > 0)
+                        $dt = "<span style='color:limegreen'>+" . $dt . "</span>";
+                    elseif ($dt < 0)
+                        $dt = "<span style='color:crimson'>" . $dt . "</span>";
+                    if ($campWin > 0)
+                        $campWin = "<span style='color:chartreuse'>" . $campWin . "</span>";
+                    if ($elimWin > 0)
+                        $elimWin = "<span style='color:chartreuse'>" . $elimWin . "</span>";
+                    // Array associativo con le etichette e i valori
+                    $record = [
+                        'Campionati Vinti' => $campWin,
+                        'Coppe Vinte' => $elimWin,
+                        'Giocate Totali' => $countpartite,
+                        'Vinte Totali' => "<span style='color:yellowgreen'>" . $v . "</span>",
+                        'Pareggiate Totali' => "<span style='color:orange'>" . $n . "</span>",
+                        'Perse Totali' => "<span style='color:orangered'>" . $p . "</span>",
+                        'Gol Fatti Totali' => "<span style='color:green'>" . $gf . "</span>",
+                        'Gol Subiti Totali' => "<span style='color:red'>" . $gs . "</span>",
+                        'Differenza Reti Totale' => $d,
+                        'Giocate Casa' => $gc,
+                        'Vinte Casa' => "<span style='color:yellowgreen'>" . $vc . "</span>",
+                        'Pareggiate Casa' => "<span style='color:orange'>" . $nc . "</span>",
+                        'Perse Casa' => "<span style='color:orangered'>" . $pc . "</span>",
+                        'Gol Fatti Casa' => "<span style='color:green'>" . $gfc . "</span>",
+                        'Gol Subiti Casa' => "<span style='color:red'>" . $gsc . "</span>",
+                        'Differenza Reti Casa' => $dc,
+                        'Giocate Trasferta' => $gt,
+                        'Vinte Trasferta' => "<span style='color:yellowgreen'>" . $vt . "</span>",
+                        'Pareggiate Trasferta' => "<span style='color:orange'>" . $nt . "</span>",
+                        'Perse Trasferta' => "<span style='color:orangered'>" . $pt . "</span>",
+                        'Gol Fatti Trasferta' => "<span style='color:green'>" . $gft . "</span>",
+                        'Gol Subiti Trasferta' => "<span style='color:red'>" . $gst . "</span>",
+                        'Differenza Reti Trasferta' => $dt
+                    ];
                     ?>
+
                     <table class="table table-striped table-bordered text-center">
                         <thead>
                             <tr>
-                                <th colspan="2" >Record</th>
+                                <th colspan="2">Record</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Campionati Vinti</td>
-                                <td><?php echo $campWin; ?></td>
-                            </tr>
-                            <tr>
-                                <td>Coppe Vinte</td>
-                                <td><?php echo $elimWin; ?></td>
-                            </tr>
-                            <!-- Aggiungi altre righe qui, seguendo lo stesso schema -->
+                            <?php foreach ($record as $label => $value): ?>
+                                <tr>
+                                    <td><?php echo $label; ?></td>
+                                    <td class="fw-bold"><?php echo $value; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
+
 
                 </div>
             </div>

@@ -1186,6 +1186,26 @@ abstract class Competizione
         ];
     }
 
+    public static function getStats($tableStatistiche, $squadra)
+    {
+        // Ottieni l'oggetto database di Joomla
+        $db = Factory::getDbo();
+
+        // Crea una nuova query
+        $query = $db->getQuery(true);
+
+        // Scrivi la query per selezionare tutti i dati dalla tabella 'statistiche'
+        $query->select('*')
+            ->from($tableStatistiche)
+            ->where($db->quoteName('squadra') . " = " . $squadra); // Nota che Joomla prevede il prefisso '#__' per la tabella, che verrà sostituito dal prefisso effettivo del database
+
+        // Imposta la query e eseguila
+        $db->setQuery($query);
+
+        // Recupera i risultati come array di oggetti
+        return $db->loadObjectList();
+    }
+
     public static function getAndamento($tablePartite)
     {
         // Inizializza un array per tenere traccia dei punti accumulati per ogni squadra
@@ -2260,10 +2280,12 @@ abstract class Competizione
                 return true;
         } elseif ($mod === 69) {
             $classifica = self::getUltimaPartita($tablePartite);
-            if($classifica->gol1>$classifica->gol2){
-                if($classifica->squadra1 == $squadra) return true;
-            } elseif($classifica->gol1<$classifica->gol2){
-                if($classifica->squadra2 == $squadra) return true;
+            if ($classifica->gol1 > $classifica->gol2) {
+                if ($classifica->squadra1 == $squadra)
+                    return true;
+            } elseif ($classifica->gol1 < $classifica->gol2) {
+                if ($classifica->squadra2 == $squadra)
+                    return true;
             }
         }
         return false;
