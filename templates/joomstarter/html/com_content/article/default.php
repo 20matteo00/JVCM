@@ -92,7 +92,8 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 ?>
             </div>
             <br>
-            <span class="h4 fw-bold"><a class="campionato" href="/jvcm/index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
+            <span class="h4 fw-bold"><a class="campionato"
+                    href="/jvcm/index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
         </div>
         <div class="col-md-4  text-center my-3">
             <div class="com-content-article__image">
@@ -104,13 +105,13 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
 
     <div class="accordion my-5" id="archivioAccordion">
         <div class="accordion-item">
-            <h2 class="accordion-header" id="headingArchivio">
+            <h2 class="accordion-header" id="headingarchivio">
                 <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseArchivio" aria-expanded="false" aria-controls="collapseArchivio">
+                    data-bs-target="#collapsearchivio" aria-expanded="false" aria-controls="collapsearchivio">
                     Archivio
                 </button>
             </h2>
-            <div id="collapseArchivio" class="accordion-collapse collapse" aria-labelledby="headingArchivio"
+            <div id="collapsearchivio" class="accordion-collapse collapse" aria-labelledby="headingarchivio"
                 data-bs-parent="#archivioAccordion">
                 <div class="accordion-body">
                     <?php
@@ -140,7 +141,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                                 echo '<td>' . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra1)) . " - " . Competizione::getArticleTitleById(htmlspecialchars($partita->squadra2)) . '</td>';
                                 if ($partita->gol1 !== null && $partita->gol2 !== null) {
                                     echo '<td>' . htmlspecialchars($partita->gol1) . " - " . htmlspecialchars($partita->gol2) . '</td>';
-                                } else{
+                                } else {
                                     echo '<td> - </td>';
                                 }
                                 echo '</tr>';
@@ -162,6 +163,54 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
         </div>
     </div>
 
+    <div class="accordion my-5" id="statisticheAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingstatistiche">
+                <button class="accordion-button collapsed bg-primary text-white" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapsestatistiche" aria-expanded="false" aria-controls="collapsestatistiche">
+                    Statistiche
+                </button>
+            </h2>
+            <div id="collapsestatistiche" class="accordion-collapse collapse" aria-labelledby="headingstatistiche"
+                data-bs-parent="#statisticheAccordion">
+                <div class="accordion-body">
+                    <?php
+                    $c = Competizione::getAllCompetizioni($id, $userId);
+                    $campWin = $elimWin = 0;
+                    for ($i = 0; $i < count($c); $i++) {
+                        $tableStatistiche = Competizione::getTableStatistiche($c[$i]);
+                        $tablePartite = Competizione::getTablePartite($c[$i]);
+                        $competizione = Competizione::getCompetizioneById($c[$i], $userId);
+                        $mod = $competizione->modalita;
+                        $winner = Competizione::checkWinner($tablePartite,$tableStatistiche, $id, $mod);
+                        if ($mod === 68 && $winner)
+                            $campWin++;
+                        elseif ($mod === 69 && $winner)
+                            $elimWin++;
+                    }
+                    ?>
+                    <table class="table table-striped table-bordered text-center">
+                        <thead>
+                            <tr>
+                                <th colspan="2" >Record</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Campionati Vinti</td>
+                                <td><?php echo $campWin; ?></td>
+                            </tr>
+                            <tr>
+                                <td>Coppe Vinte</td>
+                                <td><?php echo $elimWin; ?></td>
+                            </tr>
+                            <!-- Aggiungi altre righe qui, seguendo lo stesso schema -->
+                        </tbody>
+                    </table>
 
+                </div>
+            </div>
+        </div>
+    </div>
     <?php echo $this->item->event->afterDisplayContent; ?>
 </div>

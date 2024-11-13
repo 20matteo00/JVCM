@@ -2065,7 +2065,8 @@ abstract class Competizione
         // Crea la query
         $query = $db->getQuery(true)
             ->select('id')
-            ->from($db->quoteName('#__competizioni'));
+            ->from($db->quoteName('#__competizioni'))
+            ->where($db->quoteName('finita') . " = 1");
 
         // Esegui la query
         $db->setQuery($query);
@@ -2251,5 +2252,20 @@ abstract class Competizione
         }
     }
 
-
+    public static function checkWinner($tablePartite, $tableStatistiche, $squadra, $mod)
+    {
+        if ($mod === 68) {
+            $classifica = self::getClassifica($tableStatistiche);
+            if ($squadra == $classifica[0]->squadra)
+                return true;
+        } elseif ($mod === 69) {
+            $classifica = self::getUltimaPartita($tablePartite);
+            if($classifica->gol1>$classifica->gol2){
+                if($classifica->squadra1 == $squadra) return true;
+            } elseif($classifica->gol1<$classifica->gol2){
+                if($classifica->squadra2 == $squadra) return true;
+            }
+        }
+        return false;
+    }
 }
