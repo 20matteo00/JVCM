@@ -196,7 +196,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             </h2>
             <div id="collapsestatistiche" class="accordion-collapse collapse" aria-labelledby="headingstatistiche"
                 data-bs-parent="#statisticheAccordion">
-                <div class="accordion-body">
+                <div class="accordion-body overflow-auto px-0 px-md-4">
                     <?php
                     $modalitaArray = [68, 69, 70];
                     $totali = [
