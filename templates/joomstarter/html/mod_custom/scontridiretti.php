@@ -15,7 +15,7 @@ if (isset($_POST['submit'])) {
     $squadra2 = (int) $_POST['squadra2'];
     $luogo = (int) $_POST['luogo'];
     $modalita = (int) $_POST['modalita'];
-    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $luogo,  $modalita, $userId);
+    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $luogo, $modalita, $userId);
 } elseif (isset($_POST['reset'])) {
     $_POST = [];
 }
@@ -119,39 +119,6 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
 
     <?php if (!empty($scontriDiretti)): ?>
         <h2 class="my-4">Risultati degli Scontri Diretti</h2>
-        <table class="table table-striped table-bordered text-center">
-            <thead>
-                <tr>
-                    <th>Competizione</th>
-                    <th>Giornata</th>
-                    <th>Partita</th>
-                    <th>Risultato</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($scontriDiretti as $scontro): ?>
-                    <?php
-                    $partita = $scontro['partita']; // Dettagli della partita
-                    $competizioneId = $scontro['competizione']; // ID della competizione
-                    ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($competizioneId); ?></td>
-                        <td><?php echo htmlspecialchars($partita->giornata); ?></td>
-                        <td><?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra1)); ?> vs
-                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra2)); ?>
-                        </td>
-                        <td>
-                            <?php if ($partita->gol1 !== null && $partita->gol2 !== null): ?>
-                                <?php echo htmlspecialchars($partita->gol1); ?> - <?php echo htmlspecialchars($partita->gol2); ?>
-                            <?php else: ?>
-                                -
-                            <?php endif; ?>
-                        </td>
-
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
         <?php
         $partite = count($scontriDiretti);
         $gc1 = $gc2 = $vc1 = $vc2 = $nc1 = $nc2 = $pc1 = $pc2 = $gfc1 = $gfc2 = $gsc1 = $gsc2 = $dc1 = $dc2 = 0;
@@ -233,7 +200,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
         }
         // A questo punto avrai aggiornato tutte le statistiche relative alle due squadre ($squadra1 e $squadra2)            
         ?>
-        <div class="row g-4">
+        <div class="row mb-4">
             <!-- Card per la prima squadra -->
             <div class="col-lg-6 col-12">
                 <div class="card shadow-sm border-light rounded">
@@ -416,6 +383,40 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                 </div>
             </div>
         </div>
+        <table class="table table-striped table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Competizione</th>
+                    <th>Giornata</th>
+                    <th>Partita</th>
+                    <th>Risultato</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($scontriDiretti as $scontro): ?>
+                    <?php
+                    $partita = $scontro['partita']; // Dettagli della partita
+                    $competizioneId = $scontro['competizione']; // ID della competizione
+                    ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($competizioneId); ?></td>
+                        <td><?php echo htmlspecialchars($partita->giornata); ?></td>
+                        <td><?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra1)); ?> vs
+                            <?php echo htmlspecialchars(Competizione::getArticleTitleById($partita->squadra2)); ?>
+                        </td>
+                        <td>
+                            <?php if ($partita->gol1 !== null && $partita->gol2 !== null): ?>
+                                <?php echo htmlspecialchars($partita->gol1); ?> - <?php echo htmlspecialchars($partita->gol2); ?>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+
 
     <?php else: ?>
         <p class="text-center">Nessun incontro trovato tra le due squadre.</p>
