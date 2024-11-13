@@ -57,7 +57,8 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
     <div class="row">
         <div class="col-md-8 my-3">
             <?php if ($this->params->get('show_title')): ?>
-                <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;border-radius:50px;">
+                <div class="com-content-article__header  text-center"
+                    style="background-color: <?php echo $color1; ?>;border-radius:50px;">
                     <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;">
                         <?php echo $this->escape($this->item->title); ?>
                     </h1>
@@ -104,10 +105,11 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
     </div>
 
     <div class="row">
-        
+
         <?php
-        $c = Competizione::getAllCompetizioni($id, $userId);
-        if ($c!=null) echo '<h2 class="text-center">Competizioni</h2>';
+        $c = Competizione::getAllCompetizioni($id, $userId, 0);
+        if ($c != null)
+            echo '<h2 class="text-center">Competizioni</h2>';
         for ($i = 0; $i < count($c); $i++) {
             $competizione = Competizione::getCompetizioneById($c[$i], $userId);
             echo "
@@ -136,7 +138,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 data-bs-parent="#archivioAccordion">
                 <div class="accordion-body">
                     <?php
-                    $c = Competizione::getAllCompetizioni($id, $userId);
+                    $c = Competizione::getAllCompetizioni($id, $userId, 0);
                     echo '<div class="row text-center">';
                     for ($i = 0; $i < count($c); $i++) {
                         $tablePartite = Competizione::getTablePartite($c[$i]);
@@ -196,104 +198,191 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 data-bs-parent="#statisticheAccordion">
                 <div class="accordion-body">
                     <?php
-                    $c = Competizione::getAllCompetizioni($id, $userId);
-                    $campWin = $elimWin = $countpartite = 0;
-                    $vc = $nc = $pc = $gfc = $gsc = $vt = $nt = $pt = $gft = $gst = 0;
-                    for ($i = 0; $i < count($c); $i++) {
-                        $tableStatistiche = Competizione::getTableStatistiche($c[$i]);
-                        $tablePartite = Competizione::getTablePartite($c[$i]);
-                        $countpartite += count(Competizione::getPartitePerSquadra($id, $tablePartite));
-                        $stats = Competizione::getStats($tableStatistiche, $id);
-                        $vc += $stats[0]->VC;
-                        $nc += $stats[0]->NC;
-                        $pc += $stats[0]->PC;
-                        $gfc += $stats[0]->GFC;
-                        $gsc += $stats[0]->GSC;
-                        $vt += $stats[0]->VT;
-                        $nt += $stats[0]->NT;
-                        $pt += $stats[0]->PT;
-                        $gft += $stats[0]->GFT;
-                        $gst += $stats[0]->GST;
-                        $competizione = Competizione::getCompetizioneById($c[$i], $userId);
-                        $mod = $competizione->modalita;
-                        $winner = Competizione::checkWinner($tablePartite, $tableStatistiche, $id, $mod);
-                        if ($mod === 68 && $winner)
-                            $campWin++;
-                        elseif ($mod === 69 && $winner)
-                            $elimWin++;
-                    }
-                    $gc = $vc + $nc + $pc;
-                    $gt = $vt + $nt + $pt;
-                    $dc = $gfc - $gsc;
-                    $dt = $gft - $gst;
-                    $v = $vc + $vt;
-                    $n = $nc + $nt;
-                    $p = $pc + $pt;
-                    $gf = $gfc + $gft;
-                    $gs = $gsc + $gst;
-                    $d = $dc + $dt;
-                    if ($d > 0)
-                        $d = "<span style='color:limegreen'>+" . $d . "</span>";
-                    elseif ($d < 0)
-                        $d = "<span style='color:crimson'>" . $d . "</span>";
-                    if ($dc > 0)
-                        $dc = "<span style='color:limegreen'>+" . $dc . "</span>";
-                    elseif ($dc < 0)
-                        $dc = "<span style='color:crimson'>" . $dc . "</span>";
-                    if ($dt > 0)
-                        $dt = "<span style='color:limegreen'>+" . $dt . "</span>";
-                    elseif ($dt < 0)
-                        $dt = "<span style='color:crimson'>" . $dt . "</span>";
-                    if ($campWin > 0)
-                        $campWin = "<span style='color:chartreuse'>" . $campWin . "</span>";
-                    if ($elimWin > 0)
-                        $elimWin = "<span style='color:chartreuse'>" . $elimWin . "</span>";
-                    // Array associativo con le etichette e i valori
-                    $record = [
-                        'Campionati Vinti' => $campWin,
-                        'Coppe Vinte' => $elimWin,
-                        'Giocate Totali' => $countpartite,
-                        'Vinte Totali' => "<span style='color:yellowgreen'>" . $v . "</span>",
-                        'Pareggiate Totali' => "<span style='color:orange'>" . $n . "</span>",
-                        'Perse Totali' => "<span style='color:orangered'>" . $p . "</span>",
-                        'Gol Fatti Totali' => "<span style='color:green'>" . $gf . "</span>",
-                        'Gol Subiti Totali' => "<span style='color:red'>" . $gs . "</span>",
-                        'Differenza Reti Totale' => $d,
-                        'Giocate Casa' => $gc,
-                        'Vinte Casa' => "<span style='color:yellowgreen'>" . $vc . "</span>",
-                        'Pareggiate Casa' => "<span style='color:orange'>" . $nc . "</span>",
-                        'Perse Casa' => "<span style='color:orangered'>" . $pc . "</span>",
-                        'Gol Fatti Casa' => "<span style='color:green'>" . $gfc . "</span>",
-                        'Gol Subiti Casa' => "<span style='color:red'>" . $gsc . "</span>",
-                        'Differenza Reti Casa' => $dc,
-                        'Giocate Trasferta' => $gt,
-                        'Vinte Trasferta' => "<span style='color:yellowgreen'>" . $vt . "</span>",
-                        'Pareggiate Trasferta' => "<span style='color:orange'>" . $nt . "</span>",
-                        'Perse Trasferta' => "<span style='color:orangered'>" . $pt . "</span>",
-                        'Gol Fatti Trasferta' => "<span style='color:green'>" . $gft . "</span>",
-                        'Gol Subiti Trasferta' => "<span style='color:red'>" . $gst . "</span>",
-                        'Differenza Reti Trasferta' => $dt
+                    $modalitaArray = [68, 69, 70];
+                    $totali = [
+                        'Win' => 0,
+                        'comp' => 0,
+                        'countpartite' => 0,
+                        'vc' => 0,
+                        'nc' => 0,
+                        'pc' => 0,
+                        'gfc' => 0,
+                        'gsc' => 0,
+                        'vt' => 0,
+                        'nt' => 0,
+                        'pt' => 0,
+                        'gft' => 0,
+                        'gst' => 0,
                     ];
+                    $recordPerModalita = [];
+
+                    foreach ($modalitaArray as $mod) {
+                        $Win = $countpartite = 0;
+                        $vc = $nc = $pc = $gfc = $gsc = $vt = $nt = $pt = $gft = $gst = 0;
+                        $comp = 0;
+                        $c = Competizione::getAllCompetizioni($id, $userId, $mod);
+                        for ($i = 0; $i < count($c); $i++) {
+                            $tableStatistiche = Competizione::getTableStatistiche($c[$i]);
+                            $tablePartite = Competizione::getTablePartite($c[$i]);
+                            $countpartite += count(Competizione::getPartitePerSquadra($id, $tablePartite));
+                            $stats = Competizione::getStats($tableStatistiche, $id);
+                            $comp++;
+                            // Accumula i valori statistici per la modalità corrente
+                            $vc += $stats[0]->VC;
+                            $nc += $stats[0]->NC;
+                            $pc += $stats[0]->PC;
+                            $gfc += $stats[0]->GFC;
+                            $gsc += $stats[0]->GSC;
+                            $vt += $stats[0]->VT;
+                            $nt += $stats[0]->NT;
+                            $pt += $stats[0]->PT;
+                            $gft += $stats[0]->GFT;
+                            $gst += $stats[0]->GST;
+
+                            $competizione = Competizione::getCompetizioneById($c[$i], $userId);
+                            $winner = Competizione::checkWinner($tablePartite, $tableStatistiche, $id, $mod);
+                            if ($winner)
+                                $Win++;
+                        }
+
+                        // Calcolo i totali della modalità
+                        $gc = $vc + $nc + $pc;
+                        $gt = $vt + $nt + $pt;
+                        $dc = $gfc - $gsc;
+                        $dt = $gft - $gst;
+                        $d = $dc + $dt;
+
+                        // Memorizza i valori per la modalità corrente
+                        $recordPerModalita[$mod] = [
+                            'Competizioni Vinte' => $Win,
+                            'Competizioni Giocate' => $comp,
+                            //Totale
+                            'Giocate Totali' => $countpartite,
+                            'Vinte Totali' => $vc + $vt,
+                            'Pareggiate Totali' => $nc + $nt,
+                            'Perse Totali' => $pc + $pt,
+                            'Gol Fatti Totali' => $gfc + $gft,
+                            'Gol Subiti Totali' => $gsc + $gst,
+                            'Differenza Reti Totale' => $d,
+                            // Casa
+                            'Giocate Casa' => $gc,
+                            'Vinte Casa' => $vc,
+                            'Pareggiate Casa' => $nc,
+                            'Perse Casa' => $pc,
+                            'Gol Fatti Casa' => $gfc,
+                            'Gol Subiti Casa' => $gsc,
+                            'Differenza Reti Casa' => $dc,
+                            //Trasferta
+                            'Giocate Trasferta' => $gt,
+                            'Vinte Trasferta' => $vt,
+                            'Pareggiate Trasferta' => $nt,
+                            'Perse Trasferta' => $pt,
+                            'Gol Fatti Trasferta' => $gft,
+                            'Gol Subiti Trasferta' => $gst,
+                            'Differenza Reti Trasferta' => $dt,
+                        ];
+
+                        // Somma ai totali generali
+                        foreach ($totali as $key => &$value) {
+                            $value += ${$key};
+                        }
+                    }
+                    // Array per i totali
+                    $recordTotali = [
+                        'Competizioni Vinte' => $totali['Win'],
+                        'Competizioni Giocate' => $totali['comp'],
+                        //Totale
+                        'Giocate Totali' => $totali['countpartite'],
+                        'Vinte Totali' => $totali['vc'] + $totali['vt'],
+                        'Pareggiate Totali' => $totali['nc'] + $totali['nt'],
+                        'Perse Totali' => $totali['pc'] + $totali['pt'],
+                        'Gol Fatti Totali' => $totali['gfc'] + $totali['gft'],
+                        'Gol Subiti Totali' => $totali['gsc'] + $totali['gst'],
+                        'Differenza Reti Totale' => $totali['gfc'] - $totali['gsc'] + $totali['gft'] - $totali['gst'],
+                        // Casa
+                        'Giocate Casa' => $totali['vc'] + $totali['nc'] + $totali['pc'],
+                        'Vinte Casa' => $totali['vc'],
+                        'Pareggiate Casa' => $totali['nc'],
+                        'Perse Casa' => $totali['pc'],
+                        'Gol Fatti Casa' => $totali['gfc'],
+                        'Gol Subiti Casa' => $totali['gft'],
+                        'Differenza Reti Casa' => $totali['gfc'] - $totali['gsc'],
+                        //Trasferta
+                        'Giocate Trasferta' => $totali['vt'] + $totali['nt'] + $totali['pt'],
+                        'Vinte Trasferta' => $totali['vt'],
+                        'Pareggiate Trasferta' => $totali['nt'],
+                        'Perse Trasferta' => $totali['pt'],
+                        'Gol Fatti Trasferta' => $totali['gft'],
+                        'Gol Subiti Trasferta' => $totali['gst'],
+                        'Differenza Reti Trasferta' => $totali['gft'] - $totali['gst'],
+                    ];
+                    $i = 0;
                     ?>
 
                     <table class="table table-striped table-bordered text-center">
                         <thead>
                             <tr>
                                 <th colspan="2">Record</th>
+                                <th>Campionato</th>
+                                <th>Eliminazione</th>
+                                <th>Champions</th>
+                                <th>Totale</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($record as $label => $value): ?>
+                            <?php foreach ($recordTotali as $label => $value): ?>
+                                <?php
+                                $color = "";
+                                if ($i === 3 || $i === 10 || $i === 17)
+                                    $color = "Green";
+                                elseif ($i === 4 || $i === 11 || $i === 18)
+                                    $color = "Orange";
+                                elseif ($i === 5 || $i === 12 || $i === 19)
+                                    $color = "Red";
+                                elseif ($i === 6 || $i === 13 || $i === 20)
+                                    $color = "Lime";
+                                elseif ($i === 7 || $i === 14 || $i === 21)
+                                    $color = "LightCoral";
+                                ?>
                                 <tr>
-                                    <td><?php echo $label; ?></td>
-                                    <td class="fw-bold"><?php echo $value; ?></td>
+                                    <?php
+                                    if($i===0) echo "<td class='align-middle fw-bold' rowspan='2'>Generale</td>";
+                                    elseif($i===2) echo "<td class='align-middle fw-bold' rowspan='7'>Totale</td>";
+                                    elseif($i===9) echo "<td class='align-middle fw-bold' rowspan='7'>Casa</td>";
+                                    elseif($i===16) echo "<td class='align-middle fw-bold' rowspan='7'>Trasferta</td>";
+                                    ?>
+                                    <td class="fw-bold"><?php echo $label; ?></td>
+                                    <?php foreach ($modalitaArray as $mod): ?>
+                                        <?php
+                                        if ($recordPerModalita[$mod][$label] < 0 && ($i === 8 || $i === 15 || $i === 22))
+                                            $color = "Crimson";
+                                        elseif ($recordPerModalita[$mod][$label] > 0 && ($i === 8 || $i === 15 || $i === 22))
+                                            $color = "Chartreuse";
+                                        if ($mod == 69 && $label == "Competizioni Vinte") {
+                                            echo "<td class='fw-bold' colspan='2' style='color:" . $color . ";'>" . $recordPerModalita[$mod][$label] . "</td>";
+                                        } elseif ($mod == 70 && $label == "Competizioni Vinte") {
+                                            echo "";
+                                        } else {
+                                            echo "<td class='fw-bold' style='color:" . $color . ";'>" . $recordPerModalita[$mod][$label] . "</td>";
+                                        }
+                                        ?>
+                                    <?php endforeach; ?>
+                                    <?php
+                                    if ($recordTotali[$label] < 0 && ($i === 8 || $i === 15 || $i === 22))
+                                        $color = "Crimson";
+                                    elseif ($recordTotali[$label] > 0 && ($i === 8 || $i === 15 || $i === 22))
+                                        $color = "Chartreuse";
+                                    ?>
+                                    <td class="fw-bold" style='color:<?php echo $color; ?>;'>
+                                        <?php echo $recordTotali[$label]; ?>
+                                    </td>
                                 </tr>
+                                <?php $i++; ?>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-
-
                 </div>
+
             </div>
         </div>
     </div>

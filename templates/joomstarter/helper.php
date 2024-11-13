@@ -2039,9 +2039,11 @@ abstract class Competizione
     {
         sort($squadre);
         $squadrenew = array_map('strval', $squadre);
+        $newname = explode("-", $nome);
+        $joinedName = implode("-", array_slice($newname, 1));
         $data = array(
             'user_id' => $user, // ID dell'utente
-            'nome_competizione' => $nome . " - Fase Finale", // Nome della competizione
+            'nome_competizione' => $joinedName . " - Fase Finale", // Nome della competizione
             'modalita' => 69, // Modalità
             'gironi' => 0, // Numero di gironi
             'squadre' => $squadrenew, // ID delle squadre
@@ -2077,16 +2079,26 @@ abstract class Competizione
         return $count > 0;
     }
 
-    public static function getAllCompetizioni($squadraId, $user)
+    public static function getAllCompetizioni($squadraId, $user, $mod)
     {
+
         // Ottieni il database
         $db = Factory::getDbo();
+        if ($mod === 0) {
+            // Crea la query
+            $query = $db->getQuery(true)
+                ->select('id')
+                ->from($db->quoteName('#__competizioni'))
+                ->where($db->quoteName('finita') . " = 1");
+        } else {
+            // Crea la query
+            $query = $db->getQuery(true)
+                ->select('id')
+                ->from($db->quoteName('#__competizioni'))
+                ->where($db->quoteName('finita') . " = 1")
+                ->where($db->quoteName('modalita') . " = " . $mod);
+        }
 
-        // Crea la query
-        $query = $db->getQuery(true)
-            ->select('id')
-            ->from($db->quoteName('#__competizioni'))
-            ->where($db->quoteName('finita') . " = 1");
 
         // Esegui la query
         $db->setQuery($query);
