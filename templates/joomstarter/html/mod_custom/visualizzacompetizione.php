@@ -53,13 +53,33 @@ $userId = $user->id;
             echo '<h1 class="text-center fw-bold h1 mb-5">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
             ?>
             <form method="post" action="">
-                <div class="d-flex justify-content-between p-2 fixed-buttons">
-                    <button type="submit" name="module_id" value="116" class="btn btn-success mx-3">Calendario</button>
-                    <button type="submit" name="module_id" value="117" class="btn btn-success mx-3">Classifica</button>
-                    <button type="submit" name="module_id" value="118" class="btn btn-success mx-3">Tabellone</button>
-                    <button type="submit" name="module_id" value="119" class="btn btn-success mx-3">Statistiche</button>
-                    <button type="submit" name="simulation" class="btn btn-warning mx-3" <?php echo $disabled; ?>>Simula</button>
-                    <button type="submit" name="elimination" class="btn btn-danger mx-3" <?php echo $disabled; ?>>Elimina</button>
+                <div class="container p-2 fixed-lg mybar">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="module_id" value="116"
+                                    class="btn btn-success w-100">Calendario</button>
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="module_id" value="117"
+                                    class="btn btn-success w-100">Classifica</button>
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="module_id" value="118"
+                                    class="btn btn-success w-100">Tabellone</button>
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="module_id" value="119"
+                                    class="btn btn-success w-100">Statistiche</button>
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="simulation" class="btn btn-warning w-100" <?php echo $disabled; ?>>Simula</button>
+                            </div>
+                            <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
+                                <button type="submit" name="elimination" class="btn btn-danger w-100" <?php echo $disabled; ?>>Elimina</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
 

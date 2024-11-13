@@ -19,7 +19,7 @@ $groups = $user->getAuthorisedViewLevels();
 ?>
 
 <div class="table-responsive category-table-container">
-    <div class="container mt-5 w-25 text-center">
+    <div class="container mt-5 w-25 text-center" style="min-width: 250px;">
         <div class="row">
             <?php foreach ($this->children[$this->category->id] as $id => $child) : ?>
                 <?php if (in_array($child->access, $groups)) : ?>

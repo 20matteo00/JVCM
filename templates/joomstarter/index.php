@@ -125,7 +125,7 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
 
     <?php // Generate the main content area of the website 
     ?>
-    <div class="siteBody">
+    <div class="siteBody mb-5">
         <div class="container">
             <?php // Load Breadcrumbs Module if Module Exists 
             ?>

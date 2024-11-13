@@ -46,21 +46,37 @@ if (isset($_GET['id'])) {
         $gir = true;
     }
     ?>
-    <div class="container classifica">
+    <div class="container classifica mybar">
         <form method="post" action="">
-            <div class="d-flex justify-content-around p-2">
-                <input type="hidden" name="module_id" value="117">
-                <button type="submit" name="Totale" class="btn btn-info">Totale</button>
-                <button type="submit" name="Andamento" class="btn btn-info">Andamento</button>
-                <button type="submit" name="Casa" class="btn btn-info">Casa</button>
-                <button type="submit" name="Trasferta" class="btn btn-info">Trasferta</button>
-                <button type="submit" name="Andata" class="btn btn-info">Andata</button>
-                <button type="submit" name="Ritorno" class="btn btn-info">Ritorno</button>
-                <?php if ($mod === 70)
-                    echo '<button type="submit" name="Gironi" class="btn btn-info">Gironi</button>' ?>
+            <div class="container p-2">
+                <div class="row justify-content-center">
+                    <input type="hidden" name="module_id" value="117">
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Totale" class="btn btn-info w-100">Totale</button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Andamento" class="btn btn-info w-100">Andamento</button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Casa" class="btn btn-info w-100">Casa</button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Trasferta" class="btn btn-info w-100">Trasferta</button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Andata" class="btn btn-info w-100">Andata</button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-auto mb-2">
+                        <button type="submit" name="Ritorno" class="btn btn-info w-100">Ritorno</button>
+                    </div>
+                    <?php if ($mod === 70): ?>
+                        <div class="col-6 col-md-4 col-lg-auto mb-2">
+                            <button type="submit" name="Gironi" class="btn btn-info w-100">Gironi</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            </form>
-
+            </div>
+        </form>
         <?php if (!empty($classifica) && !$checkgol): ?>
             <div class="table-responsive my-5">
                 <table class="table table-striped table-bordered text-center category-table">

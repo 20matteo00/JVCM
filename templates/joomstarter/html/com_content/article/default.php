@@ -55,7 +55,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
         content="<?php echo ($this->item->language === '*') ? $app->get('language') : $this->item->language; ?>">
 
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-8 my-3">
             <?php if ($this->params->get('show_title')): ?>
                 <div class="com-content-article__header  text-center" style="background-color: <?php echo $color1; ?>;">
                     <h1 class="com-content-article__title" style="color: <?php echo $color2; ?>;">
@@ -94,7 +94,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             <br>
             <span class="h4 fw-bold"><a class="campionato" href="/jvcm/index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
         </div>
-        <div class="col-md-4  text-center">
+        <div class="col-md-4  text-center my-3">
             <div class="com-content-article__image">
                 <img id="articleImage" src="<?php echo htmlspecialchars($imageSrc); ?>"
                     alt="<?php echo htmlspecialchars($this->item->title); ?>">

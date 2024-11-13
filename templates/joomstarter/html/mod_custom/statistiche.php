@@ -63,15 +63,24 @@ if (isset($_GET['id'])) {
         $view = 'Generali'; // Default view if none is set
     }
     ?>
-    <div class="container statistiche">
+    <div class="container statistiche mybar">
         <form method="post" action="">
-            <div class="d-flex justify-content-around p-2">
-                <input type="hidden" name="module_id" value="119">
-                <button type="submit" name="Generali" class="btn btn-info">Generali</button>
-                <button type="submit" name="Individuali" class="btn btn-info">Individuali</button>
-                <button type="submit" name="Elenco" class="btn btn-info">Elenco Partite</button>
+            <div class="container p-2">
+                <div class="row justify-content-center">
+                    <input type="hidden" name="module_id" value="119">
+                    <div class="col-6 col-md-4 mb-2">
+                        <button type="submit" name="Generali" class="btn btn-info w-100">Generali</button>
+                    </div>
+                    <div class="col-6 col-md-4 mb-2">
+                        <button type="submit" name="Individuali" class="btn btn-info w-100">Individuali</button>
+                    </div>
+                    <div class="col-6 col-md-4 mb-2">
+                        <button type="submit" name="Elenco" class="btn btn-info w-100">Elenco Partite</button>
+                    </div>
+                </div>
             </div>
         </form>
+
 
         <?php if ($view === 'Individuali' || $view === 'Elenco'): ?>
             <div class="text-center my-5">
@@ -83,7 +92,7 @@ if (isset($_GET['id'])) {
                         $color1 = !empty($cf[1]) && isset($cf[1]->value) ? $cf[1]->value : '#000000'; // Default to black
                         $color2 = !empty($cf[2]) && isset($cf[2]->value) ? $cf[2]->value : '#ffffff'; // Default to white
                         ?>
-                        <div class="col-2 my-3">
+                        <div class="col-12 col-md-6 col-lg-2 my-3" style="min-width:150px;">
                             <form action="" method="post">
                                 <input type="hidden" name="squadra" value="<?php echo $squadra; ?>">
                                 <input type="hidden" name="module_id" value="119">
