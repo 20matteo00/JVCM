@@ -66,7 +66,7 @@ if (isset($_GET['id'])) {
     <div class="container statistiche mybar">
         <form method="post" action="">
             <div class="container p-2">
-                <div class="row justify-content-center">
+                <div class="row justify-content-between">
                     <input type="hidden" name="module_id" value="119">
                     <div class="col-6 col-md-4 mb-2">
                         <button type="submit" name="Generali" class="btn btn-info w-100">Generali</button>

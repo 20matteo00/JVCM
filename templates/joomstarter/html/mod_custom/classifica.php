@@ -49,7 +49,7 @@ if (isset($_GET['id'])) {
     <div class="container classifica mybar">
         <form method="post" action="">
             <div class="container p-2">
-                <div class="row justify-content-center">
+                <div class="row justify-content-between">
                     <input type="hidden" name="module_id" value="117">
                     <div class="col-6 col-md-4 col-lg-auto mb-2">
                         <button type="submit" name="Totale" class="btn btn-info w-100">Totale</button>

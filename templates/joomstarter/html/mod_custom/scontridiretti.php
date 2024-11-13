@@ -13,8 +13,9 @@ $scontriDiretti = [];
 if (isset($_POST['submit'])) {
     $squadra1 = (int) $_POST['squadra1'];
     $squadra2 = (int) $_POST['squadra2'];
+    $luogo = (int) $_POST['luogo'];
     $modalita = (int) $_POST['modalita'];
-    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $modalita, $userId);
+    $scontriDiretti = Competizione::getScontriDiretti($squadra1, $squadra2, $luogo,  $modalita, $userId);
 } elseif (isset($_POST['reset'])) {
     $_POST = [];
 }
@@ -28,7 +29,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
         <div class="container">
             <div class="row justify-content-center">
                 <!-- Campo per la prima squadra -->
-                <div class="col-md-5 col-12 mb-3">
+                <div class="col-md-3 col-12 mb-3">
                     <label for="squadra1" class="form-label fs-5 fw-bold">Squadra 1</label>
                     <select name="squadra1" id="squadra1" class="form-select form-select-lg">
                         <?php
@@ -46,7 +47,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                 </div>
 
                 <!-- Campo per la seconda squadra -->
-                <div class="col-md-5 col-12 mb-3">
+                <div class="col-md-3 col-12 mb-3">
                     <label for="squadra2" class="form-label fs-5 fw-bold">Squadra 2</label>
                     <select name="squadra2" id="squadra2" class="form-select form-select-lg">
                         <?php
@@ -62,22 +63,45 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
                     </select>
                 </div>
 
+                <!-- Campo per il luogo -->
+                <div class="col-md-3 col-12 mb-3">
+                    <label for="luogo" class="form-label fs-5 fw-bold">Luogo</label>
+                    <select name="luogo" id="luogo" class="form-select form-select-lg">
+                        <?php
+                        $selectedluogo = isset($_POST['luogo']) ? (int) $_POST['luogo'] : 0;
+                        $casa = $trasferta = "";
+                        if ($selectedluogo === 1) {
+                            $casa = "selected";
+                        } elseif ($selectedluogo === 2) {
+                            $trasferta = "selected";
+                        }
+                        ?>
+                        <option value="0" <?php echo ($selectedluogo === 0) ? 'selected' : ''; ?>>Tutto</option>
+                        <option value="1" <?php echo $casa; ?>>Casa</option>
+                        <option value="2" <?php echo $trasferta; ?>>Trasferta</option>
+
+                    </select>
+                </div>
+
                 <!-- Campo per la modalita -->
-                <div class="col-md-2 col-12 mb-3">
+                <div class="col-md-3 col-12 mb-3">
                     <label for="modalita" class="form-label fs-5 fw-bold">Modalita</label>
                     <select name="modalita" id="modalita" class="form-select form-select-lg">
                         <?php
                         $selectedModalita = isset($_POST['modalita']) ? (int) $_POST['modalita'] : 0;
-                        $casa = $trasferta = "";
-                        if ($selectedModalita === 1) {
-                            $casa = "selected";
-                        } elseif ($selectedModalita === 2) {
-                            $trasferta = "selected";
+                        $camp = $elim = $champ = "";
+                        if ($selectedModalita === 68) {
+                            $camp = "selected";
+                        } elseif ($selectedModalita === 69) {
+                            $elim = "selected";
+                        } elseif ($selectedModalita === 70) {
+                            $champ = "selected";
                         }
                         ?>
                         <option value="0" <?php echo ($selectedModalita === 0) ? 'selected' : ''; ?>>Tutto</option>
-                        <option value="1" <?php echo $casa; ?>>Casa</option>
-                        <option value="2" <?php echo $trasferta; ?>>Trasferta</option>
+                        <option value="68" <?php echo $camp; ?>>Campionato</option>
+                        <option value="69" <?php echo $elim; ?>>Eliminazione</option>
+                        <option value="70" <?php echo $champ; ?>>Champions</option>
 
                     </select>
                 </div>
@@ -203,7 +227,7 @@ $squadre = Competizione::getArticlesFromSubcategories(8);
         }
         $class = "";
         $col = "";
-        if ($modalita === 1 || $modalita === 2) {
+        if ($luogo === 1 || $luogo === 2) {
             $class = "d-none";
             $col = "col-md-12";
         }

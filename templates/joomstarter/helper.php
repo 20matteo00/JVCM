@@ -2092,19 +2092,27 @@ abstract class Competizione
         return $c;
     }
 
-    public static function getScontriDiretti($squadra1, $squadra2, $modalita, $user)
+    public static function getScontriDiretti($squadra1, $squadra2, $luogo, $modalita, $user)
     {
         // Ottieni il database
         $db = Factory::getDbo();
 
         // Crea la query per trovare le partite tra le due squadre
-        // Crea la query per ottenere tutte le competizioni
-        $query = $db->getQuery(true)
-            ->select('*') // Seleziona tutte le competizioni
-            ->from($db->quoteName('#__competizioni'))
-            ->where($db->quoteName('user_id') . ' = ' . $user)
-            ->where($db->quoteName('finita') . ' = 1');
-
+        if ($modalita === 0) {
+            $query = $db->getQuery(true)
+                ->select('*') // Seleziona tutte le competizioni
+                ->from($db->quoteName('#__competizioni'))
+                ->where($db->quoteName('user_id') . ' = ' . $user)
+                ->where($db->quoteName('finita') . ' = 1');
+        } else {
+            // Crea la query per ottenere tutte le competizioni
+            $query = $db->getQuery(true)
+                ->select('*') // Seleziona tutte le competizioni
+                ->from($db->quoteName('#__competizioni'))
+                ->where($db->quoteName('user_id') . ' = ' . $user)
+                ->where($db->quoteName('finita') . ' = 1')
+                ->where($db->quoteName('modalita') . ' = ' . $modalita);
+        }
         // Esegui la query
         $db->setQuery($query);
 
@@ -2119,7 +2127,7 @@ abstract class Competizione
             $tablePartite = self::getTablePartite($c->id);
             $partite = self::getPartite($tablePartite);
             foreach ($partite as $partita) {
-                if ($modalita === 0) {
+                if ($luogo === 0) {
                     // Controlla se la partita coinvolge squadra1 e squadra2
                     if (
                         ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) ||
@@ -2131,18 +2139,18 @@ abstract class Competizione
                             'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
                         ];
                     }
-                }elseif ($modalita === 1) {
+                } elseif ($luogo === 1) {
                     // Controlla se la partita coinvolge squadra1 e squadra2
-                    if ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2){
+                    if ($partita->squadra1 == $squadra1 && $partita->squadra2 == $squadra2) {
                         // Aggiungi la partita agli scontri diretti
                         $scontriDiretti[] = [
                             'partita' => $partita,
                             'competizione' => $c->nome_competizione // Aggiungi l'ID della competizione
                         ];
                     }
-                }elseif ($modalita === 2) {
+                } elseif ($luogo === 2) {
                     // Controlla se la partita coinvolge squadra1 e squadra2
-                    if ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1){
+                    if ($partita->squadra1 == $squadra2 && $partita->squadra2 == $squadra1) {
                         // Aggiungi la partita agli scontri diretti
                         $scontriDiretti[] = [
                             'partita' => $partita,

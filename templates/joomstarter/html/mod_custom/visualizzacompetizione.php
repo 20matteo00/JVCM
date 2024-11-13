@@ -53,9 +53,9 @@ $userId = $user->id;
             echo '<h1 class="text-center fw-bold h1 mb-5">' . htmlspecialchars($competizione->nome_competizione) . '</h1>';
             ?>
             <form method="post" action="">
-                <div class="container p-2 fixed-lg mybar">
+                <div class="container p-2 fixed-lg">
                     <div class="container">
-                        <div class="row justify-content-center">
+                        <div class="row justify-content-between mybar">
                             <div class="col-6 col-sm-4 col-md-3 col-lg-2 mb-2">
                                 <button type="submit" name="module_id" value="116"
                                     class="btn btn-success w-100">Calendario</button>
