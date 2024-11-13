@@ -332,7 +332,7 @@ abstract class Competizione
         $values = [
             (int) $nextId, // Usa il primo ID disponibile
             (int) $data['user_id'],
-            $db->quote($data['nome_competizione']),
+            $db->quote($nextId . " - " . $data['nome_competizione']),
             (int) $data['modalita'],
             (int) $data['gironi'],
             (int) $data['andata_ritorno'],
