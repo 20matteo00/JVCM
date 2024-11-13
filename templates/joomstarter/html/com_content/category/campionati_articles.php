@@ -8,7 +8,9 @@ use Joomla\CMS\Helper\TagsHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomstarter\Helpers\Competizione;
-
+// Ottieni l'ID dell'utente corrente
+$user = Factory::getUser();
+$userId = $user->id;
 $categoryId = $this->category->id; // ID della categoria corrente
 $articles = Competizione::getArticlesFromCategory($categoryId);
 $categoryTitle = Competizione::getCategoryTitleById($categoryId); // Carica solo il valore del titolo
@@ -64,7 +66,8 @@ if ($categoryTitle) {
                         <td class="category-items-cell">
                             <form action="/jvcm/index.php/modifica-squadra" method="get">
                                 <input type="hidden" value="<?php echo $article->id; ?>" name="id">
-                                <button type="submit" class="btn btn-warning btn-sm" name="modifica" value="modifica">Modifica</button>
+                                <button type="submit" class="btn btn-warning btn-sm" name="modifica"
+                                    value="modifica">Modifica</button>
                             </form>
                         </td>
                     </tr>
@@ -75,8 +78,37 @@ if ($categoryTitle) {
 <?php endif; ?>
 
 
+<form action="" method="post" class="text-center">
+    <input type="hidden" value="<?php echo $categoryId; ?>" name="catid">
+    <button type="submit" class="btn btn-success btn" name="simula_campionato">Simula Campionato</button>
+</form>
 <?php
-if (isset($_POST['modifica'])) {
-    echo "ciao";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simula_campionato'])) {
+    $catid = $_POST['catid'];
+    //$squadre = json_encode($squadre);
+    $squadre = Competizione::getArticlesFromCategory($catid);
+    $partecipanti = count($squadre);
+    if ($partecipanti < 2) return;
+    $squad = [];
+    foreach ($squadre as $squadra) {
+        $squad[] = $squadra->id;
+    }
+    $squadre = array_map('strval', $squad);
+    $data = array(
+        'user_id' => $userId, // ID dell'utente
+        'nome_competizione' => $categoryTitle . " - Simulazione", // Nome della competizione
+        'modalita' => 68, // Modalità
+        'gironi' => 0, // Numero di gironi
+        'squadre' => $squadre, // ID delle squadre
+        'andata_ritorno' => 1, // Modalità andata/ritorno
+        'partecipanti' => $partecipanti, // Numero di partecipanti
+        'fase_finale' => 0, // Stato fase finale
+        'finita' => 0, // Stato finita
+    );
+    Competizione::insertCompetizione($data);
+
+    // Ricarica la pagina
+    header("Location: /jvcm/index.php/competizioni-in-corso");
+    exit;
 }
 ?>

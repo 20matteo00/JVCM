@@ -23,7 +23,6 @@ $competizioni = Competizione::getCompetizioniPerUtente($userId);
 
 
 $pagconsentite = [106, 107];
-
 if (in_array($menuItemId, $pagconsentite)) {
     // Visualizza i risultati in un formato HTML
     if (!empty($competizioni)) { ?>
@@ -144,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
                 //$squadre = json_encode($squadre);
                 $data = array(
                     'user_id' => $result->user_id, // ID dell'utente
-                    'nome_competizione' => $result->nome_competizione . " - Copia", // Nome della competizione
+                    'nome_competizione' => $result->nome_competizione, // Nome della competizione
                     'modalita' => $result->modalita, // Modalità
                     'gironi' => $result->gironi, // Numero di gironi
                     'squadre' => $squadre, // ID delle squadre
@@ -159,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             // Gestisci gli errori
             echo 'Errore nel recupero dei dati: ' . $e->getMessage();
         }
-
+        
         // Ricarica la pagina
         header("Location: /jvcm/index.php/competizioni-in-corso" );
         exit;
