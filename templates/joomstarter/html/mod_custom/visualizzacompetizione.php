@@ -125,7 +125,7 @@ $userId = $user->id;
                 exit;
             }
             if (isset($_POST['elimination'])) {
-                $module_ID = 116;
+                $module_ID = $_GET['module_id'];
                 $db = Factory::getDbo();
 
                 // Prepara la query per impostare a NULL i gol della giornata specificata
@@ -204,8 +204,9 @@ $userId = $user->id;
             <?php
         }
         if (isset($_POST['closecomp'])) {
+            $module_ID = $_GET['module_id'];
             Competizione::setCompetizioneFinita($idcomp);
-            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
+            header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=$module_ID");
             exit;
         }
         if (isset($_POST['fasefinale'])) {
