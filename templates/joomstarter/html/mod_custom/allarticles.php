@@ -13,14 +13,14 @@ use Joomstarter\Helpers\Competizione;
 $categoryId = 8; // ID della categoria principale
 
 // Parametri di paginazione
-$limit = Factory::getApplication()->input->getInt('limit', 10); // Limite per pagina
+$limit = Factory::getApplication()->input->getInt('limit', 40); // Limite per pagina
 $limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
 
 
 $articles = Competizione::getArticlesFromSubcategoriesPagination($categoryId, $limit, $limitstart);
 // Ottieni il numero totale di articoli per la paginazione
 $total = Competizione::getTotalArticlesFromSubcategories($categoryId);
-$pagination = new Joomla\CMS\Pagination\Pagination($total, Factory::getApplication()->input->getInt('limitstart', 0), Factory::getApplication()->input->getInt('limit', 10));
+$pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
 
 // Controlla se ci sono articoli
 if ($articles):
@@ -73,7 +73,7 @@ if ($articles):
     <p><?php echo Text::_('No articles found'); ?></p>
 <?php endif; ?>
 
-<!-- Paginazione -->
-<div class="pagination">
+<!-- Paginazione centrata con mx-auto -->
+<div class="pagination justify-content-center">
     <?php echo $pagination->getPagesLinks(); ?>
 </div>

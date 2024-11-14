@@ -22,8 +22,10 @@ $limit = 5; // Numero di competizioni per pagina
 $page = Factory::getApplication()->input->getInt('page', 1); // Pagina corrente, di default 1
 $offset = ($page - 1) * $limit;
 $finita = null;
-if($menuItemId === 106) $finita = 0;
-elseif ($menuItemId === 107) $finita = 1;
+if ($menuItemId === 106)
+    $finita = 0;
+elseif ($menuItemId === 107)
+    $finita = 1;
 // Ottieni le competizioni per l'utente con limite e offset
 $competizioni = Competizione::getCompetizioniPerUtente($userId, $finita, $limit, $offset);
 $totalCompetizioni = Competizione::countCompetizioniPerUtente($userId, $finita);
@@ -127,32 +129,34 @@ if ($totalPages > 1): ?>
             <?php if ($page > 1): ?>
                 <li class="page-item">
                     <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=1'); ?>">
-                        Inizio
+                    <span class="icon-angle-double-left" aria-hidden="true"></span>
                     </a>
                 </li>
             <?php else: ?>
                 <li class="page-item disabled">
-                    <span class="page-link">Inizio</span>
+                    <span class="page-link"><span class="icon-angle-double-left" aria-hidden="true"></span></span>
                 </li>
             <?php endif; ?>
 
             <!-- Link alla pagina precedente -->
             <?php if ($page > 1): ?>
                 <li class="page-item">
-                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page - 1)); ?>" aria-label="Precedente">
-                        <span aria-hidden="true">&laquo;</span> Precedente
+                    <a class="page-link"
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page - 1)); ?>"
+                        aria-label="Precedente">
+                        <span class="icon-angle-left" aria-hidden="true"></span>
                     </a>
                 </li>
             <?php else: ?>
                 <li class="page-item disabled">
-                    <span class="page-link">&laquo; Precedente</span>
+                    <span class="page-link"><span class="icon-angle-left" aria-hidden="true"></span></span>
                 </li>
             <?php endif; ?>
 
             <!-- Link alle pagine centrali -->
             <?php
-            $start = max(1, $page - 2);
-            $end = min($totalPages, $page + 2);
+            $start = max(1, $page - 5);
+            $end = min($totalPages, $page + 5);
 
             for ($i = $start; $i <= $end; $i++): ?>
                 <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
@@ -165,26 +169,29 @@ if ($totalPages > 1): ?>
             <!-- Link alla pagina successiva -->
             <?php if ($page < $totalPages): ?>
                 <li class="page-item">
-                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page + 1)); ?>" aria-label="Successiva">
-                        Successiva <span aria-hidden="true">&raquo;</span>
+                    <a class="page-link"
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page + 1)); ?>"
+                        aria-label="Successiva">
+                        <span class="icon-angle-right" aria-hidden="true"></span>
                     </a>
                 </li>
             <?php else: ?>
                 <li class="page-item disabled">
-                    <span class="page-link">Successiva &raquo;</span>
+                    <span class="page-link"><span class="icon-angle-right" aria-hidden="true"></span></span>
                 </li>
             <?php endif; ?>
 
             <!-- Link all'ultima pagina -->
             <?php if ($page < $totalPages): ?>
                 <li class="page-item">
-                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $totalPages); ?>">
-                        Fine
+                    <a class="page-link"
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $totalPages); ?>">
+                        <span class="icon-angle-double-right" aria-hidden="true"></span>
                     </a>
                 </li>
             <?php else: ?>
                 <li class="page-item disabled">
-                    <span class="page-link">Fine</span>
+                    <span class="page-link"><span class="icon-angle-double-right" aria-hidden="true"></span></span>
                 </li>
             <?php endif; ?>
 

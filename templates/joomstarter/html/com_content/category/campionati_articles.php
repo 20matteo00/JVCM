@@ -90,7 +90,7 @@ if ($categoryTitle) {
                 <!-- Link alla prima pagina -->
                 <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1'); ?>">Primo</a>
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1'); ?>"><span class="icon-angle-double-left" aria-hidden="true"></span></a>
                 </li>
 
                 <!-- Link alla pagina precedente -->
@@ -99,17 +99,17 @@ if ($categoryTitle) {
                         <a class="page-link"
                             href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page - 1)); ?>"
                             aria-label="Precedente">
-                            &laquo; Precedente
+                            <span class="icon-angle-left" aria-hidden="true"></span>
                         </a>
                     </li>
                 <?php else: ?>
-                    <li class="page-item disabled"><span class="page-link">&laquo; Precedente</span></li>
+                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-left" aria-hidden="true"></span></span></li>
                 <?php endif; ?>
 
                 <!-- Link pagine centrali -->
                 <?php
-                $start = max(1, $page - 2);
-                $end = min($totalPages, $page + 2);
+                $start = max(1, $page - 5);
+                $end = min($totalPages, $page + 5);
 
                 for ($i = $start; $i <= $end; $i++): ?>
                     <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
@@ -124,17 +124,17 @@ if ($categoryTitle) {
                         <a class="page-link"
                             href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page + 1)); ?>"
                             aria-label="Successiva">
-                            Successiva &raquo;
+                            <span class="icon-angle-right" aria-hidden="true"></span>
                         </a>
                     </li>
                 <?php else: ?>
-                    <li class="page-item disabled"><span class="page-link">Successiva &raquo;</span></li>
+                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-right" aria-hidden="true"></span></span></li>
                 <?php endif; ?>
 
                 <!-- Link all'ultima pagina -->
                 <li class="page-item <?php echo ($page == $totalPages) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages); ?>">Ultimo</a>
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages); ?>"><span class="icon-angle-double-right" aria-hidden="true"></span></a>
                 </li>
             </ul>
         </nav>
