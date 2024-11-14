@@ -3,6 +3,11 @@
   --bianco: white;
   --blu: blue;
 }
+/*SISTEMA*/
+.jmodedit,
+[id^="tip-"] {
+  display: none !important;
+}
 
 /*HEADER*/
 .sticky-header {
