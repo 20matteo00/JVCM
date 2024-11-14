@@ -147,6 +147,49 @@ abstract class Competizione
         return $db->loadObjectList();
     }
 
+    public static function getArticlesFromSubcategoriesPagination($categoryId, $limit, $limitstart)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+        
+        $query = $db->getQuery(true);
+
+        // Query per ottenere gli articoli delle sottocategorie della categoria specificata
+        $query->select('a.id, a.title, a.images, a.catid, a.created, c.title as category_title, f1.value as color1, f2.value as color2, f3.value as number_value')
+            ->from('#__content AS a')
+            ->join('INNER', '#__categories AS c ON a.catid = c.id')
+            ->join('LEFT', '#__fields_values AS f1 ON f1.item_id = a.id AND f1.field_id = 1') // Colore 1
+            ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
+            ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
+            ->where('c.parent_id = ' . (int) $categoryId)
+            ->order('c.id ASC, CAST(f3.value AS UNSIGNED) DESC, a.title ASC') // Ordina prima per ID categoria e poi per titolo dell'articolo
+            ->setLimit($limit, $limitstart); // Imposta il limite e l'inizio
+
+        $db->setQuery($query);
+
+        // Restituisci gli articoli come array di oggetti
+        return $db->loadObjectList();
+    }
+
+
+    public static function getTotalArticlesFromSubcategories($categoryId)
+    {
+        // Ottieni l'oggetto del database
+        $db = Factory::getDbo();
+
+        $query = $db->getQuery(true)
+            ->select('COUNT(a.id)')
+            ->from('#__content AS a')
+            ->join('INNER', '#__categories AS c ON a.catid = c.id')
+            ->where('c.parent_id = ' . (int) $categoryId);
+
+        $db->setQuery($query);
+
+        // Restituisci il numero totale di articoli
+        return $db->loadResult();
+    }
+
+
     public static function getCategoryUrlByArticleId($articleId)
     {
         // Ottieni il database
@@ -284,23 +327,34 @@ abstract class Competizione
         return $db->loadObject();
     }
 
-    public static function getCompetizioniPerUtente($userId)
+    public static function getCompetizioniPerUtente($userId, $finita, $limit = 10, $offset = 0)
     {
-        // Importa il database di Joomla
         $db = Factory::getDbo();
-
-        // Costruisci la query per selezionare i dati dalla tabella delle competizioni solo per l'utente corrente
         $query = $db->getQuery(true)
             ->select('*')
             ->from($db->quoteName('#__competizioni'))
-            ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId)); // Filtra per user_id
+            ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId))
+            ->where($db->quoteName('finita') . ' = ' . $finita)
+            ->setLimit($limit, $offset); // Aggiungi il limite e l'offset
 
-        // Imposta ed esegui la query
         $db->setQuery($query);
-
-        // Restituisci i risultati della query come un array di oggetti
         return $db->loadObjectList();
     }
+
+    public static function countCompetizioniPerUtente($userId, $finita)
+    {
+        $db = Factory::getDbo();
+        $query = $db->getQuery(true)
+            ->select('COUNT(*)')
+            ->from($db->quoteName('#__competizioni'))
+            ->where($db->quoteName('user_id') . ' = ' . $db->quote($userId))
+            ->where($db->quoteName('finita') . ' = ' . $finita);
+
+        $db->setQuery($query);
+        return (int) $db->loadResult();
+    }
+
+
     // Funzione per inserire una competizione nella tabella
     public static function insertCompetizione($data)
     {

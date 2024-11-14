@@ -11,10 +11,20 @@ use Joomstarter\Helpers\Competizione;
 
 // Utilizzo della funzione
 $categoryId = 8; // ID della categoria principale
-$articles = Competizione::getArticlesFromSubcategories( $categoryId);
+
+// Parametri di paginazione
+$limit = Factory::getApplication()->input->getInt('limit', 10); // Limite per pagina
+$limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
+
+
+$articles = Competizione::getArticlesFromSubcategoriesPagination($categoryId, $limit, $limitstart);
+// Ottieni il numero totale di articoli per la paginazione
+$total = Competizione::getTotalArticlesFromSubcategories($categoryId);
+$pagination = new Joomla\CMS\Pagination\Pagination($total, Factory::getApplication()->input->getInt('limitstart', 0), Factory::getApplication()->input->getInt('limit', 10));
+
 // Controlla se ci sono articoli
-if ($articles) :
-?>
+if ($articles):
+    ?>
     <div class="table-responsive category-table-container">
         <table class="table table-striped category-table">
             <thead>
@@ -26,7 +36,7 @@ if ($articles) :
                 </tr>
             </thead>
             <tbody class="allarticles">
-                <?php foreach ($articles as $article) : ?>
+                <?php foreach ($articles as $article): ?>
                     <tr>
                         <td class="category-image-cell">
                             <?php
@@ -34,11 +44,14 @@ if ($articles) :
                             $images = json_decode($article->images);
                             $imageSrc = isset($images->image_intro) && !empty($images->image_intro) ? $images->image_intro : 'https://via.placeholder.com/150';
                             ?>
-                            <img src="<?php echo htmlspecialchars($imageSrc); ?>" alt="<?php echo htmlspecialchars($article->title); ?>" class="category-image">
+                            <img src="<?php echo htmlspecialchars($imageSrc); ?>"
+                                alt="<?php echo htmlspecialchars($article->title); ?>" class="category-image">
                         </td>
                         <td class="category-title-cell">
                             <div class="squadra" style="background-color:<?php echo htmlspecialchars($article->color1); ?>;">
-                                <a href="<?php echo Route::_("index.php?option=com_content&view=article&id={$article->id}&catid={$article->catid}"); ?>" class="category-title w-100 d-block" style="color:<?php echo htmlspecialchars($article->color2); ?>;">
+                                <a href="<?php echo Route::_("index.php?option=com_content&view=article&id={$article->id}&catid={$article->catid}"); ?>"
+                                    class="category-title w-100 d-block"
+                                    style="color:<?php echo htmlspecialchars($article->color2); ?>;">
                                     <?php echo htmlspecialchars($article->title); ?>
                                 </a>
                             </div>
@@ -56,6 +69,11 @@ if ($articles) :
             </tbody>
         </table>
     </div>
-<?php else : ?>
+<?php else: ?>
     <p><?php echo Text::_('No articles found'); ?></p>
 <?php endif; ?>
+
+<!-- Paginazione -->
+<div class="pagination">
+    <?php echo $pagination->getPagesLinks(); ?>
+</div>

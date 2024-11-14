@@ -17,7 +17,17 @@ $menuItemId = $activeMenuItem ? $activeMenuItem->id : null;
 $user = Factory::getUser();
 $userId = $user->id;
 
-$competizioni = Competizione::getCompetizioniPerUtente($userId);
+// Imposta i parametri di paginazione
+$limit = 5; // Numero di competizioni per pagina
+$page = Factory::getApplication()->input->getInt('page', 1); // Pagina corrente, di default 1
+$offset = ($page - 1) * $limit;
+$finita = null;
+if($menuItemId === 106) $finita = 0;
+elseif ($menuItemId === 107) $finita = 1;
+// Ottieni le competizioni per l'utente con limite e offset
+$competizioni = Competizione::getCompetizioniPerUtente($userId, $finita, $limit, $offset);
+$totalCompetizioni = Competizione::countCompetizioniPerUtente($userId, $finita);
+$totalPages = ceil($totalCompetizioni / $limit);
 
 // Ora $competizioni conterrà solo le competizioni dell'utente loggato
 
@@ -108,7 +118,83 @@ if (in_array($menuItemId, $pagconsentite)) {
         echo "<p class='h1 text-center'>" . text::_('JOOM_NESSUNA_COMPETIZIONE_PRESENTE') . "</p>";
     }
 }
-?>
+/*<!-- Aggiungi i link di navigazione per la paginazione -->*/
+if ($totalPages > 1): ?>
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+
+            <!-- Link alla prima pagina -->
+            <?php if ($page > 1): ?>
+                <li class="page-item">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=1'); ?>">
+                        Inizio
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <span class="page-link">Inizio</span>
+                </li>
+            <?php endif; ?>
+
+            <!-- Link alla pagina precedente -->
+            <?php if ($page > 1): ?>
+                <li class="page-item">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page - 1)); ?>" aria-label="Precedente">
+                        <span aria-hidden="true">&laquo;</span> Precedente
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; Precedente</span>
+                </li>
+            <?php endif; ?>
+
+            <!-- Link alle pagine centrali -->
+            <?php
+            $start = max(1, $page - 2);
+            $end = min($totalPages, $page + 2);
+
+            for ($i = $start; $i <= $end; $i++): ?>
+                <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $i); ?>">
+                        <?php echo $i; ?>
+                    </a>
+                </li>
+            <?php endfor; ?>
+
+            <!-- Link alla pagina successiva -->
+            <?php if ($page < $totalPages): ?>
+                <li class="page-item">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page + 1)); ?>" aria-label="Successiva">
+                        Successiva <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <span class="page-link">Successiva &raquo;</span>
+                </li>
+            <?php endif; ?>
+
+            <!-- Link all'ultima pagina -->
+            <?php if ($page < $totalPages): ?>
+                <li class="page-item">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $totalPages); ?>">
+                        Fine
+                    </a>
+                </li>
+            <?php else: ?>
+                <li class="page-item disabled">
+                    <span class="page-link">Fine</span>
+                </li>
+            <?php endif; ?>
+
+        </ul>
+    </nav>
+<?php endif; ?>
+
+
+
+
 <div class="text-center mt-5"> <a href="<?php echo Uri::base(); ?>" class="btn btn-primary btn-sm">Crea Nuova</a> </div>
 <?php
 // Gestione della richiesta POST
