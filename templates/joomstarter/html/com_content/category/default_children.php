@@ -21,25 +21,45 @@ use Joomla\CMS\Factory;
 $db = Factory::getDbo();
 
 /** @var \Joomla\Component\Content\Site\View\Category\HtmlView $this */
-$lang   = $this->getLanguage();
-$user   = $this->getCurrentUser();
+$lang = $this->getLanguage();
+$user = $this->getCurrentUser();
 $groups = $user->getAuthorisedViewLevels();
-
-// Parametri di paginazione
-$limit = Factory::getApplication()->input->getInt('limit', 10); // Limite per pagina
-$limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
-
 // Otteniamo il totale degli articoli per la categoria
 $total = count($this->children[$this->category->id]);
 
-// Applichiamo la paginazione sugli articoli (limit e limitstart)
-$items = array_slice($this->children[$this->category->id], $limitstart, $limit);
+if (isset($_POST['limit'])) {
+    $limit = $_POST['limit'] == 0 ? $total : (int) $_POST['limit'];  // Usa $total se limit è 0 (Tutto)
+} else {
+    $limit = Factory::getApplication()->input->getInt('limit', 10);  // Limite di default
+}
+
+$limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
+
+
+if ($limit == 0) {
+    $items = $this->children[$this->category->id];  // Tutti gli articoli
+} else {
+    $items = array_slice($this->children[$this->category->id], $limitstart, $limit);
+}
+
 
 // Creiamo la paginazione
 $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
 
 ?>
-
+<form action="" method="get">
+    <div class="form-group w-25 mx-auto mb-3">
+        <label for="limit"><?php echo Text::_('Seleziona il numero di articoli per pagina'); ?></label>
+        <select name="limit" id="limit" class="form-control" onchange="this.form.submit()">
+            <option value="0" <?php echo $limit == 0 ? 'selected' : ''; ?>>Tutto</option>
+            <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
+            <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
+            <option value="15" <?php echo $limit == 15 ? 'selected' : ''; ?>>15</option>
+            <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
+            <option value="30" <?php echo $limit == 30 ? 'selected' : ''; ?>>30</option>
+        </select>
+    </div>
+</form>
 <div class="table-responsive category-table-container">
     <table class="table table-striped category-table">
         <thead>
@@ -51,21 +71,24 @@ $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($items as $id => $child) : ?>
-                <?php if (in_array($child->access, $groups)) : ?>
+            <?php foreach ($items as $id => $child): ?>
+                <?php if (in_array($child->access, $groups)): ?>
                     <tr>
                         <td class="category-image-cell">
-                            <?php if ($child->getParams()->get('image')) : ?>
-                                <img src="<?php echo htmlspecialchars($child->getParams()->get('image')); ?>" alt="<?php echo $this->escape($child->title); ?>" class="category-image">
+                            <?php if ($child->getParams()->get('image')): ?>
+                                <img src="<?php echo htmlspecialchars($child->getParams()->get('image')); ?>"
+                                    alt="<?php echo $this->escape($child->title); ?>" class="category-image">
                             <?php endif; ?>
                         </td>
                         <td class="category-title-cell">
-                            <a href="<?php echo Route::_(RouteHelper::getCategoryRoute($child->id, $child->language)); ?>" class="category-title h4">
+                            <a href="<?php echo Route::_(RouteHelper::getCategoryRoute($child->id, $child->language)); ?>"
+                                class="category-title h4">
                                 <?php echo $this->escape($child->title); ?>
                             </a>
                         </td>
                         <td class="category-items-cell">
-                            <span class="badge bg-info category-badge" title="<?php echo HTMLHelper::_('tooltipText', 'JOOM_NUM_ITEMS'); ?>">
+                            <span class="badge bg-info category-badge"
+                                title="<?php echo HTMLHelper::_('tooltipText', 'JOOM_NUM_ITEMS'); ?>">
                                 <?php echo $child->getNumItems(true); ?>
                             </span>
                         </td>
@@ -79,7 +102,7 @@ $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
                                 ->select('*') // Seleziona tutte le colonne dalla mappa dei contenuti e tag
                                 ->from($db->quoteName('vcmdb_contentitem_tag_map'))
                                 ->where($db->quoteName('content_item_id') . ' = ' . (int) $categoryId); // Confronta con content_item_id
-
+                    
                             // Esegui la query
                             $db->setQuery($query);
                             $tagMappings = $db->loadObjectList();
@@ -103,7 +126,8 @@ $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
                                     // Controlla se il tag esiste
                                     if ($tag) {
                                         // Stampa il nome del tag come link cliccabile
-                                        echo '<a href="' . Route::_('index.php?option=com_tags&view=tag&id=' . $tagId) . '" class="badge bg-warning category-badge">' . $this->escape($tag->tag_title) . '</a>';                                    }
+                                        echo '<a href="' . Route::_('index.php?option=com_tags&view=tag&id=' . $tagId) . '" class="badge bg-warning category-badge">' . $this->escape($tag->tag_title) . '</a>';
+                                    }
                                 }
                             }
                             ?>

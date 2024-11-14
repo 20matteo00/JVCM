@@ -13,19 +13,27 @@ use Joomstarter\Helpers\Competizione;
 $user = Factory::getUser();
 $userId = $user->id;
 $categoryId = $this->category->id;
-
-// Definisci il numero di articoli per pagina
-$articlesPerPage = 5;
-$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
-
 // Ottieni tutti gli articoli della categoria
 $allArticles = Competizione::getArticlesFromCategory($categoryId);
-$totalArticles = count($allArticles);
-$totalPages = ceil($totalArticles / $articlesPerPage);
+$total = count($allArticles);
+
+
+if (isset($_POST['limit'])) {
+    if ($_POST['limit'] == 0)
+        $limit = Factory::getApplication()->input->getInt('limit', $total);
+    else
+        $limit = Factory::getApplication()->input->getInt('limit', $_POST['limit']); // Limite per pagina
+} else
+    $limit = Factory::getApplication()->input->getInt('limit', 5); // Limite per pagina
+
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+
+
+$totalPages = ceil($total / $limit);
 
 // Calcola l'indice di partenza e di fine per gli articoli della pagina corrente
-$startIndex = ($page - 1) * $articlesPerPage;
-$articles = array_slice($allArticles, $startIndex, $articlesPerPage);
+$startIndex = ($page - 1) * $limit;
+$articles = array_slice($allArticles, $startIndex, $limit);
 
 // Ottieni il titolo della categoria e URL di modifica
 $categoryTitle = Competizione::getCategoryTitleById($categoryId);
@@ -38,6 +46,18 @@ if ($categoryTitle) {
 ?>
 
 <?php if (!empty($articles)): ?>
+    <form action="" method="post">
+        <div class="form-group w-25 mx-auto mb-3">
+            <label for="limit"><?php echo Text::_('Seleziona il numero di articoli per pagina'); ?></label>
+            <select name="limit" id="limit" class="form-control" onchange="this.form.submit()">
+                <option value="0" <?php echo $limit == 0 ? 'selected' : ''; ?>>Tutto</option>
+                <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
+                <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
+                <option value="15" <?php echo $limit == 15 ? 'selected' : ''; ?>>15</option>
+                <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
+            </select>
+        </div>
+    </form>
     <div class="table-responsive category-table-container">
         <p class="text-center"></p>
         <table class="table table-striped category-table">
@@ -90,7 +110,8 @@ if ($categoryTitle) {
                 <!-- Link alla prima pagina -->
                 <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1'); ?>"><span class="icon-angle-double-left" aria-hidden="true"></span></a>
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1'); ?>"><span
+                            class="icon-angle-double-left" aria-hidden="true"></span></a>
                 </li>
 
                 <!-- Link alla pagina precedente -->
@@ -103,7 +124,8 @@ if ($categoryTitle) {
                         </a>
                     </li>
                 <?php else: ?>
-                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-left" aria-hidden="true"></span></span></li>
+                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-left"
+                                aria-hidden="true"></span></span></li>
                 <?php endif; ?>
 
                 <!-- Link pagine centrali -->
@@ -128,13 +150,15 @@ if ($categoryTitle) {
                         </a>
                     </li>
                 <?php else: ?>
-                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-right" aria-hidden="true"></span></span></li>
+                    <li class="page-item disabled"><span class="page-link"><span class="icon-angle-right"
+                                aria-hidden="true"></span></span></li>
                 <?php endif; ?>
 
                 <!-- Link all'ultima pagina -->
                 <li class="page-item <?php echo ($page == $totalPages) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages); ?>"><span class="icon-angle-double-right" aria-hidden="true"></span></a>
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages); ?>"><span
+                            class="icon-angle-double-right" aria-hidden="true"></span></a>
                 </li>
             </ul>
         </nav>
