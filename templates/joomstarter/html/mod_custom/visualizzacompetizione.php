@@ -195,7 +195,7 @@ $userId = $user->id;
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
                     <span><?php echo text::_('JOOM_FASEFINALE') ?></span>
                     <form action="" method="post">
-                        <button class="btn btn-warning" name="fasefinale"><?php echo text::_('JOOM_FF') ?></button>
+                        <button class="btn btn-success" name="fasefinale"><?php echo text::_('JOOM_FF') ?></button>
                     </form>
                 </div>
                 <?php
