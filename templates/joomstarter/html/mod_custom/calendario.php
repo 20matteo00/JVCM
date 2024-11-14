@@ -13,6 +13,10 @@ $userId = $user->id;
 
 if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
+    if($_GET['module_id'] != 116) {
+        header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=116");
+        exit;
+    }
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);
     $finita = $competizione->finita;
     $mod = $competizione->modalita;

@@ -10,6 +10,10 @@ $userId = $user->id;
 
 if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
+    if($_GET['module_id'] != 119) {
+        header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=119");
+        exit;
+    }
     $tableStatistiche = Competizione::getTableStatistiche($idcomp);
     $tablePartite = Competizione::getTablePartite($idcomp);
     $competizione = Competizione::getCompetizioneById($idcomp, $userId);

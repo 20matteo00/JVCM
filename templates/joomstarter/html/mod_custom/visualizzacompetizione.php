@@ -96,7 +96,7 @@ $userId = $user->id;
             }
             if (isset($_POST['simulation'])) {
                 $simpar = Competizione::getPartite($tablePartite);
-                $module_ID = 116;
+                $module_ID = $_GET['module_id'];
                 if ($mod !== 69) {
                     foreach ($simpar as $partita) {
                         $cf1 = Competizione::getCustomFields($partita->squadra1);
