@@ -16,6 +16,7 @@ use Joomla\CMS\Router\Route;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomla\CMS\Factory;
 
+
 // Creiamo un'istanza del database
 $db = Factory::getDbo();
 
@@ -23,6 +24,19 @@ $db = Factory::getDbo();
 $lang   = $this->getLanguage();
 $user   = $this->getCurrentUser();
 $groups = $user->getAuthorisedViewLevels();
+
+// Parametri di paginazione
+$limit = Factory::getApplication()->input->getInt('limit', 10); // Limite per pagina
+$limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
+
+// Otteniamo il totale degli articoli per la categoria
+$total = count($this->children[$this->category->id]);
+
+// Applichiamo la paginazione sugli articoli (limit e limitstart)
+$items = array_slice($this->children[$this->category->id], $limitstart, $limit);
+
+// Creiamo la paginazione
+$pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
 
 ?>
 
@@ -37,7 +51,7 @@ $groups = $user->getAuthorisedViewLevels();
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($this->children[$this->category->id] as $id => $child) : ?>
+            <?php foreach ($items as $id => $child) : ?>
                 <?php if (in_array($child->access, $groups)) : ?>
                     <tr>
                         <td class="category-image-cell">
@@ -57,7 +71,6 @@ $groups = $user->getAuthorisedViewLevels();
                         </td>
                         <td class="category-items-cell">
                             <?php
-
                             // Assicurati di avere accesso all'oggetto della categoria
                             $categoryId = (int) $child->id;
 
@@ -100,4 +113,9 @@ $groups = $user->getAuthorisedViewLevels();
             <?php endforeach; ?>
         </tbody>
     </table>
+</div>
+
+<!-- Paginazione centrata con mx-auto -->
+<div class="pagination justify-content-center">
+    <?php echo $pagination->getPagesLinks(); ?>
 </div>

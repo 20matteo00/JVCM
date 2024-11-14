@@ -13,7 +13,7 @@ use Joomstarter\Helpers\Competizione;
 $categoryId = 8; // ID della categoria principale
 
 // Parametri di paginazione
-$limit = Factory::getApplication()->input->getInt('limit', 40); // Limite per pagina
+$limit = Factory::getApplication()->input->getInt('limit', 20); // Limite per pagina
 $limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
 
 
