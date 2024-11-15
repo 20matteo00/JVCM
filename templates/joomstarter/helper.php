@@ -2279,16 +2279,16 @@ abstract class Competizione
         } elseif ($diff < 50 && $diff > -50) {
             $gol1 = self::pesoRand(0, 3);
             $gol2 = self::pesoRand(0, 3);
-        } elseif ($diff >= -100) {
+        } elseif ($diff >= -150) {
             $gol2 = self::pesoRand(0, 3);
             $gol1 = self::pesoRand(0, $gol2 + 1);
-        } elseif ($diff >= -250) {
+        } elseif ($diff >= -350) {
             $gol2 = self::pesoRand(0, 4);
             $gol1 = self::pesoRand(0, $gol2);
-        } elseif ($diff >= -500) {
+        } elseif ($diff >= -600) {
             $gol2 = self::pesoRand(1, 5);
             $gol1 = self::pesoRand(0, $gol2 - 1);
-        } elseif ($diff >= -1000) {
+        } elseif ($diff >= -1200) {
             $gol2 = self::pesoRand(2, 6);
             $gol1 = self::pesoRand(0, $gol2 - 2);
         } else {
