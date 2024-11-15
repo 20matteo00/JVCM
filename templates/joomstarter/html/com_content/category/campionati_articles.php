@@ -13,25 +13,24 @@ use Joomstarter\Helpers\Competizione;
 $user = Factory::getUser();
 $userId = $user->id;
 $categoryId = $this->category->id;
+
 // Ottieni tutti gli articoli della categoria
 $allArticles = Competizione::getArticlesFromCategory($categoryId);
 $total = count($allArticles);
 
+// Recupera il valore di `limit` dalla richiesta GET o imposta un valore di default
+$app = Factory::getApplication();
+$limit = $app->input->getInt('limit', 5);
 
-if (isset($_POST['limit'])) {
-    if ($_POST['limit'] == 0)
-        $limit = Factory::getApplication()->input->getInt('limit', $total);
-    else
-        $limit = Factory::getApplication()->input->getInt('limit', $_POST['limit']); // Limite per pagina
-} else
-    $limit = Factory::getApplication()->input->getInt('limit', 5); // Limite per pagina
+// Ottieni la pagina corrente dal parametro GET
+$page = $app->input->getInt('page', 1);
 
-$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+if ($limit === 0 ) $limit = $total;
 
-
+// Calcola il numero totale di pagine
 $totalPages = ceil($total / $limit);
 
-// Calcola l'indice di partenza e di fine per gli articoli della pagina corrente
+// Calcola l'indice di partenza per gli articoli della pagina corrente
 $startIndex = ($page - 1) * $limit;
 $articles = array_slice($allArticles, $startIndex, $limit);
 
@@ -46,7 +45,7 @@ if ($categoryTitle) {
 ?>
 
 <?php if (!empty($articles)): ?>
-    <form action="" method="post">
+    <form action="" method="get">
         <div class="form-group w-25 mx-auto mb-3">
             <label for="limit"><?php echo Text::_('Seleziona il numero di articoli per pagina'); ?></label>
             <select name="limit" id="limit" class="form-control" onchange="this.form.submit()">
@@ -110,7 +109,7 @@ if ($categoryTitle) {
                 <!-- Link alla prima pagina -->
                 <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1'); ?>"><span
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=1&limit=' . $limit); ?>"><span
                             class="icon-angle-double-left" aria-hidden="true"></span></a>
                 </li>
 
@@ -118,7 +117,7 @@ if ($categoryTitle) {
                 <?php if ($page > 1): ?>
                     <li class="page-item">
                         <a class="page-link"
-                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page - 1)); ?>"
+                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page - 1) . '&limit=' . $limit); ?>"
                             aria-label="Precedente">
                             <span class="icon-angle-left" aria-hidden="true"></span>
                         </a>
@@ -136,7 +135,7 @@ if ($categoryTitle) {
                 for ($i = $start; $i <= $end; $i++): ?>
                     <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
                         <a class="page-link"
-                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $i); ?>"><?php echo $i; ?></a>
+                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $i . '&limit=' . $limit); ?>"><?php echo $i; ?></a>
                     </li>
                 <?php endfor; ?>
 
@@ -144,7 +143,7 @@ if ($categoryTitle) {
                 <?php if ($page < $totalPages): ?>
                     <li class="page-item">
                         <a class="page-link"
-                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page + 1)); ?>"
+                            href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . ($page + 1) . '&limit=' . $limit); ?>"
                             aria-label="Successiva">
                             <span class="icon-angle-right" aria-hidden="true"></span>
                         </a>
@@ -157,7 +156,7 @@ if ($categoryTitle) {
                 <!-- Link all'ultima pagina -->
                 <li class="page-item <?php echo ($page == $totalPages) ? 'disabled' : ''; ?>">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages); ?>"><span
+                        href="<?php echo Route::_('index.php?option=com_content&view=category&id=' . $categoryId . '&page=' . $totalPages . '&limit=' . $limit); ?>"><span
                             class="icon-angle-double-right" aria-hidden="true"></span></a>
                 </li>
             </ul>
@@ -165,6 +164,7 @@ if ($categoryTitle) {
 
     <?php endif; ?>
 <?php endif; ?>
+
 
 <!-- Form per simulare il campionato -->
 <form action="" method="post" class="text-center">

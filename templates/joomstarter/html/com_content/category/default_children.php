@@ -24,27 +24,28 @@ $db = Factory::getDbo();
 $lang = $this->getLanguage();
 $user = $this->getCurrentUser();
 $groups = $user->getAuthorisedViewLevels();
-// Otteniamo il totale degli articoli per la categoria
 $total = count($this->children[$this->category->id]);
+// Inizia la sessione
+$session = Factory::getSession();
 
-if (isset($_POST['limit'])) {
-    $limit = $_POST['limit'] == 0 ? $total : (int) $_POST['limit'];  // Usa $total se limit è 0 (Tutto)
-} else {
-    $limit = Factory::getApplication()->input->getInt('limit', 10);  // Limite di default
-}
+// Ottieni il valore di limit dalla richiesta GET o dalla sessione
+$limit = Factory::getApplication()->input->getInt('limit', $session->get('limit', 10));
 
-$limitstart = Factory::getApplication()->input->getInt('limitstart', 0); // Inizio della pagina corrente
+// Salva il valore di limit nella sessione
+$session->set('limit', $limit);
 
+$limitstart = Factory::getApplication()->input->getInt('limitstart', 0);
 
+// Filtra gli articoli in base al limite
 if ($limit == 0) {
     $items = $this->children[$this->category->id];  // Tutti gli articoli
 } else {
     $items = array_slice($this->children[$this->category->id], $limitstart, $limit);
 }
 
-
 // Creiamo la paginazione
 $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
+
 
 ?>
 <form action="" method="get">
