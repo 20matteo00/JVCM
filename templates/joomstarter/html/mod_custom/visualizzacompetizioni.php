@@ -17,21 +17,25 @@ $menuItemId = $activeMenuItem ? $activeMenuItem->id : null;
 $user = Factory::getUser();
 $userId = $user->id;
 
-// Imposta i parametri di paginazione
-$limit = 5; // Numero di competizioni per pagina
-$page = Factory::getApplication()->input->getInt('page', 1); // Pagina corrente, di default 1
+// Recupera i parametri di paginazione
+$limit = $input->getInt('limit', 5); // Numero di competizioni per pagina, default 5
+$page = $input->getInt('page', 1); // Pagina corrente, default 1
 $offset = ($page - 1) * $limit;
+
+// Determina lo stato delle competizioni in base al menu attivo
 $finita = null;
-if ($menuItemId === 106)
+if ($menuItemId === 106) {
     $finita = 0;
-elseif ($menuItemId === 107)
+} elseif ($menuItemId === 107) {
     $finita = 1;
-// Ottieni le competizioni per l'utente con limite e offset
+}
+
+// Ottieni le competizioni e il numero totale di competizioni
 $competizioni = Competizione::getCompetizioniPerUtente($userId, $finita, $limit, $offset);
 $totalCompetizioni = Competizione::countCompetizioniPerUtente($userId, $finita);
-$totalPages = ceil($totalCompetizioni / $limit);
+if ($limit === 0 ) $limit = $totalCompetizioni;
 
-// Ora $competizioni conterrà solo le competizioni dell'utente loggato
+$totalPages = ceil($totalCompetizioni / $limit);
 
 
 $pagconsentite = [106, 107];
@@ -41,6 +45,19 @@ if (in_array($menuItemId, $pagconsentite)) {
         <h1 class="text-center fw-bold">Competizioni
             <?php echo ($menuItemId == 106) ? " in Corso" : " Finite"; ?>
         </h1>
+        <form action="" method="get">
+            <div class="form-group w-25 mx-auto mb-3">
+                <label for="limit"><?php echo Text::_('Seleziona il numero di articoli per pagina'); ?></label>
+                <select name="limit" id="limit" class="form-control" onchange="this.form.submit()">
+                    <option value="0" <?php echo $limit == 0 ? 'selected' : ''; ?>>Tutto</option>
+                    <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
+                    <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
+                    <option value="15" <?php echo $limit == 15 ? 'selected' : ''; ?>>15</option>
+                    <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
+                </select>
+            </div>
+        </form>
+
         <div class="table-responsive category-table-container competizioni">
             <table class="table table-striped category-table" style="min-width:1200px;">
                 <thead>
@@ -128,8 +145,8 @@ if ($totalPages > 1): ?>
             <!-- Link alla prima pagina -->
             <?php if ($page > 1): ?>
                 <li class="page-item">
-                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=1'); ?>">
-                    <span class="icon-angle-double-left" aria-hidden="true"></span>
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=1&limit=' . $limit); ?>">
+                        <span class="icon-angle-double-left" aria-hidden="true"></span>
                     </a>
                 </li>
             <?php else: ?>
@@ -142,7 +159,7 @@ if ($totalPages > 1): ?>
             <?php if ($page > 1): ?>
                 <li class="page-item">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page - 1)); ?>"
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page - 1) . '&limit=' . $limit); ?>"
                         aria-label="Precedente">
                         <span class="icon-angle-left" aria-hidden="true"></span>
                     </a>
@@ -160,7 +177,7 @@ if ($totalPages > 1): ?>
 
             for ($i = $start; $i <= $end; $i++): ?>
                 <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $i); ?>">
+                    <a class="page-link" href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $i . '&limit=' . $limit); ?>">
                         <?php echo $i; ?>
                     </a>
                 </li>
@@ -170,7 +187,7 @@ if ($totalPages > 1): ?>
             <?php if ($page < $totalPages): ?>
                 <li class="page-item">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page + 1)); ?>"
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . ($page + 1) . '&limit=' . $limit); ?>"
                         aria-label="Successiva">
                         <span class="icon-angle-right" aria-hidden="true"></span>
                     </a>
@@ -185,7 +202,7 @@ if ($totalPages > 1): ?>
             <?php if ($page < $totalPages): ?>
                 <li class="page-item">
                     <a class="page-link"
-                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $totalPages); ?>">
+                        href="<?php echo Route::_('index.php?Itemid=' . $menuItemId . '&page=' . $totalPages . '&limit=' . $limit); ?>">
                         <span class="icon-angle-double-right" aria-hidden="true"></span>
                     </a>
                 </li>
@@ -198,6 +215,7 @@ if ($totalPages > 1): ?>
         </ul>
     </nav>
 <?php endif; ?>
+
 
 
 
