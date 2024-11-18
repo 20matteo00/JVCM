@@ -180,8 +180,29 @@ $userId = $user->id;
                 $totgior = ($totpartpergir - 1) * 2;
                 $totpart = $totgior * ($totpartpergir / 2) * $gironi;
             }
+            if ($mod === 69) {
+                $partita = Competizione::getUltimaPartita($tablePartite);
+                // Controlla se la partita è stata trovata e determina il vincitore
+                if ($partita) {
+                    $winner = "";
+                    if ($partita->gol1 > $partita->gol2) {
+                        $winner = $partita->squadra1;
+                    } elseif ($partita->gol1 < $partita->gol2) {
+                        $winner = $partita->squadra2;
+                    }
+                }
+            }
             $checknome = Competizione::CheckNome($nome . " - Fase Finale");
-            if ($numpartitevalide === $totpart && $finita === 0) {
+            if ($numpartitevalide === $totpart && $finita === 0 && $mod!=69) {
+                ?>
+                <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
+                    <span><?php echo text::_('JOOM_COMPLIMENTI') ?></span>
+                    <form action="" method="post">
+                        <button class="btn btn-warning" name="closecomp"><?php echo text::_('JOOM_CHIUDICOMP') ?></button>
+                    </form>
+                </div>
+                <?php
+            } elseif ($numpartitevalide === $totpart && $finita === 0 && $mod==69 && $winner != "") {
                 ?>
                 <div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
                     <span><?php echo text::_('JOOM_COMPLIMENTI') ?></span>

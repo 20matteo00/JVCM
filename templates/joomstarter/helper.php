@@ -151,7 +151,7 @@ abstract class Competizione
     {
         // Ottieni l'oggetto del database
         $db = Factory::getDbo();
-        
+
         $query = $db->getQuery(true);
 
         // Query per ottenere gli articoli delle sottocategorie della categoria specificata
@@ -704,7 +704,22 @@ abstract class Competizione
             } elseif ($risultato['gol2'] > $risultato['gol1']) {
                 $squadreVincenti[] = $risultato['squadra2'];
             } else {
-                //echo "Pareggio tra ".self::getArticleTitleById(articleId: $risultato['squadra1'])." e ".self::getArticleTitleById(articleId: $risultato['squadra2'])." dopo andata e ritorno. Attendi prima di procedere.";
+
+                // Messaggio di alert
+                $message = "Pareggio tra " . self::getArticleTitleById(articleId: $risultato['squadra1']) . " e " . self::getArticleTitleById(articleId: $risultato['squadra2']);
+
+                // Codice JavaScript con SweetAlert2
+                echo "
+                    <script>
+                        Swal.fire({
+                            title: 'Attenzione!',
+                            text: '" . addslashes($message) ."',
+                            icon: 'warning',
+                            confirmButtonText: 'Ok'
+                        });
+                    </script>";
+
+
                 return;
             }
         }
