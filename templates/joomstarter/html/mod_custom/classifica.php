@@ -10,7 +10,7 @@ $userId = $user->id;
 
 if (isset($_GET['id'])) {
     $idcomp = (int) $_GET['id'];
-    if($_GET['module_id'] != 117) {
+    if ($_GET['module_id'] != 117) {
         header("Location: " . htmlspecialchars($_SERVER['PHP_SELF']) . "?id=$idcomp&module_id=117");
         exit;
     }
@@ -169,43 +169,83 @@ if (isset($_GET['id'])) {
                     return count($squadra['risultati']);
                 }, $andamento));
                 ?>
-                <table class="table table-striped text-center">
-                    <tr>
-                        <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
+                <table class="table table-striped table-bordered text-center">
+                    <thead>
+                        <tr>
                             <?php
-                            // Raccogli tutti i risultati della giornata corrente
-                            $giornataRisultati = array_column($andamento, 'risultati', $giornata);
+                            $squadraprec = null;
+                            $colspan = 0;
+                            for ($giornata = 1; $giornata <= $maxGiornate; $giornata++) {
+                                // Raccogli tutti i risultati della giornata corrente
+                                $giornataRisultati = array_column($andamento, 'risultati', $giornata);
 
-                            // Filtra solo i risultati validi per la giornata
-                            $giornataRisultati = array_filter(array_column($giornataRisultati, $giornata), 'is_numeric');
+                                // Filtra solo i risultati validi per la giornata
+                                $giornataRisultati = array_filter(array_column($giornataRisultati, $giornata), 'is_numeric');
 
-                            // Ottieni il massimo valore della giornata
-                            $maxRisultato = !empty($giornataRisultati) ? max($giornataRisultati) : null;
+                                // Ottieni il massimo valore della giornata
+                                $maxRisultato = !empty($giornataRisultati) ? max($giornataRisultati) : null;
 
-                            // Conta quante squadre hanno ottenuto il massimo valore
-                            $conteggioMax = array_count_values($giornataRisultati)[$maxRisultato] ?? 0;
-                            $entrato = false;
-                            ?>
-                            <?php foreach ($andamento as $squadra): ?>
-                                <?php
-                                if (isset($squadra['risultati'][$giornata]) && $squadra['risultati'][$giornata] == $maxRisultato && $conteggioMax == 1) {
-                                    $cf = Competizione::getCustomFields($squadra['squadra']);
-                                    $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
-                                    $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
-                                    echo '<td class="px-0" style="background-color:' . $colors . '; color:' . $colort . ';font-size:1em;font-weight:bold;min-width:25px;"><div class="px-2">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadra['squadra'])) . '</div><hr><div>' . $giornata . '</div></td>';
-                                    $entrato = true;
+                                // Conta quante squadre hanno ottenuto il massimo valore
+                                $conteggioMax = array_count_values($giornataRisultati)[$maxRisultato] ?? 0;
+
+                                // Identifica la squadra leader, se esiste
+                                $leader = null;
+                                if ($conteggioMax === 1) {
+                                    foreach ($andamento as $squadra) {
+                                        if (isset($squadra['risultati'][$giornata]) && $squadra['risultati'][$giornata] == $maxRisultato) {
+                                            $leader = $squadra['squadra'];
+                                            break;
+                                        }
+                                    }
                                 }
-                                ?>
-                            <?php endforeach; ?>
-                            <?php
-                            if (!$entrato) {
-                                echo '<td class="px-0" style="background-color:#8a8a8a; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;"><div>' . "<br>" . '</div><hr><div>' . $giornata . '</div></td>';
+
+                                if ($leader === $squadraprec) {
+                                    // Incrementa il colspan per giornate consecutive della stessa squadra
+                                    $colspan++;
+                                } else {
+                                    // Stampa il td precedente se cambia la squadra o non c'è leader
+                                    if ($squadraprec !== null) {
+                                        $cf = Competizione::getCustomFields($squadraprec);
+                                        $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
+                                        $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
+                                        echo '<th colspan="' . $colspan . '" style="background-color:' . $colors . '; color:' . $colort . '; font-size:1em; font-weight:bold;">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadraprec)) . '</th>';
+                                    } elseif ($colspan > 0) {
+                                        // Caso di leader assente: spazio vuoto
+                                        echo '<th colspan="' . $colspan . '" style="background-color:#d3d3d3; color:#000000; font-size:1em; font-weight:bold;"></th>';
+                                    }
+
+                                    // Reset per la nuova squadra (o leader assente)
+                                    $squadraprec = $leader;
+                                    $colspan = 1;
+                                }
+                            }
+
+                            // Stampa il td finale per l'ultima squadra o periodo vuoto
+                            if ($squadraprec !== null) {
+                                $cf = Competizione::getCustomFields($squadraprec);
+                                $colors = !empty($cf[1]) ? $cf[1]->value : '#000000';
+                                $colort = !empty($cf[2]) ? $cf[2]->value : '#ffffff';
+                                echo '<th colspan="' . $colspan . '" style="background-color:' . $colors . '; color:' . $colort . '; font-size:1em; font-weight:bold;">' . Competizione::abbreviaNomeSquadra(Competizione::getArticleTitleById($squadraprec)) . '</th>';
+                            } elseif ($colspan > 0) {
+                                // Caso finale di leader assente
+                                echo '<th colspan="' . $colspan . '" style="background-color:#d3d3d3; color:#000000; font-size:1em; font-weight:bold;"></th>';
                             }
                             ?>
-                        <?php endfor; ?>
-                    </tr>
-
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <?php for ($giornata = 1; $giornata <= $maxGiornate; $giornata++): ?>
+                                <td class="px-0"
+                                    style="background-color:#8a8a8a; color:#ffffff;font-size:1em;font-weight:bold;min-width:25px;">
+                                    <div><?php echo $giornata; ?></div>
+                                </td>
+                            <?php endfor; ?>
+                        </tr>
+                    </tbody>
                 </table>
+
+
                 <table class="table table-striped table-bordered text-center category-table">
                     <thead class="thead-dark">
                         <tr>

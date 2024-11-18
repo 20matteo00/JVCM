@@ -289,7 +289,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                     }
                     // Array per i totali
                     $recordTotali = [
-                        'Competizioni Vinte' => $totali['Win'],
+                        'Competizioni Vinte' => $totali['Win']."/".($recordPerModalita[68]["Competizioni Giocate"]+$recordPerModalita[69]["Competizioni Giocate"]),
                         'Competizioni Giocate' => $totali['comp'],
                         //Totale
                         'Giocate Totali' => $totali['countpartite'],
