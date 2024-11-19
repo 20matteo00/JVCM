@@ -8,6 +8,8 @@ use Joomla\CMS\Helper\TagsHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomstarter\Helpers\Competizione;
+use Joomla\CMS\Uri\Uri;
+$baseUrl = Uri::base();
 
 // Ottieni l'ID dell'utente corrente e la categoria
 $user = Factory::getUser();
@@ -25,7 +27,8 @@ $limit = $app->input->getInt('limit', 5);
 // Ottieni la pagina corrente dal parametro GET
 $page = $app->input->getInt('page', 1);
 
-if ($limit === 0 ) $limit = $total;
+if ($limit === 0)
+    $limit = $total;
 
 // Calcola il numero totale di pagine
 $totalPages = ceil($total / $limit);
@@ -90,8 +93,8 @@ if ($categoryTitle) {
                         </td>
                         <td class="category-items-cell"><?php echo htmlspecialchars($article->forza); ?></td>
                         <td class="category-items-cell">
-                            <form action="/jvcm/index.php/modifica-squadra" method="get">
-                                <input type="hidden" value="<?php echo $article->id; ?>" name="id">
+                            <form action="<?php echo $baseUrl; ?>index.php/modifica-squadra" method="get"> <input type="hidden"
+                                    value="<?php echo $article->id; ?>" name="id">
                                 <button type="submit" class="btn btn-warning btn-sm" name="modifica"
                                     value="modifica">Modifica</button>
                             </form>
@@ -193,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simula_campionato']))
         'finita' => 0,
     );
     Competizione::insertCompetizione($data);
-    header("Location: /jvcm/index.php/competizioni-in-corso");
+    header("Location: ".$baseUrl."index.php/competizioni-in-corso");
     exit;
 }
 ?>

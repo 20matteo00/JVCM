@@ -22,6 +22,7 @@ use Joomla\CMS\Uri\Uri;
 use Joomla\Component\Content\Administrator\Extension\ContentComponent;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomstarter\Helpers\Competizione;
+$baseUrl = Uri::base();
 
 // Creiamo un oggetto per l'articolo attuale
 $app = Factory::getApplication();
@@ -94,7 +95,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             </div>
             <br>
             <span class="h4 fw-bold"><a class="campionato"
-                    href="/jvcm/index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
+                    href="<?php echo $baseUrl; ?>index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
         </div>
         <div class="col-md-4  text-center my-3">
             <div class="com-content-article__image">
@@ -115,7 +116,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             echo "
             <div class='col-12 col-sm-6 col-md-4 col-lg-3 mb-4'>
                 <div class='text-center p-3'>
-                    <a style='border-radius:50px;' href='/jvcm/index.php/visualizza-competizione?id=" . $competizione->id . "' class='btn btn-outline-dark w-100'>
+                    <a style='border-radius:50px;' href='".$baseUrl."index.php/visualizza-competizione?id=" . $competizione->id . "' class='btn btn-outline-dark w-100'>
                         " . $competizione->nome_competizione . "
                     </a>
                 </div>

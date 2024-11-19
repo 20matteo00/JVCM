@@ -7,6 +7,7 @@ use Joomla\CMS\Router\Route;
 use Joomstarter\Helpers\Competizione;
 use Joomla\CMS\Uri\Uri;
 use Joomla\CMS\Language\Text;
+$baseUrl = Uri::base();
 
 // Ottieni l'ID della voce di menu attiva
 $menu = Factory::getApplication()->getMenu();
@@ -274,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
         }
 
         // Ricarica la pagina
-        header("Location: /jvcm/index.php/competizioni-in-corso");
+        header("Location: ".$baseUrl."index.php/competizioni-in-corso");
         exit;
 
     } elseif (isset($_POST['elimina'])) {
