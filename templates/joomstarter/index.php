@@ -16,29 +16,29 @@ use Joomla\CMS\Factory; // Factory class: Contains static methods to get global 
 use Joomla\CMS\HTML\HTMLHelper; // HTMLHelper class: Contains static methods to generate HTML tags.
 use Joomla\CMS\Language\Text; // Text class: Contains static methods to get text from language files
 use Joomla\CMS\Uri\Uri; // Uri class: Contains static methods to manipulate URIs.
-
+use Joomla\CMS\Router\Route;
 /** @var Joomla\CMS\Document\HtmlDocument $this */
 
 $app = Factory::getApplication();
-$wa  = $this->getWebAssetManager();  // Get the Web Asset Manager - used to load our CSS and JS files
+$wa = $this->getWebAssetManager();  // Get the Web Asset Manager - used to load our CSS and JS files
 
 // Add Favicon from images folder
 $this->addHeadLink(HTMLHelper::_('image', 'favicon.ico', '', [], true, 1), 'icon', 'rel', ['type' => 'image/x-icon']);
 
 
 // Detecting Active Variables
-$option   = $app->input->getCmd('option', '');
-$view     = $app->input->getCmd('view', '');
-$layout   = $app->input->getCmd('layout', '');
-$task     = $app->input->getCmd('task', '');
-$itemid   = $app->input->getCmd('Itemid', '');
+$option = $app->input->getCmd('option', '');
+$view = $app->input->getCmd('view', '');
+$layout = $app->input->getCmd('layout', '');
+$task = $app->input->getCmd('task', '');
+$itemid = $app->input->getCmd('Itemid', '');
 $sitename = htmlspecialchars($app->get('sitename'), ENT_QUOTES, 'UTF-8');
-$menu     = $app->getMenu()->getActive();
+$menu = $app->getMenu()->getActive();
 $pageclass = $menu !== null ? $menu->getParams()->get('pageclass_sfx', '') : '';
 
 //Get params from template styling
 //If you want to add your own parameters you may do so in templateDetails.xml
-$testparam =  $this->params->get('testparam');
+$testparam = $this->params->get('testparam');
 
 //uncomment to see how this works on site... it just shows 1 or 0 depending on option selected in style config.
 //You can use this style to get/set any param according to instructions at https://kevinsguides.com/guides/webdev/joomla4/joomla-4-templates/adding-config
@@ -83,7 +83,7 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
     ?>
     <jdoc:include type="styles" />
     <jdoc:include type="scripts" />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -91,18 +91,22 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
 
 <?php // you can change data-bs-theme to dark for dark mode  // 
 ?>
+
 <body class="site <?php echo $pageclass; ?>" data-bs-theme="light">
     <header class="sticky-header mb-3">
         <?php // Generate a Bootstrap Navbar for the top of our website and put the site title on it 
         ?>
         <nav class="navbar navbar-dark bg-dark navbar-expand-lg">
             <div class="container">
-                <a href="<?php echo $this->baseurl; ?>" class="navbar-brand" alt="<?php echo htmlspecialchars($sitename, ENT_QUOTES, 'UTF-8'); ?>">
-                    <img src="<?php echo $this->baseurl; ?>/images/logo.png" alt="<?php echo htmlspecialchars($sitename, ENT_QUOTES, 'UTF-8'); ?>" />
+                <a href="<?php echo $this->baseurl; ?>" class="navbar-brand"
+                    alt="<?php echo htmlspecialchars($sitename, ENT_QUOTES, 'UTF-8'); ?>">
+                    <img src="<?php echo $this->baseurl; ?>/images/logo.png"
+                        alt="<?php echo htmlspecialchars($sitename, ENT_QUOTES, 'UTF-8'); ?>" />
                 </a>
                 <?php // Update 1.14 - Added support for mobile menu with bootstrap 
                 ?>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu" aria-controls="mainmenu" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainmenu"
+                    aria-controls="mainmenu" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <?php // Put menu links in the navbar - main menu must be in the "menu" position!!! Only supports top level and 1 down, so no more than 1 level of child items 
@@ -113,11 +117,21 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
                     </div>
 
                 <?php endif; ?>
+                <div class="text-white fw-bold h5 m-0">
+                    <?php
+                    // Nome dell'utente loggato
+                    $user = Factory::getUser();
+                    $username = $user->username;
+                    if ($username != "")
+                        echo 'Benvenuto <a class="text-decoration-none text-white" href="' . Route::_('index.php?option=com_users&view=profile&id=' . $user->id) . '">' . $username . '</a>';
+                    ?>
+                </div>
+
             </div>
         </nav>
         <?php // Load Header Module if Module Exists 
         ?>
-        <?php if ($this->countModules('header')) : ?>
+        <?php if ($this->countModules('header')): ?>
             <div class="headerClasses">
                 <jdoc:include type="modules" name="header" style="none" />
             </div>
@@ -130,12 +144,12 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
         <div class="container">
             <?php // Load Breadcrumbs Module if Module Exists 
             ?>
-            <?php if ($this->countModules('breadcrumbs')) : ?>
+            <?php if ($this->countModules('breadcrumbs')): ?>
                 <div class="breadcrumbs">
                     <jdoc:include type="modules" name="breadcrumbs" style="none" />
                 </div>
             <?php endif; ?>
-            <?php if ($this->countModules('custom')) : ?>
+            <?php if ($this->countModules('custom')): ?>
                 <div class="container">
                     <jdoc:include type="modules" name="custom" style="none" />
                 </div>
@@ -143,30 +157,30 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
             <div class="row">
                 <?php // Use a BootStrap grid to load main content on left, sidebar on right IF sidebar exists 
                 ?>
-                <?php if ($this->countModules('sidebar')) : ?>
+                <?php if ($this->countModules('sidebar')): ?>
                     <div class="col-xs-12 col-lg-8">
 
                         <main>
                             <?php // Load important Joomla system messages 
-                            ?>
+                                ?>
                             <jdoc:include type="message" />
                             <?php // Load the main component of the webpage 
-                            ?>
+                                ?>
                             <jdoc:include type="component" />
                         </main>
                     </div>
                     <?php // Load the sidebar if one exists 
-                    ?>
+                        ?>
                     <div class="col-xs-12 col-lg-4">
                         <?php // This line tells Joomla to load the "sidebar" module position with the "superBasicMod" mod chrome as the default (see html/layouts/chromes folder) 
-                        ?>
+                            ?>
                         <jdoc:include type="modules" name="sidebar" style="superBasicMod" />
                     </div>
                     <?php // If there's no sidebar, just load the component with no sidebar 
-                    ?>
+                        ?>
                 <?php else: ?>
                     <?php // Load the main component of the webpage 
-                    ?>
+                        ?>
                     <main>
                         <jdoc:include type="component" />
                     </main>
@@ -176,7 +190,7 @@ $this->setMetaData('viewport', 'width=device-width, initial-scale=1');
     </div>
     <?php // Load Footer 
     ?>
-    <?php if ($this->countModules('footer')) : ?>
+    <?php if ($this->countModules('footer')): ?>
         <footer class="footer mt-auto py-3 bg-light ">
             <div class="container">
 
