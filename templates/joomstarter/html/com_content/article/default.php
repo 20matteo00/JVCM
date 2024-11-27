@@ -30,7 +30,8 @@ $db = Factory::getDbo();
 $user = Factory::getUser();
 $userId = $user->id;
 $id = (int) $this->item->id;
-
+$groups = $user->get('groups');
+$isadmin = in_array(8, $groups);
 $customFields = Competizione::getCustomFields($id);
 
 // Assegniamo i valori ai colori, alla forza e all'immagine
@@ -94,8 +95,14 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                 ?>
             </div>
             <br>
-            <span class="h4 fw-bold"><a class="campionato"
-                    href="<?php echo $baseUrl; ?>index.php/modifica-squadra?id=<?php echo $id; ?>&modifica=modifica">Modifica</a></span>
+            <?php
+            if ($isadmin || $this->item->catid == 71) {
+                ?>
+                <span class="h4 fw-bold"><a class="campionato"
+                        href="<?php echo $baseUrl; ?>index.php/modifica-squadra?id=<?php echo $id; ?>&catid=<?php echo $this->item->catid; ?>&modifica=modifica">Modifica</a></span>
+                <?php
+            }
+            ?>
         </div>
         <div class="col-md-4  text-center my-3">
             <div class="com-content-article__image">
@@ -116,7 +123,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
             echo "
             <div class='col-12 col-sm-6 col-md-4 col-lg-3 mb-4'>
                 <div class='text-center p-3'>
-                    <a style='border-radius:50px;' href='".$baseUrl."index.php/visualizza-competizione?id=" . $competizione->id . "' class='btn btn-outline-dark w-100'>
+                    <a style='border-radius:50px;' href='" . $baseUrl . "index.php/visualizza-competizione?id=" . $competizione->id . "' class='btn btn-outline-dark w-100'>
                         " . $competizione->nome_competizione . "
                     </a>
                 </div>
@@ -290,7 +297,7 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                     }
                     // Array per i totali
                     $recordTotali = [
-                        'Competizioni Vinte' => $totali['Win']."/".($recordPerModalita[68]["Competizioni Giocate"]+$recordPerModalita[69]["Competizioni Giocate"]),
+                        'Competizioni Vinte' => $totali['Win'] . "/" . ($recordPerModalita[68]["Competizioni Giocate"] + $recordPerModalita[69]["Competizioni Giocate"]),
                         'Competizioni Giocate' => $totali['comp'],
                         //Totale
                         'Giocate Totali' => $totali['countpartite'],
@@ -347,10 +354,14 @@ $imageSrc = strtok($imageSrc, '#'); // Questo restituirà solo la parte prima di
                                 ?>
                                 <tr>
                                     <?php
-                                    if($i===0) echo "<td class='align-middle fw-bold' rowspan='2'>Generale</td>";
-                                    elseif($i===2) echo "<td class='align-middle fw-bold' rowspan='7'>Totale</td>";
-                                    elseif($i===9) echo "<td class='align-middle fw-bold' rowspan='7'>Casa</td>";
-                                    elseif($i===16) echo "<td class='align-middle fw-bold' rowspan='7'>Trasferta</td>";
+                                    if ($i === 0)
+                                        echo "<td class='align-middle fw-bold' rowspan='2'>Generale</td>";
+                                    elseif ($i === 2)
+                                        echo "<td class='align-middle fw-bold' rowspan='7'>Totale</td>";
+                                    elseif ($i === 9)
+                                        echo "<td class='align-middle fw-bold' rowspan='7'>Casa</td>";
+                                    elseif ($i === 16)
+                                        echo "<td class='align-middle fw-bold' rowspan='7'>Trasferta</td>";
                                     ?>
                                     <td class="fw-bold"><?php echo $label; ?></td>
                                     <?php foreach ($modalitaArray as $mod): ?>

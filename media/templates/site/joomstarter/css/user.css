@@ -9,6 +9,12 @@
   display: none !important;
 }
 
+/*UTENTI*/
+[class^="com-users"] button[type="submit"]{
+  margin-top: 1rem;
+}
+
+
 /*HEADER*/
 .sticky-header {
   position: sticky;
@@ -20,8 +26,13 @@
 
 /*NAVBAR*/
 .navbar-brand {
-  width: 48px;
-  height: 48px;
+  width: clamp(48px, 100%, 200px);
+  height: auto;
+  max-height: 80px;
+}
+.navbar-brand img{
+  width: 100%;
+  height: auto;
 }
 
 /***** CATEGORY LIST *****/
@@ -237,11 +248,14 @@
   border-radius: 8px;
 }
 
-.calendario .card {
-  min-width: 450px;
+.calendario .card-body{
   overflow: auto;
 }
 
+.calendario .card-body .calendarow {
+  min-width: 100px;
+  width: 150px;
+}
 .myinput input[type="number"] {
   -moz-appearance: textfield;
   /* Rimuove le freccette in Firefox */
@@ -259,3 +273,18 @@
 }
 
 /***** COMPETIZIONI *****/
+/***** CREA SQUADRA *****/
+.mioeditform [id^="jform_alias"],
+.mioeditform [id^="jform_state"],
+.mioeditform #publishing,
+.mioeditform .tox,
+.mioeditform .toggle-editor,
+.mioeditform legend
+{
+  display: none !important;
+}
+
+.mioeditform .input-group{
+  max-width: 356px;
+}
+/***** CREA SQUADRA *****/

@@ -109,8 +109,18 @@ abstract class Competizione
         // Ottieni l'oggetto del database
         $db = Factory::getDbo();
 
-        // Crea la query con un unico UPDATE usando CASE
+        // Iniziamo verificando se i campi esistono già per l'item_id
         $query = $db->getQuery(true)
+            ->select('field_id')
+            ->from('#__fields_values')
+            ->where('item_id = ' . (int) $idsquadra)
+            ->where('field_id IN (1, 2, 3)');
+
+        $db->setQuery($query);
+        $existingFields = $db->loadColumn(); // Ottiene un array di field_id esistenti
+
+        // Crea la query per l'UPDATE usando CASE, come già fatto
+        $updateQuery = $db->getQuery(true)
             ->update('#__fields_values')
             ->set($db->quoteName('value') . ' = CASE ' . $db->quoteName('field_id') .
                 ' WHEN 1 THEN ' . $db->quote($color1) .
@@ -120,12 +130,38 @@ abstract class Competizione
             ->where('item_id = ' . (int) $idsquadra)
             ->where('field_id IN (1, 2, 3)');
 
-        // Esegui la query
-        $db->setQuery($query);
-        $db->execute();
+        // Esegui l'UPDATE se ci sono campi da aggiornare
+        if (!empty($existingFields)) {
+            $db->setQuery($updateQuery);
+            $db->execute();
+        }
+
+        // Aggiungi i nuovi campi se non esistono
+        if (empty($existingFields) || count($existingFields) < 3) {
+            $insertQuery = $db->getQuery(true)
+                ->insert('#__fields_values')
+                ->columns(['item_id', 'field_id', 'value']);
+
+            if (!in_array(1, $existingFields)) {
+                $insertQuery->values((int) $idsquadra . ', 1, ' . $db->quote($color1));
+            }
+            if (!in_array(2, $existingFields)) {
+                $insertQuery->values((int) $idsquadra . ', 2, ' . $db->quote($color2));
+            }
+            if (!in_array(3, $existingFields)) {
+                $insertQuery->values((int) $idsquadra . ', 3, ' . $db->quote($forza));
+            }
+
+            // Esegui l'inserimento dei nuovi record
+            if (isset($insertQuery)) {
+                $db->setQuery($insertQuery);
+                $db->execute();
+            }
+        }
     }
 
-    public static function getArticlesFromSubcategories($categoryId)
+
+    public static function getArticlesFromSubcategories($categoryId, $userId)
     {
         // Ottieni l'oggetto del database
         $db = Factory::getDbo();
@@ -139,6 +175,7 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
             ->where('c.parent_id = ' . (int) $categoryId)
+            ->where('a.created_by IN (' . (int) $userId . ', 988)')
             ->order('c.id ASC, CAST(f3.value AS UNSIGNED) DESC, a.title ASC'); // Ordina prima per ID categoria e poi per titolo dell'articolo
 
         $db->setQuery($query);
@@ -147,7 +184,7 @@ abstract class Competizione
         return $db->loadObjectList();
     }
 
-    public static function getArticlesFromSubcategoriesPagination($categoryId, $limit, $limitstart)
+    public static function getArticlesFromSubcategoriesPagination($categoryId, $userId, $limit, $limitstart)
     {
         // Ottieni l'oggetto del database
         $db = Factory::getDbo();
@@ -162,6 +199,7 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Colore 2
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Numero
             ->where('c.parent_id = ' . (int) $categoryId)
+            ->where('a.created_by IN (' . (int) $userId . ', 988)')
             ->order('c.id ASC, CAST(f3.value AS UNSIGNED) DESC, a.title ASC') // Ordina prima per ID categoria e poi per titolo dell'articolo
             ->setLimit($limit, $limitstart); // Imposta il limite e l'inizio
 
@@ -172,7 +210,7 @@ abstract class Competizione
     }
 
 
-    public static function getTotalArticlesFromSubcategories($categoryId)
+    public static function getTotalArticlesFromSubcategories($categoryId, $userId)
     {
         // Ottieni l'oggetto del database
         $db = Factory::getDbo();
@@ -181,7 +219,9 @@ abstract class Competizione
             ->select('COUNT(a.id)')
             ->from('#__content AS a')
             ->join('INNER', '#__categories AS c ON a.catid = c.id')
-            ->where('c.parent_id = ' . (int) $categoryId);
+            ->where('c.parent_id = ' . (int) $categoryId)
+            ->where('a.created_by IN (' . (int) $userId . ', 988)')
+        ;
 
         $db->setQuery($query);
 
@@ -215,7 +255,7 @@ abstract class Competizione
         return null; // Restituisce null se la categoria non è trovata
     }
 
-    public static function getArticlesFromCategory($categoryId)
+    public static function getArticlesFromCategory($categoryId, $userId)
     {
         // Ottieni il database
         $db = Factory::getDbo();
@@ -229,6 +269,7 @@ abstract class Competizione
             ->join('LEFT', '#__fields_values AS f2 ON f2.item_id = a.id AND f2.field_id = 2') // Extra field Colore 2
             ->join('LEFT', '#__fields_values AS f3 ON f3.item_id = a.id AND f3.field_id = 3') // Extra field Forza
             ->where('a.catid = ' . (int) $categoryId) // Filtro per la categoria corrente
+            ->where('a.created_by IN (' . (int) $userId . ', 988)')
             ->where('a.state = 1') // Solo articoli pubblicati
             ->order('CAST(f3.value AS UNSIGNED) DESC, a.title ASC'); // Ordina per forza in modo numerico, poi per titolo
 
@@ -252,7 +293,7 @@ abstract class Competizione
         return $article ? Route::_('index.php?option=com_content&view=article&id=' . (int) $articleId . '&catid=' . (int) $article->catid) : '';
     }
     // Funzione per recuperare gli articoli in base alle sottocategorie
-    public static function getArticlesInSubcategories($subcategoryIds)
+    public static function getArticlesInSubcategories($subcategoryIds, $userId)
     {
         $db = Factory::getDbo();
         $query = $db->getQuery(true)
@@ -260,6 +301,7 @@ abstract class Competizione
             ->from('#__content')
             ->where('catid IN (' . implode(',', array_map('intval', $subcategoryIds)) . ')')
             ->where('state = 1') // Solo articoli pubblicati
+            ->where('created_by IN (' . (int) $userId . ', 988)')
             ->order('catid ASC, hits DESC'); // Ordina prima per 'catid' in ordine crescente, poi per 'hits' in ordine decrescente
 
         return $db->setQuery($query)->loadObjectList();
@@ -382,12 +424,13 @@ abstract class Competizione
 
         // Ora prepariamo l'inserimento con l'ID trovato
         $query = $db->getQuery(true);
-        $columns = ['id', 'user_id', 'nome_competizione', 'modalita', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
+        $columns = ['id', 'user_id', 'nome_competizione', 'modalita', 'tipo', 'gironi', 'andata_ritorno', 'partecipanti', 'fase_finale', 'finita', 'squadre'];
         $values = [
             (int) $nextId, // Usa il primo ID disponibile
             (int) $data['user_id'],
             $db->quote($nextId . " - " . $data['nome_competizione']),
             (int) $data['modalita'],
+            (int) $data['tipo'],
             (int) $data['gironi'],
             (int) $data['andata_ritorno'],
             (int) $data['partecipanti'],
@@ -713,7 +756,7 @@ abstract class Competizione
                     <script>
                         Swal.fire({
                             title: 'Attenzione!',
-                            text: '" . addslashes($message) ."',
+                            text: '" . addslashes($message) . "',
                             icon: 'warning',
                             confirmButtonText: 'Ok'
                         });
@@ -974,7 +1017,6 @@ abstract class Competizione
             return [];
         }
     }
-
 
     public static function getClassificaAR($tablePartite, $ar, $numsquadre, $view, $mod, $gironi)
     {
@@ -2114,6 +2156,7 @@ abstract class Competizione
             'user_id' => $user, // ID dell'utente
             'nome_competizione' => $joinedName . " - Fase Finale", // Nome della competizione
             'modalita' => 69, // Modalità
+            'tipo' => 71, // Categoria
             'gironi' => 0, // Numero di gironi
             'squadre' => $squadrenew, // ID delle squadre
             'andata_ritorno' => $ar, // Modalità andata/ritorno
@@ -2274,43 +2317,61 @@ abstract class Competizione
         // Inizializziamo i gol
         $gol1 = 0;
         $gol2 = 0;
-
+        $fdiff = abs($forza1 - $forza2);
         // Calcoliamo i gol in base alla forza e alla casualità
-        if ($diff >= 1000) {
-            $gol1 = self::pesoRand(3, 7);
-            $gol2 = self::pesoRand(0, $gol1 - 3);
-        } elseif ($diff >= 500) {
-            $gol1 = self::pesoRand(2, 6);
-            $gol2 = self::pesoRand(0, $gol1 - 2);
-        } elseif ($diff >= 250) {
-            $gol1 = self::pesoRand(1, 5);
-            $gol2 = self::pesoRand(0, $gol1 - 1);
-        } elseif ($diff >= 100) {
-            $gol1 = self::pesoRand(0, 4);
-            $gol2 = self::pesoRand(0, $gol1);
-        } elseif ($diff >= 50) {
-            $gol1 = self::pesoRand(0, 3);
-            $gol2 = self::pesoRand(0, $gol1 + 1);
-        } elseif ($diff < 50 && $diff > -50) {
-            $gol1 = self::pesoRand(0, 3);
-            $gol2 = self::pesoRand(0, 3);
-        } elseif ($diff >= -150) {
-            $gol2 = self::pesoRand(0, 3);
-            $gol1 = self::pesoRand(0, $gol2 + 1);
-        } elseif ($diff >= -350) {
-            $gol2 = self::pesoRand(0, 4);
-            $gol1 = self::pesoRand(0, $gol2);
-        } elseif ($diff >= -600) {
-            $gol2 = self::pesoRand(1, 5);
-            $gol1 = self::pesoRand(0, $gol2 - 1);
-        } elseif ($diff >= -1200) {
-            $gol2 = self::pesoRand(2, 6);
-            $gol1 = self::pesoRand(0, $gol2 - 2);
+        if ($fdiff > 100) {
+            if ($diff >= 1000) {
+                $gol1 = self::pesoRand(3, 7);
+                $gol2 = self::pesoRand(0, $gol1 - 3);
+            } elseif ($diff >= 500) {
+                $gol1 = self::pesoRand(2, 6);
+                $gol2 = self::pesoRand(0, $gol1 - 2);
+            } elseif ($diff >= 250) {
+                $gol1 = self::pesoRand(1, 5);
+                $gol2 = self::pesoRand(0, $gol1 - 1);
+            } elseif ($diff >= 100) {
+                $gol1 = self::pesoRand(0, 4);
+                $gol2 = self::pesoRand(0, $gol1);
+            } elseif ($diff >= 50) {
+                $gol1 = self::pesoRand(0, 3);
+                $gol2 = self::pesoRand(0, $gol1 + 1);
+            } elseif ($diff >= -50) {
+                $gol1 = self::pesoRand(0, 3);
+                $gol2 = self::pesoRand(0, 3);
+            } elseif ($diff >= -150) {
+                $gol2 = self::pesoRand(0, 3);
+                $gol1 = self::pesoRand(0, $gol2 + 1);
+            } elseif ($diff >= -350) {
+                $gol2 = self::pesoRand(0, 4);
+                $gol1 = self::pesoRand(0, $gol2);
+            } elseif ($diff >= -600) {
+                $gol2 = self::pesoRand(1, 5);
+                $gol1 = self::pesoRand(0, $gol2 - 1);
+            } elseif ($diff >= -1200) {
+                $gol2 = self::pesoRand(2, 6);
+                $gol1 = self::pesoRand(0, $gol2 - 2);
+            } else {
+                $gol2 = self::pesoRand(3, 7);
+                $gol1 = self::pesoRand(0, $gol2 - 3);
+            }
         } else {
-            $gol2 = self::pesoRand(3, 7);
-            $gol1 = self::pesoRand(0, $gol2 - 3);
+            if($diff>=50){
+                $gol1 = self::pesoRand(2, 6);
+                $gol2 = self::pesoRand(0, $gol1 - 2);
+            }elseif($diff>=15){
+                $gol1 = self::pesoRand(1, 4);
+                $gol2 = self::pesoRand(0, $gol1);
+            }elseif($diff >= -15){
+                $gol1 = self::pesoRand(0, 3);
+                $gol2 = self::pesoRand(0, 3);
+            }elseif($diff >= -50){
+                $gol2 = self::pesoRand(1, 4);
+                $gol1 = self::pesoRand(0, $gol2);
+            }else{
+                $gol2 = self::pesoRand(2, 6);
+                $gol1 = self::pesoRand(0, $gol2 - 2);
+            }
         }
-
         // Restituisce il risultato finale
         return [
             'squadra1' => $gol1,
@@ -2371,4 +2432,67 @@ abstract class Competizione
         }
         return false;
     }
+
+    public static function deleteArticleById($articleId, $userId)
+    {
+        // Ottieni il database
+        $db = Factory::getDbo();
+
+        // Recupera tutte le competizioni e controlla se l'ID dell'articolo è presente nella colonna "squadre"
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('squadre'))
+            ->from($db->quoteName('#__competizioni')); // Tabella competizioni, adattato al tuo schema
+
+        // Esegui la query per ottenere le competizioni
+        $db->setQuery($query);
+        $competizioni = $db->loadColumn(); // Ottiene tutte le voci della colonna "squadre"
+
+        // Verifica se l'articolo è associato a una competizione
+        foreach ($competizioni as $squadreJson) {
+            $squadre = json_decode($squadreJson, true); // Decodifica il JSON in un array
+            if (in_array((int) $articleId, $squadre)) {
+                // Se l'articolo è presente in una competizione, non lo eliminare
+                return false; // Restituisce false se l'articolo è collegato a una competizione
+            }
+        }
+
+        // Se l'articolo non è presente in nessuna competizione, procedi con l'eliminazione
+
+        // Crea la query per eliminare l'articolo solo se l'utente loggato è il creatore
+        $query = $db->getQuery(true)
+            ->delete($db->quoteName('#__content')) // Tabella degli articoli in Joomla
+            ->where([
+                $db->quoteName('id') . ' = ' . (int) $articleId,
+                $db->quoteName('created_by') . ' = ' . (int) $userId
+            ]);
+
+        // Esegui la query per eliminare l'articolo
+        $db->setQuery($query);
+
+        try {
+            // Esegui l'eliminazione dell'articolo
+            $db->execute();
+
+            // Se l'articolo è stato eliminato, procediamo a rimuovere i relativi campi
+            if ($db->getAffectedRows() > 0) {
+                // Rimuovi i relativi campi dalla tabella #__fields_values
+                $deleteFieldsQuery = $db->getQuery(true)
+                    ->delete($db->quoteName('#__fields_values')) // Tabella dei valori dei campi
+                    ->where($db->quoteName('item_id') . ' = ' . (int) $articleId);
+
+                // Esegui la query per eliminare i campi
+                $db->setQuery($deleteFieldsQuery);
+                $db->execute();
+
+                return true; // Restituisce true se l'articolo e i campi sono stati eliminati
+            }
+
+            return false; // L'articolo non è stato eliminato
+        } catch (Exception $e) {
+            return false; // Errore durante l'esecuzione
+        }
+    }
+
+
+
 }

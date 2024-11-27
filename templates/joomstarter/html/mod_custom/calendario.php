@@ -70,20 +70,20 @@ if (isset($_GET['id'])) {
                                 $gol2 = isset($partita['gol2']) ? $partita['gol2'] : '';
                                 $girone = isset($partita['girone']) ? $partita['girone'] : '';
                                 ?>
-                                <div class="d-flex my-3 fw-bold align-items-center myinput">
+                                <div class="d-flex my-3 mx-2 fw-bold align-items-center myinput ">
                                     <?php if ($mod === 70): ?>
                                         <div class="p-1 text-center me-2"
                                             style="border-radius:50px; width: 32px; background-color:var(--nero);">
                                             <span style="color:var(--bianco);"><?php echo htmlspecialchars($girone); ?></span>
                                         </div>
                                     <?php endif; ?>
-                                    <div class="p-1 text-center"
-                                        style="border-radius:50px; width:200px; background-color: <?php echo $colors1; ?>;">
+                                    <div class="p-1 text-center calendarow"
+                                        style="border-radius:50px; background-color: <?php echo $colors1; ?>;">
                                         <span style="color: <?php echo $colort1; ?>;"><?php echo htmlspecialchars($s1); ?></span>
                                     </div>
                                     <div class="mx-3"></div>
-                                    <div class="p-1 text-center"
-                                        style="border-radius:50px; width:200px; background-color: <?php echo $colors2; ?>;">
+                                    <div class="p-1 text-center calendarow"
+                                        style="border-radius:50px; background-color: <?php echo $colors2; ?>;">
                                         <span style="color: <?php echo $colort2; ?>;"><?php echo htmlspecialchars($s2); ?></span>
                                     </div>
                                     <form action="" class="d-flex align-items-center ms-3" method="post">
@@ -392,7 +392,7 @@ if (isset($_POST['save'])) {
 
     // Assicurati che tutti gli array abbiano la stessa lunghezza
     $count = count($squadre1);
-
+    var_dump($gol1);
     if ($count === count($squadre2) && $count === count($gol1) && $count === count($gol2)) {
         $db = Factory::getDbo();
 
@@ -402,7 +402,7 @@ if (isset($_POST['save'])) {
             $s2 = $db->quote($squadre2[$i]);
             $f1 = $forza1[$i]; // Rimuovi il quote() per lavorare con i numeri direttamente
             $f2 = $forza2[$i]; // Rimuovi il quote() per lavorare con i numeri direttamente
-
+            if($gol1[$i]!=="" && $gol2[$i]!=="")continue;
             $ris = Competizione::ris($f1, $f2);
             $g1 = $ris['squadra1'];
             $g2 = $ris['squadra2'];

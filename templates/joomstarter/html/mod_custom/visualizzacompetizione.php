@@ -11,6 +11,7 @@ use Joomstarter\Helpers\Competizione;
 // Ottieni l'ID dell'utente corrente
 $user = Factory::getUser();
 $userId = $user->id;
+$baseurl = URI::base();
 ?>
 <div style=" margin-bottom:100px;">
     <?php
@@ -34,7 +35,10 @@ $userId = $user->id;
         $squadreJson = $competizione->squadre;
         // Decodifica la stringa JSON in un array
         $squadre = json_decode($squadreJson, true);
-        $numsquadre = count($squadre);
+        $numsquadre = 0;
+        if (!empty($squadre)) {
+            $numsquadre = count($squadre);
+        }
         // Controlla se la competizione è stata trovata
         if ($competizione) {
             $nomemodalita = Competizione::getCategoryNameById($competizione->modalita);
@@ -99,6 +103,7 @@ $userId = $user->id;
                 $module_ID = $_GET['module_id'];
                 if ($mod !== 69) {
                     foreach ($simpar as $partita) {
+                        if($partita->gol1!==null || $partita->gol2!==null)continue;
                         $cf1 = Competizione::getCustomFields($partita->squadra1);
                         $cf2 = Competizione::getCustomFields($partita->squadra2);
                         $forza1 = !empty($cf1[3]) ? $cf1[3]->value : 0;
@@ -223,6 +228,9 @@ $userId = $user->id;
             }
             ?>
             <?php
+        } else{
+            header("location: " . $baseurl);
+            exit;
         }
         if (isset($_POST['closecomp'])) {
             $module_ID = $_GET['module_id'];
@@ -237,6 +245,6 @@ $userId = $user->id;
             header("Location: " . $url);
             exit;
         }
-    }
+    } 
     ?>
 </div>

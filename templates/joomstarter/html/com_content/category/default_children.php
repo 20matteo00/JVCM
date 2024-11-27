@@ -9,13 +9,14 @@
  */
 
 defined('_JEXEC') or die;
+require_once JPATH_SITE . '/templates/joomstarter/helper.php';
 
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomla\CMS\Factory;
-
+use Joomstarter\Helpers\Competizione;
 
 // Creiamo un'istanza del database
 $db = Factory::getDbo();
@@ -24,10 +25,10 @@ $db = Factory::getDbo();
 $lang = $this->getLanguage();
 $user = $this->getCurrentUser();
 $groups = $user->getAuthorisedViewLevels();
+$userId = $user->id;
 $total = count($this->children[$this->category->id]);
 // Inizia la sessione
 $session = Factory::getSession();
-
 // Ottieni il valore di limit dalla richiesta GET o dalla sessione
 $limit = Factory::getApplication()->input->getInt('limit', $session->get('limit', 10));
 
@@ -45,7 +46,6 @@ if ($limit == 0) {
 
 // Creiamo la paginazione
 $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
-
 
 ?>
 <form action="" method="get">
@@ -90,7 +90,10 @@ $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
                         <td class="category-items-cell">
                             <span class="badge bg-info category-badge"
                                 title="<?php echo HTMLHelper::_('tooltipText', 'JOOM_NUM_ITEMS'); ?>">
-                                <?php echo $child->getNumItems(true); ?>
+                                <?php
+                                $partecipants = count(Competizione::getArticlesFromCategory($child->id, $userId));
+                                echo $partecipants;
+                                ?>
                             </span>
                         </td>
                         <td class="category-items-cell">

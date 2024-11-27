@@ -15,11 +15,11 @@ $baseUrl = Uri::base();
 $user = Factory::getUser();
 $userId = $user->id;
 $categoryId = $this->category->id;
-
+$groups = $user->get('groups');
+$isadmin = in_array(8, $groups);
 // Ottieni tutti gli articoli della categoria
-$allArticles = Competizione::getArticlesFromCategory($categoryId);
+$allArticles = Competizione::getArticlesFromCategory($categoryId, $userId);
 $total = count($allArticles);
-
 // Recupera il valore di `limit` dalla richiesta GET o imposta un valore di default
 $app = Factory::getApplication();
 $limit = $app->input->getInt('limit', 5);
@@ -68,7 +68,9 @@ if ($categoryTitle) {
                     <th class="category-header-logo"><?php echo Text::_('LOGO'); ?></th>
                     <th class="category-header-title"><?php echo Text::_('SQUADRA'); ?></th>
                     <th class="category-header-force"><?php echo Text::_('FORZA'); ?></th>
-                    <th class="category-header-logo"><?php echo Text::_('AZIONI'); ?></th>
+                    <?php if ($isadmin || $categoryId === 71): ?>
+                        <th class="category-header-logo"><?php echo Text::_('AZIONI'); ?></th>
+                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody class="allarticles">
@@ -92,13 +94,21 @@ if ($categoryTitle) {
                             </div>
                         </td>
                         <td class="category-items-cell"><?php echo htmlspecialchars($article->forza); ?></td>
-                        <td class="category-items-cell">
-                            <form action="<?php echo $baseUrl; ?>index.php/modifica-squadra" method="get"> <input type="hidden"
-                                    value="<?php echo $article->id; ?>" name="id">
-                                <button type="submit" class="btn btn-warning btn-sm" name="modifica"
-                                    value="modifica">Modifica</button>
-                            </form>
-                        </td>
+                        <?php if ($isadmin || $categoryId === 71): ?>
+
+                            <td class="category-items-cell">
+                                <form class="my-1" action="<?php echo $baseUrl; ?>index.php/modifica-squadra" method="get">
+                                    <input type="hidden" value="<?php echo $article->id; ?>" name="id">
+                                    <input type="hidden" value="<?php echo $categoryId; ?>" name="catid">
+                                    <input type="hidden" value="<?php echo $userId; ?>" name="user">
+                                    <button type="submit" class="btn btn-warning btn-sm my-1" name="modifica"
+                                        value="modifica">Modifica</button>
+                                    <button type="submit" class="btn btn-danger btn-sm my-1" name="elimina"
+                                        value="elimina">Elimina</button>
+                                </form>
+                            </td>
+                        <?php endif; ?>
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -168,6 +178,11 @@ if ($categoryTitle) {
     <?php endif; ?>
 <?php endif; ?>
 
+<?php if ($categoryId === 71): ?>
+    <div class="text-center my-5"> <a href="<?php echo Uri::base(); ?>index.php/crea-squadra"
+            class="btn btn-success btn-sm">Crea Nuova Squadra</a> </div>
+<?php endif; ?>
+
 
 <!-- Form per simulare il campionato -->
 <form action="" method="post" class="text-center">
@@ -175,19 +190,20 @@ if ($categoryTitle) {
     <button type="submit" class="btn btn-success btn" name="simula_campionato">Simula Campionato</button>
 </form>
 
+
 <?php
 // Gestione della simulazione del campionato
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simula_campionato'])) {
     $catid = $_POST['catid'];
-    $squadre = Competizione::getArticlesFromCategory($catid);
+    $squadre = Competizione::getArticlesFromCategory($catid, $userId);
     $partecipanti = count($squadre);
-    if ($partecipanti < 2)
-        return;
+    if ($partecipanti < 4 || $partecipanti > 24 || $partecipanti % 2 != 0) return;    
     $squad = array_map(fn($squadra) => (string) $squadra->id, $squadre);
     $data = array(
         'user_id' => $userId,
         'nome_competizione' => $categoryTitle . " - Simulazione",
         'modalita' => 68,
+        'tipo' => $catid,
         'gironi' => 0,
         'squadre' => $squad,
         'andata_ritorno' => 1,
@@ -196,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['simula_campionato']))
         'finita' => 0,
     );
     Competizione::insertCompetizione($data);
-    header("Location: ".$baseUrl."index.php/competizioni-in-corso");
+    header("Location: " . $baseUrl . "index.php/competizioni-in-corso");
     exit;
 }
 ?>

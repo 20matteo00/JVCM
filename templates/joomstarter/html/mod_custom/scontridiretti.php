@@ -19,7 +19,7 @@ if (isset($_POST['submit'])) {
 } elseif (isset($_POST['reset'])) {
     $_POST = [];
 }
-$squadre = Competizione::getArticlesFromSubcategories(8);
+$squadre = Competizione::getArticlesFromSubcategories(8, $userId);
 
 ?>
 

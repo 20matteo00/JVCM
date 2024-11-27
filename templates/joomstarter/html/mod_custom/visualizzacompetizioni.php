@@ -60,17 +60,18 @@ if (in_array($menuItemId, $pagconsentite)) {
         </form>
 
         <div class="table-responsive category-table-container competizioni">
-            <table class="table table-striped category-table" style="min-width:1200px;">
+            <table class="table table-striped category-table" >
                 <thead>
                     <tr>
-                        <th class="category-header-title" style="min-width:200px;">Nome Competizione</th>
-                        <th class="category-header-title" style="min-width:100px;">Modalità</th>
-                        <th class="category-header-title" style="min-width:50px;">Gironi</th>
-                        <th class="category-header-title" style="min-width:150px;">Andata/Ritorno</th>
-                        <th class="category-header-title" style="min-width:100px;">Partecipanti</th>
-                        <th class="category-header-title" style="min-width:100px;">Fase Finale</th>
-                        <th class="category-header-title" style="min-width:400px;">Squadre</th>
-                        <th class="category-header-title" style="min-width:100px;">Azioni</th>
+                        <th class="category-header-title" >Nome Competizione</th>
+                        <th class="category-header-title" >Modalità</th>
+                        <th class="category-header-title" >Tipo</th>
+                        <th class="category-header-title" >Gironi</th>
+                        <th class="category-header-title" >Andata/Ritorno</th>
+                        <th class="category-header-title" >Partecipanti</th>
+                        <th class="category-header-title" >Fase Finale</th>
+                        <th class="category-header-title" >Squadre</th>
+                        <th class="category-header-title" >Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="allarticles">
@@ -79,10 +80,12 @@ if (in_array($menuItemId, $pagconsentite)) {
                         $squadre = json_decode($competizione->squadre);
                         $idcomp = $competizione->id;
                         $nomemodalita = Competizione::getCategoryNameById($competizione->modalita);
+                        $nomecategoria = Competizione::getCategoryNameById($competizione->tipo);
                         if (($menuItemId == 106 && $competizione->finita == 0) || ($menuItemId == 107 && $competizione->finita == 1)): ?>
                             <tr>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($competizione->nome_competizione); ?></td>
                                 <td class="category-title-cell"><?php echo htmlspecialchars($nomemodalita); ?></td>
+                                <td class="category-title-cell"><?php echo htmlspecialchars($nomecategoria); ?></td>
                                 <td class="category-title-cell">
                                     <?php
                                     if ($competizione->modalita != 70) {
@@ -260,6 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
                     'user_id' => $result->user_id, // ID dell'utente
                     'nome_competizione' => $joinedName, // Nome della competizione
                     'modalita' => $result->modalita, // Modalità
+                    'tipo' => $result->tipo,
                     'gironi' => $result->gironi, // Numero di gironi
                     'squadre' => $squadre, // ID delle squadre
                     'andata_ritorno' => $result->andata_ritorno, // Modalità andata/ritorno

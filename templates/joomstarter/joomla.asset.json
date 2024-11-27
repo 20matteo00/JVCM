@@ -51,6 +51,21 @@
       "name": "fontawesome",
       "type": "style",
       "uri": "system/joomla-fontawesome.min.css"
+    },
+    {
+      "name": "jsdelivr.css",
+      "type": "style",
+      "uri": "jsdelivr.css"
+    },
+    {
+      "name": "jsdelivr.js",
+      "type": "script",
+      "uri": "jsdelivr.js"
+    },
+    {
+      "name": "cloudflare.js",
+      "type": "script",
+      "uri": "cloudflare.js"
     }
   ]
 }

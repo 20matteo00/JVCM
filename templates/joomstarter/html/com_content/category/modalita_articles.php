@@ -18,7 +18,7 @@ if ($userId == 0)
 // Recupera le sottocategorie della categoria 8
 $subcategoryIds = Competizione::getSubcategories(8);
 // Recupera gli articoli delle sottocategorie
-$articles = Competizione::getArticlesInSubcategories($subcategoryIds);
+$articles = Competizione::getArticlesInSubcategories($subcategoryIds, $userId);
 // Recupera i sottotag del tag 2
 $subTags = Competizione::getSubTags(2);
 // Modalità specifiche
@@ -212,6 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit-button'])) {
         'user_id' => (int) $userId, // ID dell'utente
         'nome_competizione' => $_POST['nome_campionato'], // Nome della competizione
         'modalita' => (int) $this->category->id, // Modalità
+        'tipo' => 71,
         'gironi' => isset($_POST['gironi']) ? (int) $_POST['gironi'] : 0, // Gironi
         'andata_ritorno' => (int) $_POST['andata_ritorno'], // Andata/Ritorno
         'partecipanti' => (int) $_POST['numero_partecipanti'], // Partecipanti

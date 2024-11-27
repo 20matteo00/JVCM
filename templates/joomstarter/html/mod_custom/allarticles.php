@@ -8,12 +8,15 @@ use Joomla\CMS\Helper\TagsHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\Component\Content\Site\Helper\RouteHelper;
 use Joomstarter\Helpers\Competizione;
-
+use Joomla\CMS\Uri\Uri;
+// Ottieni l'ID dell'utente corrente
+$user = Factory::getUser();
+$userId = $user->id;
 // Utilizzo della funzione
 $categoryId = 8; // ID della categoria principale
 
 // Ottieni il numero totale di articoli per la paginazione
-$total = Competizione::getTotalArticlesFromSubcategories($categoryId);
+$total = Competizione::getTotalArticlesFromSubcategories($categoryId, $userId);
 
 // Ottieni il valore di `limit` dalla richiesta GET o usa il valore di default
 $app = Factory::getApplication();
@@ -23,7 +26,7 @@ $limit = $app->input->getInt('limit', 20);
 $limitstart = $app->input->getInt('limitstart', 0);
 
 // Ottieni gli articoli con paginazione
-$articles = Competizione::getArticlesFromSubcategoriesPagination($categoryId, $limit, $limitstart);
+$articles = Competizione::getArticlesFromSubcategoriesPagination($categoryId, $userId, $limit, $limitstart);
 
 // Creiamo la paginazione
 $pagination = new Joomla\CMS\Pagination\Pagination($total, $limitstart, $limit);
@@ -98,3 +101,5 @@ if ($articles):
 <div class="pagination justify-content-center">
     <?php echo $pagination->getPagesLinks(); ?>
 </div>
+
+<div class="text-center mt-5"> <a href="<?php echo Uri::base(); ?>index.php/crea-squadra" class="btn btn-success btn-sm">Crea Nuova Squadra</a> </div>
